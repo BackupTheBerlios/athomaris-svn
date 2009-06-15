@@ -1,0 +1,5926 @@
+#LyX 1.6.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize 10
+\spacing single
+\use_hyperref true
+\pdf_title "The Common PHP Library"
+\pdf_author "Thomas Schöbel-Theuer"
+\pdf_bookmarks true
+\pdf_bookmarksnumbered false
+\pdf_bookmarksopen false
+\pdf_bookmarksopenlevel 1
+\pdf_breaklinks true
+\pdf_pdfborder false
+\pdf_colorlinks false
+\pdf_backref false
+\pdf_pdfusetitle true
+\papersize a4paper
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 3cm
+\topmargin 2.5cm
+\rightmargin 2.7cm
+\bottommargin 2.5cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+The Athomaris PHP Library
+\begin_inset Newline newline
+\end_inset
+
+A Framework for Business Processes,
+\begin_inset Newline newline
+\end_inset
+
+ DB Management and UIs
+\end_layout
+
+\begin_layout Author
+Version 0.0, Thomas Schöbel-Theuer
+\end_layout
+
+\begin_layout Standard
+Features:
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+sloppy
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Automated
+\series bold
+ business process execution
+\series default
+: 
+\emph on
+orchestration
+\emph default
+ of a very generic 
+\series bold
+state transition machine
+\series default
+, with generic interfaces to almost arbitrary service providers.
+\end_layout
+
+\begin_layout Itemize
+Provides 
+\series bold
+\emph on
+temporal
+\emph default
+ databases
+\series default
+: the history of all changes may be recorded, even deletions.
+ Temporal queries possible, in addition to non-temporal views of the data.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Versioned schema management
+\series default
+: when creating new versions of 
+\family typewriter
+$SCHEMA
+\family default
+, SQL statements like 
+\family typewriter
+alter table
+\family default
+ are generated.
+ Live data is left intact whenever possible.
+\end_layout
+
+\begin_layout Itemize
+Generic 
+\series bold
+default user interface
+\series default
+: once 
+\family typewriter
+$SCHEMA
+\family default
+ has been created, the database can be accessed instantly via a customizable
+ web-based interface.
+\end_layout
+
+\begin_layout Itemize
+Internal Model-View-Controller (MVC) architecture: generic 
+\series bold
+template management
+\series default
+ with internationalization and user-profile support.
+ Customizable and extensible.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Access management
+\series default
+: fine-grained access control based on user profiles.
+ The user interface obeys these rules by presenting only those fields and
+ buttons for which access is currently allowed.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Remote access
+\series default
+ to multiple databases in parallel.
+ Unified views (logical integration of multiple data sources into a single
+ 
+\begin_inset Quotes eld
+\end_inset
+
+virtual database
+\begin_inset Quotes erd
+\end_inset
+
+ with cross-join capabilities) are planned for a future release.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Scalable
+\series default
+: supports master/slave replication setups for large enterprises.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Automatic consistency updates
+\series default
+: tables on different (distributed) databases may be kept always in-sync
+ with each other, either symmetrically or asymmetrically in multiple modes.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Basic Setup
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Basic-Setup"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Requirements: you need Linux, Apache with 
+\family typewriter
+mod_php5
+\family default
+ and some of the supported databases (currently only MySQL, but a Sybase
+ driver and other drivers are planned).
+ If you want to use the business process execution engine, you also need
+ to install and enable the 
+\family typewriter
+pcntl
+\family default
+ extension module of PHP.
+\end_layout
+
+\begin_layout Standard
+Copy the sources of the Athomaris PHP Library to the document root of your
+ webserver.
+ In the following, we will assume that this is 
+\family typewriter
+/www
+\family default
+.
+ If you use another place, you have to adapt the following examples accordingly.
+ So it looks like
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+cd /www; sudo tar xzpf athomaris.tar.gz
+\end_layout
+
+\begin_layout Standard
+This creates a directory 
+\family typewriter
+/www/athomaris/
+\family default
+.
+ It is imporant to do this as 
+\family typewriter
+root
+\family default
+, because there are directories owned by different users
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+If it went wrong, or if you got the sources via 
+\family typewriter
+svn
+\family default
+, you can the fix the permissions as follows:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+cd /www/athomaris; chmod 755 */compiled; sudo chown -R wwwrun */compiled/
+\end_layout
+
+\end_inset
+
+.
+ Afterwards, configure Apache the following way:
+\end_layout
+
+\begin_layout LyX-Code
+<Directory "/www/athomaris">
+\end_layout
+
+\begin_layout LyX-Code
+    Options ExecCGI FollowSymLinks
+\end_layout
+
+\begin_layout LyX-Code
+    AllowOverride AuthConfig
+\end_layout
+
+\begin_layout LyX-Code
+    AuthType Basic
+\end_layout
+
+\begin_layout LyX-Code
+    AuthName "The Athomaris PHP Library"
+\end_layout
+
+\begin_layout LyX-Code
+    AuthBasicProvider file anon
+\end_layout
+
+\begin_layout LyX-Code
+    AuthUserFile /dev/null
+\end_layout
+
+\begin_layout LyX-Code
+    Require valid-user
+\end_layout
+
+\begin_layout LyX-Code
+    AuthBasicAuthoritative Off
+\end_layout
+
+\begin_layout LyX-Code
+    Anonymous_NoUserID off
+\end_layout
+
+\begin_layout LyX-Code
+    Anonymous *
+\end_layout
+
+\begin_layout LyX-Code
+    Order allow,deny
+\end_layout
+
+\begin_layout LyX-Code
+    Allow from all
+\end_layout
+
+\begin_layout LyX-Code
+</Directory>
+\end_layout
+
+\begin_layout LyX-Code
+Alias /demo_basic "/www/athomaris/demo_basic"
+\end_layout
+
+\begin_layout LyX-Code
+Alias /demo_advanced "/www/athomaris/demo_advanced"
+\end_layout
+
+\begin_layout LyX-Code
+Alias /demo_business "/www/athomaris/demo_business"
+\end_layout
+
+\begin_layout Standard
+Make sure the 
+\family typewriter
+authn_anon
+\family default
+ module of Apache is loaded.
+ Many Linux distributions have it disabled by default.
+ Typically, you need to add it to /etc/sysconfig/apache2 or to some file
+ in 
+\family typewriter
+/etc/apache2/sysconfig.d/
+\family default
+ or to another place within 
+\family typewriter
+/etc/apache2/
+\family default
+ (distribution specific).
+ Afterwards don't forget to restart Apache!
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Important:
+\series default
+ if you communicate over 
+\series bold
+untrusted networks
+\series default
+, is is 
+\emph on
+highly recommended
+\emph default
+ to use 
+\family typewriter
+\series bold
+https
+\family default
+\series default
+ instead of 
+\family typewriter
+http
+\family default
+.
+ Otherwise an attacker will be able to watch your passwords from the basic
+ HTTP authentification.
+ You will need an 
+\family typewriter
+SSL
+\family default
+ certificate for 
+\family typewriter
+https
+\family default
+.
+ Creating or obtaining certificates and configuring Apache for 
+\family typewriter
+https
+\family default
+ is beyond the scope of this paper.
+ Please consult the Apache documentation and various web resources for that.
+\end_layout
+
+\begin_layout Standard
+Further potential pitfalls: if you want to process large data fields such
+ as TEXT or BLOBs, you probably have to increase the 
+\emph on
+memory limits
+\emph default
+ of PHP.
+ Some distributions use rather small defaults.
+\end_layout
+
+\begin_layout Subsection
+Demo Projects
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Demo-Projects"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Provided you have a local MySQL installation running, you can immediately
+ use the demo projects 
+\family typewriter
+/www/athomaris/demo_basic/
+\family default
+, 
+\family typewriter
+/www/athomaris/demo_advanced/
+\family default
+, and 
+\family typewriter
+/www/athomaris/demo_business/
+\family default
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Inspect the files in the demo project.
+ There are not many, and they are rather small and simple.
+ For example, 
+\family typewriter
+config.php
+\family default
+ in each of the demo directories describes the connections to database servers
+ and their drivers.
+ The others mostly include generic code from the 
+\family typewriter
+/www/athomaris/common/
+\family default
+ subdirectory.
+\end_layout
+
+\begin_layout Standard
+The database schema in 
+\family typewriter
+/www/athomaris/demo_basic/schema/schema01.php
+\family default
+ is the most central place you will have to deal with.
+ Its content should be rather self-explanatory for PHP programmers.
+ Details on it will be provided later.
+\end_layout
+
+\begin_layout Standard
+Use a web browser such as Firefox or Konqueror to open the following URL:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+http://localhost/demo_basic/create_schema.php
+\end_layout
+
+\begin_layout Standard
+If your Apache setup is correct, your browser will ask you for a username
+ and a password (using the basic authentification mechanism of the HTTP
+ protocol).
+ Type in 
+\family typewriter
+root
+\family default
+ and the appropriate root password for your MySQL server.
+ Note that you 
+\emph on
+must
+\emph default
+ have already set a root password for MySQL (which is not the same as the
+ root password of the operating system), and you really 
+\emph on
+need
+\emph default
+ 
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Exception: you are a database expert who knows how to grant appropriate
+ privileges to other users.
+\end_layout
+
+\end_inset
+
+root access in order to be able to create a new database
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Some Linux distros deliver MySQL without any root password.
+ In such a case Athomaris will not work, because passwords are mandatory.
+ You may use the following command for setting an initial password:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+mysqladmin -u root password 
+\begin_inset Quotes eld
+\end_inset
+
+secret
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+.
+ If you have trouble with that, consult the MySQL and the Apache documentation,
+ inspect the logfiles, and probably turn on debugging of some of the components.
+\end_layout
+
+\begin_layout Standard
+After successfully gaining root access, you will see a 
+\emph on
+preview
+\emph default
+ screen with MySQL commands.
+ Look at them.
+ If you want to actually execute these commands, click on the button named
+ 
+\family typewriter
+demo_advanced
+\family default
+.
+ If all is ok, you will be notified that the database has been created.
+\end_layout
+
+\begin_layout Standard
+If you like, you may check the database by hand, for example:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+mysql -p -u root demo_basic
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+show tables;
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+describe foos;
+\end_layout
+
+\begin_layout Standard
+You can see that the schema definition from 
+\family typewriter
+schema/schema01.php
+\family default
+ has been applied pretty straightforward.
+ However, some additional columns have been 
+\emph on
+automatically
+\emph default
+ created.
+ Some of them have to do with 
+\emph on
+temporal databases
+\emph default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Temporal-tables"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+Now let us change the schema, by adding a new column.
+ Copy the file 
+\family typewriter
+schema/schema01.php
+\family default
+ to 
+\family typewriter
+schema/schema02.php
+\family default
+ without altering the old version s
+\family typewriter
+chema01.php
+\family default
+, and afterwards edit the new version 
+\family typewriter
+schema02.php
+\family default
+ in the following way:
+\end_layout
+
+\begin_layout Standard
+Copy the definition of 
+\family typewriter
+foo_name 
+\family default
+including its sub-structure, and rename it to 
+\family typewriter
+foo_somethingelse
+\family default
+.
+ You may change the 
+\family typewriter
+TYPE
+\family default
+ field to a different type, such as 
+\family typewriter
+varchar(50)
+\family default
+, or change the 
+\family typewriter
+DEFAULT
+\family default
+ value to something you like.
+ A list of available types will be provided later.
+ Note that you must always provide a 
+\family typewriter
+DEFAULT
+\family default
+ value when you want to create a 
+\emph on
+new
+\emph default
+ column in the database.
+ You can also change the 
+\family typewriter
+DEFAULT
+\family default
+ of an existing column, or even remove a column (but please don't remove
+ columns mentioned in UNIQUE keys - they are vital).
+\end_layout
+
+\begin_layout Standard
+After modification of 
+\family typewriter
+schema02.php
+\family default
+, just open the URL for 
+\family typewriter
+create_schema.php
+\family default
+ again.
+ Now you will see different SQL statements, in particular 
+\family typewriter
+alter table
+\family default
+ or 
+\family typewriter
+drop column
+\family default
+ statements, depending on what you have changed between 
+\family typewriter
+schema01.php
+\family default
+ and 
+\family typewriter
+schema02.php
+\family default
+.
+ When executed, these statements will update the database to the new version
+ of the schema.
+\end_layout
+
+\begin_layout Standard
+In order to use the database, open the following URL:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+http://localhost/demo_basic/
+\end_layout
+
+\begin_layout Standard
+You can enter new tuples to the database, view the data in various orders
+ and selections, update and delete the data as you like.
+ It should be rather self-explanatory what you can do.
+ Just try it!
+\end_layout
+
+\begin_layout Standard
+If you like, you may change the schema again using the name 
+\family typewriter
+schema03.php
+\family default
+, after you already have populated your tables with data.
+\end_layout
+
+\begin_layout Standard
+If you want to customize the user interface, look at the file 
+\family typewriter
+/www/athomaris/common/tpl/generic/generic.tpl
+\family default
+ and copy some of its template definitions over to 
+\family typewriter
+/www/athomaris/demo_basic/lang/generic/generic.php
+\family default
+.
+ There you can modify the HTML code in it (details on the template syntax,
+ macro substitutions, hooks etc will be provided later).
+ After having done that, you must restart the template compiler via the
+ following URL:
+\begin_inset CommandInset label
+LatexCommand label
+name "Template-Compiler"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+http://localhost/demo_basic/translate_tpl.php
+\end_layout
+
+\begin_layout Standard
+When run successfully, it translates all the templates to PHP code which
+ you can find in 
+\family typewriter
+compiled/generic_generic.php
+\family default
+.
+ This code does not aim to be readable, but is very fast on execution!
+\end_layout
+
+\begin_layout Subsection
+New Projects
+\end_layout
+
+\begin_layout Standard
+The easiest way to start a new project is by copying one of the demo projects
+ (or any other project) to a new subdirectory.
+ For example
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+cd /www/athomaris/; sudo cp -a demo_advanced myproject
+\end_layout
+
+\begin_layout Standard
+It is important to use the 
+\family typewriter
+-a
+\family default
+ flag as 
+\family typewriter
+root
+\family default
+, in order to keep some symlinks intact and to ensure that the subdirectory
+ 
+\family typewriter
+compiled/
+\family default
+ remains owned by the Apache user and is writeable by it.
+\end_layout
+
+\begin_layout Standard
+Afterwards, you should configure Apache such that your new directory is
+ accessible via HTTP over some URL.
+ For example, add the following to 
+\family typewriter
+httpd.conf
+\family default
+:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+Alias /myproject "/www/athomaris/myproject"
+\end_layout
+
+\begin_layout Standard
+Don't forget to restart Apache after that! You can then access the new project
+ over the following URLs:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+http://localhost/myproject/create_schema.php
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+http://localhost/myproject/translate_tpl.php
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+http://localhost/myproject/
+\end_layout
+
+\begin_layout Standard
+As always with PHP projects, you may add any new files and subdiretories
+ as you like.
+ To ease your life as a developer, most of your work can be delegated to
+ the Athomaris PHP library just by adding the following lines:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+require_once(
+\begin_inset Quotes eld
+\end_inset
+
+config.php
+\begin_inset Quotes erd
+\end_inset
+
+);
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+require_once(
+\begin_inset Quotes eld
+\end_inset
+
+$BASEDIR/../common/app.php
+\begin_inset Quotes erd
+\end_inset
+
+);
+\end_layout
+
+\begin_layout Standard
+and calling only a few functions.
+ Details are explained later.
+\end_layout
+
+\begin_layout Section
+Basic configuration
+\end_layout
+
+\begin_layout Subsection
+Basic 
+\family typewriter
+$SCHEMA
+\family default
+ configuration
+\end_layout
+
+\begin_layout Standard
+The subdirectory 
+\family typewriter
+schema/
+\family default
+ contains files of the form 
+\family typewriter
+schema
+\emph on
+xx
+\emph default
+.php
+\family default
+ where 
+\family typewriter
+\emph on
+xx
+\family default
+\emph default
+ must be a number.
+ The only purpose of these files is to define different versions of 
+\family typewriter
+$SCHEMA
+\family default
+ and 
+\family typewriter
+$EXTRA
+\family default
+.
+ In this section, only 
+\family typewriter
+$SCHEMA
+\family default
+ is explained.
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+$SCHEMA
+\family default
+ is a nested PHP structure.
+ 
+\end_layout
+
+\begin_layout Standard
+The outmost level of $SCHEMA is a PHP hash indexed by 
+\emph on
+table names
+\emph default
+, obeying standard identifier syntax.
+ All table names in the system must be globally unique.
+ By default, the PHP table name is also used as SQL table name.
+ This default association can be overridden via the 
+\family typewriter
+SQLNAME
+\family default
+ attribute (see later).
+\end_layout
+
+\begin_layout Subsubsection
+Table Definitions in 
+\family typewriter
+$SCHEMA
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Table-Definitions-in-$SCHEMA"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Each table is described by a nested PHP hash which may contain some of the
+ following attributes:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+FIELDS
+\family default
+ => 
+\emph on
+hash
+\emph default
+ describing the database columns.
+ No default.
+\begin_inset Newline newline
+\end_inset
+
+This sub-structure is described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:FIELDS"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+TEMPORAL
+\family default
+ => 
+\family typewriter
+true
+\family default
+ or 
+\family typewriter
+false
+\family default
+.
+ Defaults to 
+\family typewriter
+true
+\family default
+ when omitted.
+\begin_inset Newline newline
+\end_inset
+
+When a table is created as a temporal table, some special 
+\family typewriter
+FIELD
+\family default
+s are automatically added by default.
+ Details are described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Temporal-tables"
+
+\end_inset
+
+.
+\begin_inset Newline newline
+\end_inset
+
+When 
+\family typewriter
+TEMPORAL
+\family default
+ is 
+\family typewriter
+false
+\family default
+, no 
+\family typewriter
+FIELD
+\family default
+s are automatically added, not even the default primary key 
+\family typewriter
+\emph on
+tablename
+\emph default
+_id
+\family default
+.
+ Thus you 
+\emph on
+must
+\emph default
+ create that explicitly, and you 
+\emph on
+must
+\emph default
+ add a 
+\family typewriter
+PRIMARY
+\family default
+ definition (see below).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+SINGULAR
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ When omitted, it defaults to the tablename without trailing 
+\begin_inset Quotes eld
+\end_inset
+
+s
+\begin_inset Quotes erd
+\end_inset
+
+.
+\begin_inset Newline newline
+\end_inset
+
+The Athomaris convention is to use English plural forms for table names,
+ in contrast to column names which have the corresponding singular form.
+ This way, (generated) SQL code becomes better understandable for humans
+ (and foreign code bypassing the Athomaris PHP library becomes more intuitive).
+ For example, table 
+\family typewriter
+foos
+\family default
+ uses column names such 
+\family typewriter
+foo_id
+\family default
+ (here as the primary key).
+ Because there are some linguistic exceptions in English (e.g.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+classes
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\begin_inset Formula $\rightarrow$
+\end_inset
+
+ 
+\begin_inset Quotes eld
+\end_inset
+
+class
+\begin_inset Quotes erd
+\end_inset
+
+), you can set the singular form here.
+ The singular is used as a basis for automatic creation of column names,
+ such 
+\family typewriter
+*_id
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+PRIMARY
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Name of the primary key.
+ Defaults to 
+\family typewriter
+\emph on
+singulartablename
+\emph default
+_id
+\family default
+ when omitted.
+\begin_inset Newline newline
+\end_inset
+
+Normally this attribute is determined by default.
+ When 
+\family typewriter
+TEMPORAL
+\family default
+ is 
+\family typewriter
+false
+\family default
+, or when interfacing with external databases having different schema convention
+s, you can set a different name here.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+DB
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ References a database name from 
+\family typewriter
+$CONFIG
+\family default
+.
+ When omitted, it defaults to the first entry in 
+\family typewriter
+$CONFIG
+\family default
+.
+\begin_inset Newline newline
+\end_inset
+
+Use this when you maintain multiple database connections in parallel.
+ Details on $CONFIG are in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:$CONFIG-configuration"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+ENGINE
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Only used for MySQL.
+ Defaults to 
+\family typewriter
+MyISAM
+\family default
+ when omitted.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+UNIQUE
+\family default
+ => 
+\emph on
+array
+\emph default
+ of strings.
+ Names of secondary keys.
+ No default.
+ Can be omitted.
+\begin_inset Newline newline
+\end_inset
+
+Tells which columns or column combinations should be uniquely indexed.
+ If you want to create a combined index, just use a string where the column
+ names are comma-separated.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+INDEX
+\family default
+ => 
+\emph on
+array
+\emph default
+ of strings.
+ Names of indexes.
+ No default.
+ Can be omitted.
+\begin_inset Newline newline
+\end_inset
+
+Works like 
+\family typewriter
+UNIQUE
+\family default
+.
+ The only difference is that non-unique indexes are created.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+ACCESS
+\family default
+ => 
+\emph on
+string
+\emph default
+ with one of the values 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+r
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+,
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+R
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+,
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+w
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+,
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+W
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+,
+\family typewriter
+ or 
+\begin_inset Quotes eld
+\end_inset
+
+n
+\begin_inset Quotes erd
+\end_inset
+
+.
+
+\family default
+ Defaults to 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+W
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+ Can be omitted.
+\begin_inset CommandInset label
+LatexCommand label
+name "des:ACCESS"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Maximum access rights for the 
+\emph on
+whole table
+\emph default
+ which cannot be exceeded by anybody except 
+\family typewriter
+root
+\family default
+.
+ The access right codes have the following meaning:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+n no access at all.
+\end_layout
+
+\begin_layout Description
+r read access to the database, but not displayed to the user GUI.
+\end_layout
+
+\begin_layout Description
+R read access to both the database and for the user.
+\end_layout
+
+\begin_layout Description
+w write access to the database, but the user can only read it over the GUI.
+\end_layout
+
+\begin_layout Description
+W write access for both the database and for the user.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+...
+ NYD
+\end_layout
+
+\begin_layout Subsubsection
+
+\family typewriter
+FIELDS
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:FIELDS"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+TYPE
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ No default.
+ Cannot be omitted.
+\begin_inset Newline newline
+\end_inset
+
+describes the SQL type of the column.
+ Valid types are:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+int,
+\begin_inset space ~
+\end_inset
+
+smallint,
+\begin_inset space ~
+\end_inset
+
+bigint,
+\begin_inset space ~
+\end_inset
+
+int(
+\emph on
+n
+\emph default
+)
+\family default
+ Integers (with number of decimal digits 
+\emph on
+
+\begin_inset Formula $n$
+\end_inset
+
+
+\emph default
+).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+bool,
+\begin_inset space ~
+\end_inset
+
+boolean
+\family default
+ Integers with allowed values 
+\begin_inset Formula $0$
+\end_inset
+
+ and 
+\begin_inset Formula $1$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+char(n),
+\begin_inset space ~
+\end_inset
+
+varchar(n)
+\family default
+ Strings, with lenght or maximum length 
+\begin_inset Formula $n$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+datetime,
+\begin_inset space ~
+\end_inset
+
+time,
+\begin_inset space ~
+\end_inset
+
+timestamp
+\family default
+ See corresponding SQL types.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+text,
+\begin_inset space ~
+\end_inset
+
+tinytext,
+\begin_inset space ~
+\end_inset
+
+mediumtext,
+\begin_inset space ~
+\end_inset
+
+longtext
+\family default
+ Most databases store variable-length texts columns in a seaparate heap,
+ not in the data record.
+ This affects nonfunctional access properties at runtime.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+DEFAULT
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ No default.
+ Can be omitted, but strongy discouraged.
+\begin_inset Newline newline
+\end_inset
+
+Best practice is to always provide defaults for any column, and to use some
+ value which indicates that initialization has been omitted.
+\begin_inset Newline newline
+\end_inset
+
+The 
+\emph on
+string
+\emph default
+ must denote SQL code.
+ If you want 
+\family typewriter
+NULL
+\family default
+ as default value, just denote 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+null
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+ If you want a string, you have to provide the quotes within the string,
+ such as 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+'text'
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+CHANGE_FROM
+\family default
+ => 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+old_columnname
+\family default
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+.
+ No default, should be omitted if not necessary.
+\begin_inset Newline newline
+\end_inset
+
+Specifies that a column name has changed between two schema revisions (in
+ 
+\family typewriter
+schema/schema
+\emph on
+xx
+\emph default
+.php
+\family default
+).
+ In essence, this will be translated to 
+\family typewriter
+alter table ...
+ change column ...
+
+\family default
+ statements.
+ Attention! Don't forget to remove the 
+\family typewriter
+CHANGE_FROM
+\family default
+ assignment in the 
+\emph on
+following
+\emph default
+ revision, otherwise it would try to rename the (then non-existing) old
+ column once more!
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+LENGTH
+\family default
+ => 
+\emph on
+array(a, b)
+\emph default
+.
+ When omitted, array(0, 
+\emph on
+maxlen
+\emph default
+) is used as default.
+\begin_inset Newline newline
+\end_inset
+
+Specifies the minium and maximum allowed string lengths 
+\begin_inset Formula $a$
+\end_inset
+
+ and 
+\begin_inset Formula $b$
+\end_inset
+
+.
+ This is translated to a 
+\family typewriter
+check
+\family default
+ clause in some SQL dialects, and to a runtime check where SQL is incapable
+ of directly handling this.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+REGEX
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ No default.
+ May be omitted.
+\begin_inset Newline newline
+\end_inset
+
+Create runtime checks (or in some SQL dialects even 
+\family typewriter
+check
+\family default
+ clauses) which ensure that the value obeys the given regular expression.
+ The regular expression must be in Perl syntax, enclosed in 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+/.../
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+REFERENCES
+\family default
+ => 
+\emph on
+hash
+\emph default
+.
+ No default.
+ May be omitted.
+\begin_inset Newline newline
+\end_inset
+
+Speficies that referential integrity between tables must be obeyed at runtime.
+ This works even with MySQL versions which don't support referential integrity
+ such as MyISAM tables (appropriate checking code will be automatically
+ executed by the Athomaris PHP Library at runtime).
+ The 
+\emph on
+hash
+\emph default
+ must obey the following structure:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+\emph on
+\begin_inset Quotes eld
+\end_inset
+
+tablename.fieldname
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+\emph default
+ => 
+\emph on
+array(keystrings)
+\emph default
+.
+ The 
+\family typewriter
+.
+\emph on
+fieldname
+\family default
+\emph default
+ may be omitted when it has the name as the current column (corresponding
+ to a 
+\emph on
+natural join
+\emph default
+ possibility).
+ The keystrings must be one or more of the following indicating the well-known
+ ANSI SQL meaning:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+on
+\begin_inset space ~
+\end_inset
+
+delete
+\begin_inset space ~
+\end_inset
+
+cascade
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+on
+\begin_inset space ~
+\end_inset
+
+delete
+\begin_inset space ~
+\end_inset
+
+set
+\begin_inset space ~
+\end_inset
+
+null
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+on
+\begin_inset space ~
+\end_inset
+
+update
+\begin_inset space ~
+\end_inset
+
+cascade
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+on
+\begin_inset space ~
+\end_inset
+
+update
+\begin_inset space ~
+\end_inset
+
+set
+\begin_inset space ~
+\end_inset
+
+null
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+ACCESS
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Defaults to 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+W
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+ Can be omitted.
+\begin_inset Newline newline
+\end_inset
+
+Specifies maximum access rights for the current column.
+ The meaning of the code letters is the same as already described at 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "des:ACCESS"
+
+\end_inset
+
+.
+ The only difference is the granularity level, which is column granularity
+ here.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+OPTIONS
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ No default.
+ Should be omitted.
+\begin_inset Newline newline
+\end_inset
+
+This allows direct throughpassing of MySQL options.
+ Try to avoid this!
+\end_layout
+
+\begin_layout Subsubsection
+Temporal tables
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Temporal-tables"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+When a table 
+\family typewriter
+foos
+\family default
+ is created with 
+\family typewriter
+TEMPORAL => true
+\family default
+ (or by default), the following columns are automatically added to the table:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+foo_id
+\family default
+ => 
+\family typewriter
+array(
+\begin_inset Quotes eld
+\end_inset
+
+TYPE
+\begin_inset Quotes erd
+\end_inset
+
+=> 
+\begin_inset Quotes eld
+\end_inset
+
+bigint
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+DEFAULT
+\begin_inset Quotes erd
+\end_inset
+
+ => 
+\begin_inset Quotes eld
+\end_inset
+
+auto_increment
+\begin_inset Quotes erd
+\end_inset
+
+)
+\family default
+.
+\begin_inset Newline newline
+\end_inset
+
+This is the primary key of the table.
+ Best practice is to use this 
+\emph on
+only
+\emph default
+ as 
+\begin_inset Quotes eld
+\end_inset
+
+physical object id
+\begin_inset Quotes erd
+\end_inset
+
+ of data records, but 
+\series bold
+never
+\series default
+ for 
+\emph on
+logical
+\emph default
+ identification! Logical identification should always be done via additional
+ secondary keys (see 
+\family typewriter
+UNIQUE
+\family default
+ in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Table-Definitions-in-$SCHEMA"
+
+\end_inset
+
+).
+ This has the major advantage that the logical identification can be 
+\emph on
+changed
+\emph default
+ at any time, even consistently across the whole system if you define appropriat
+e 
+\family typewriter
+REFERENCES
+\family default
+ with 
+\family typewriter
+on update cascade
+\family default
+ on them (see section
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:FIELDS"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+foo_version
+\family default
+ => 
+\family typewriter
+array(
+\begin_inset Quotes eld
+\end_inset
+
+TYPE
+\begin_inset Quotes erd
+\end_inset
+
+=> 
+\begin_inset Quotes eld
+\end_inset
+
+timestamp
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+DEFAULT
+\begin_inset Quotes erd
+\end_inset
+
+ => 
+\begin_inset Quotes eld
+\end_inset
+
+current_timestamp
+\begin_inset Quotes erd
+\end_inset
+
+)
+\family default
+.
+\begin_inset Newline newline
+\end_inset
+
+The timestamp of any changes to this table is automatically recorded in
+ this column.
+ Thus you may use it for inspection of historical versions of tuples.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+foo_deleted
+\family default
+ => 
+\family typewriter
+array(
+\begin_inset Quotes eld
+\end_inset
+
+TYPE
+\begin_inset Quotes erd
+\end_inset
+
+=> 
+\begin_inset Quotes eld
+\end_inset
+
+boolean
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+DEFAULT
+\begin_inset Quotes erd
+\end_inset
+
+ => 
+\begin_inset Quotes eld
+\end_inset
+
+false
+\begin_inset Quotes erd
+\end_inset
+
+)
+\family default
+.
+\begin_inset Newline newline
+\end_inset
+
+Normally this value is always 
+\family typewriter
+false
+\family default
+.
+ When a tuple is 
+\emph on
+logically
+\emph default
+ deleted, it is not deleted in reality, but rather 
+\emph on
+marked
+\emph default
+ as deleted via this column.
+ This way, you can later inspect even deleted tuples via the temporal table
+ 
+\family typewriter
+foos_tp
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+foo_modified_from
+\family default
+ => 
+\family typewriter
+array(
+\begin_inset Quotes eld
+\end_inset
+
+TYPE
+\begin_inset Quotes erd
+\end_inset
+
+=> 
+\begin_inset Quotes eld
+\end_inset
+
+varchar(16)
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+DEFAULT
+\begin_inset Quotes erd
+\end_inset
+
+ => 
+\begin_inset Quotes eld
+\end_inset
+
+null
+\begin_inset Quotes erd
+\end_inset
+
+)
+\family default
+.
+\begin_inset Newline newline
+\end_inset
+
+This column automatically records the hostname or ip address of anybody
+ who does any modification on some tuple, provided that the access is done
+ via the PHP programming interface such as 
+\family typewriter
+db_insert()
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Programmers-API-Database"
+
+\end_inset
+
+).
+ If you bypass the default programming interface with your own hand-written
+ SQL code, it is highly advisable to provide a value here, because this
+ column is essential for humans if they try to comprehend anything in a
+ complex business application.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+foo_modified_by
+\family default
+ => 
+\family typewriter
+array(
+\begin_inset Quotes eld
+\end_inset
+
+TYPE
+\begin_inset Quotes erd
+\end_inset
+
+=> 
+\begin_inset Quotes eld
+\end_inset
+
+varchar(16)
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+DEFAULT
+\begin_inset Quotes erd
+\end_inset
+
+ => 
+\begin_inset Quotes eld
+\end_inset
+
+null
+\begin_inset Quotes erd
+\end_inset
+
+)
+\family default
+.
+\begin_inset Newline newline
+\end_inset
+
+Automatically records the login username of interactive users, or the scriptname
+ of PHP scripts when they do any modification on some tuple.
+\end_layout
+
+\begin_layout Standard
+When defining a table 
+\family typewriter
+foos
+\family default
+ as temporal, there will be two tables created behind the scenes:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+foos
+\family default
+ is a SQL view providing the non-temporal view on the table.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Non-temporal
+\begin_inset Quotes erd
+\end_inset
+
+ means that you cannot access old versions of a tuple, just as with ordinary
+ flat SQL tables where old values are always overwritten by updates.
+ From a user's perspective, this has (almost) the same semantics as a usual
+ SQL table, as if there were no temporal extensions at all.
+ The only exception is updating: a drawback of MySQL is that it does not
+ allow updates to most views.
+ Therefore you must use 
+\family typewriter
+foos_tp
+\family default
+ instead of 
+\family typewriter
+foos
+\family default
+ for updates if you want to bypass the default programming interface with
+ your own hand-written SQL code.
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+foos_tp
+\family default
+ is the actual table where all the temporal history is stored.
+ When a tuple is 
+\emph on
+logically updated
+\emph default
+ (e.g.
+ via 
+\family typewriter
+db_update()
+\family default
+ c.f.
+ section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Programmers-API-Database"
+
+\end_inset
+
+), a 
+\emph on
+new
+\emph default
+ tuple is 
+\emph on
+inserted
+\emph default
+ into foos_tp behind the scenes instead (aka COW = Copy On Update strategy).
+ The new tuple has the same 
+\family typewriter
+foo_id
+\family default
+, but a newer 
+\family typewriter
+foo_version
+\family default
+ timestamp.
+\end_layout
+
+\begin_layout Standard
+The relation between 
+\family typewriter
+foos_tp
+\family default
+ and 
+\family typewriter
+foos
+\family default
+ is illustrated by the following SQL code:
+\end_layout
+
+\begin_layout LyX-Code
+create view foos as
+\end_layout
+
+\begin_layout LyX-Code
+  select * from foos_tp t1 where t1.foo_version in
+\end_layout
+
+\begin_layout LyX-Code
+    (select max(t2.foo_version) from foos_tp t2
+\end_layout
+
+\begin_layout LyX-Code
+     where t1.foo_id = t2.foo_id and not t1.foo_deleted
+\end_layout
+
+\begin_layout LyX-Code
+    );
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout Standard
+As you can see, this filters out any old versions, as well as any tuples
+ which have been 
+\emph on
+logically
+\emph default
+ deleted.
+ However the 
+\begin_inset Quotes eld
+\end_inset
+
+deleted
+\begin_inset Quotes erd
+\end_inset
+
+ tuples remain accessible via 
+\family typewriter
+foos_tp
+\family default
+.
+\end_layout
+
+\begin_layout Subsubsection
+Initializing Data
+\end_layout
+
+\begin_layout Standard
+In order to populate your database with some initial data, you may use the
+ global variable 
+\family typewriter
+$INITDATA
+\family default
+ (see examples in 
+\family typewriter
+demo_basic
+\family default
+ and 
+\family typewriter
+demo_advanced
+\family default
+).
+ This is handy for startup tasks such as creating initial profiles and users.
+ If you omit initial data for tables 
+\family typewriter
+profiles
+\family default
+, 
+\family typewriter
+languages
+\family default
+, or 
+\family typewriter
+users
+\family default
+, some resonables defaults will be supplied (try 
+\family typewriter
+demo_advanced
+\family default
+ for details).
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+$INITDATA
+\family default
+ is a hash, indexed by table names.
+ Each table is associated an array of records.
+ In turn, each record is a hash which associates field names to field values.
+\end_layout
+
+\begin_layout Standard
+Note that initializing is only done on 
+\family typewriter
+create_schema.php
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Demo-Projects"
+
+\end_inset
+
+) when there is exactly one 
+\family typewriter
+schema/schema
+\emph on
+xx
+\emph default
+.php
+\family default
+.
+ When updating the schema to a newer version, you have to update your data
+ by hand (this is necessary because the initial data may be completely altered
+ in the meantime).
+\end_layout
+
+\begin_layout Subsection
+
+\family typewriter
+$CONFIG
+\family default
+ configuration
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:$CONFIG-configuration"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The variable 
+\family typewriter
+$CONFIG
+\family default
+ in
+\family typewriter
+ config.php
+\family default
+ describes the databases of a system and the connection methods for working
+ with them.
+ It is a hash with the following components:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+USE_AUTH
+\family default
+ => 
+\family typewriter
+true
+\family default
+ or 
+\family typewriter
+false
+\family default
+.
+ Defaults to 
+\family typewriter
+true
+\family default
+ when omitted.
+\begin_inset Newline newline
+\end_inset
+
+When set, the whole system works with profile-based user authentication
+ and authorization.
+ The following tables are automatically added to 
+\family typewriter
+$SCHEMA
+\family default
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+profiles
+\family default
+ A temporal table describing the access rights for a class of users.
+ This table contains the following columns:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+profile_name
+\family default
+ Secondary key, uniquely describing each profile.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+profile_descr
+\family default
+ Description, for comments and remarks.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+t_
+\emph on
+tablename
+\family default
+\emph default
+ columns of this form are automatically added and maintained by 
+\family typewriter
+create_schema.php
+\family default
+ for each other table in the system.
+ It specifies the access rights to the respective table in the same format
+ as described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "des:ACCESS"
+
+\end_inset
+
+.
+ The difference to the specification in $SCHEMA is that here we define 
+\emph on
+dynamic
+\emph default
+ access rights for each profile, which may 
+\emph on
+lower
+\emph default
+ the rights specified in the 
+\emph on
+static
+\emph default
+ 
+\family typewriter
+$SCHEMA
+\family default
+.
+ This way, some groups of users may be restricted to readonly access, or
+ be even denied acess to whole tables.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+f_
+\emph on
+tablename_fieldname
+\family default
+\emph default
+ Automatically added and maintained by 
+\family typewriter
+create_schema.php
+\family default
+ for all columns of all other tables in the system.
+ It specifies the access rights at column granularity.
+ It may further restrict the access rights as already restricted by 
+\family typewriter
+t_
+\emph on
+tablename
+\family default
+\emph default
+.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+languages
+\family default
+ A temporal table which may be used for internationalization of the user
+ interface.
+ Actually, it just defines which templates to use, so it may be also used
+ for creation of different 
+\emph on
+skins
+\emph default
+ (look-and-feel styles) in the same language.
+ It contains the following columns:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+language_name
+\family default
+ The secondary key uniquely describing the interface style.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+language_template
+\family default
+ The name of the compiled template file to use.
+ Defaults to 
+\family typewriter
+generic_generic.php
+\family default
+.
+ Details on the template compiler are in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Templates"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+language_descr
+\family default
+ Description, for comments and remarks.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+users
+\family default
+ A temporal table having the following columns:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+user_name
+\family default
+ Secondary key, uniquely describing each user.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+user_password
+\family default
+ This is stored in encrypted form (see the 
+\family typewriter
+password()
+\family default
+ function in MySQL).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+profile_name
+\family default
+ References 
+\family typewriter
+profiles
+\family default
+.
+ Thus it determines the access rights for the user.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+language_name
+\family default
+ References 
+\family typewriter
+languages
+\family default
+.
+ Thus it determines the user interface for the user.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+user_descr
+\family default
+ Description, for comments and remarks.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+When 
+\family typewriter
+USE_AUTH
+\family default
+ is 
+\family typewriter
+false
+\family default
+, these tables are neither created nor used.
+ The login authentication process just passes the username and password
+ credentials to the database and hopes to get a connection with the necessary
+ access rights.
+ Since there is no profile info about runtime access permissions, only the
+ 
+\family typewriter
+ACCESS
+\family default
+ attributes can be used for 
+\emph on
+static
+\emph default
+ customization of the UI.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+USE_ENGINE
+\family default
+ => 
+\family typewriter
+true
+\family default
+ or 
+\family typewriter
+false
+\family default
+.
+ Defaults to 
+\family typewriter
+false
+\family default
+.
+ Can be omitted.
+\begin_inset Newline newline
+\end_inset
+
+Specifies that additional tables for the business process engine shall be
+ added to 
+\family typewriter
+$SCHEMA
+\family default
+.
+ Details are in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Business-Process-Engine"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+CONNECTIONS
+\family default
+ => 
+\emph on
+hash
+\emph default
+.
+ No default.
+ Cannot be omitted.
+\begin_inset Newline newline
+\end_inset
+
+Describes the connections to databases.
+ It has the form 
+\family typewriter
+\emph on
+connection_name
+\family default
+\emph default
+ => 
+\emph on
+hash
+\emph default
+, where 
+\family typewriter
+\emph on
+connection_name
+\family default
+\emph default
+ is an arbitrary internal identifier which may be used in 
+\family typewriter
+DB
+\family default
+ specifications of 
+\family typewriter
+$SCHEMA
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Table-Definitions-in-$SCHEMA"
+
+\end_inset
+
+).
+ The 
+\emph on
+hash
+\emph default
+ is two or more associations from the following:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+MASTER
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ No default.
+ Cannot be omitted.
+\begin_inset Newline newline
+\end_inset
+
+Hostname of the database server.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+DRIVER
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Defaults to 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+mysql
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ when omitted.
+\begin_inset Newline newline
+\end_inset
+
+Currently this is the only driver, but others are planned.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+BASE
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ No default.
+ Cannot be omitted.
+\begin_inset Newline newline
+\end_inset
+
+Name of the database (see 
+\family typewriter
+show databases
+\family default
+ command in most SQL dialects).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+USER
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ No default.
+ Can and should be omitted.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+PASSWD
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ No default.
+ Can and should be omitted.
+\begin_inset Newline newline
+\end_inset
+
+Although you can provide usernames and passwords here, this is considered
+ 
+\series bold
+\emph on
+bad practice
+\series default
+\emph default
+.
+ When someone hacks your 
+\family typewriter
+wwwrun
+\family default
+ account, he can read your passwords in plaintext.
+ Instead, when you omit these parameters here, the login credentials from
+ the Apache authentification is used as database access credentials at runtime.
+ Many system designers try to avoid the overhead of maintaining database
+ access rights for individual users.
+ The Athomaris PHP Library 
+\emph on
+automates
+\emph default
+ this task: Whenever an entry in 
+\family typewriter
+users
+\family default
+ is created or updated via 
+\family typewriter
+db_insert()
+\family default
+ or 
+\family typewriter
+db_update()
+\family default
+, the database acess rights (e.g.
+ in MySQL this is the global table 
+\family typewriter
+mysql.user
+\family default
+) are automatically updated 
+\emph on
+in sync
+\emph default
+ with that.
+ This works even when a 
+\family typewriter
+profile
+\family default
+ is altered or when the foreign key 
+\family typewriter
+profile_name
+\family default
+ is changed.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+SLAVES
+\family default
+ => 
+\emph on
+array
+\emph default
+ of strings.
+ No default.
+ Can be omitted.
+\begin_inset Newline newline
+\end_inset
+
+When using master/slave replication in MySQL, you can provide a list of
+ slave servers.
+ 
+\emph on
+Readonly
+\emph default
+ accesses are directed to (randomly selected) servers from the list, in
+ preference to the master server.
+ This way, the overall system load can be spread more smoothly.
+ This is important in environments dominated by database reads.
+ This feature is crucial for enterprise-grade scalability.
+\end_layout
+
+\end_deeper
+\begin_layout Section
+Basic Customization
+\end_layout
+
+\begin_layout Subsection
+Link-Headers
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Link-Headers"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+By default, each page starts with links to all tables from $SCHEMA.
+ You can customize these and add your own links as follows:
+\end_layout
+
+\begin_layout Standard
+Define a global variable $LINKS (best practice: do this in 
+\family typewriter
+config.php
+\family default
+) which is a hash indexed by categories.
+ Each category will later be displayed in a different line.
+ The default links are all in the default category 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+Tables:
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+ In turn, a link category is another hash indexed by 
+\emph on
+link names
+\emph default
+ (see 
+\family typewriter
+{textlist}
+\family default
+ in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Templates"
+
+\end_inset
+
+).
+ In the default links, the link name is equal to the table name; in general
+ you may create you own names as you like.
+ Each link name may be associated with an arbitrary HTML href.
+ For example, the default links for project 
+\family typewriter
+demo_basic
+\family default
+ are constructed as follows:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+http://localhost/demo_basic/index.php?table=foos
+\end_layout
+
+\begin_layout Standard
+Hint: if you want to remove some of the default links, just define something
+ like
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+$LINKS[
+\begin_inset Quotes eld
+\end_inset
+
+Tables:
+\begin_inset Quotes erd
+\end_inset
+
+][
+\begin_inset Quotes eld
+\end_inset
+
+foos
+\begin_inset Quotes erd
+\end_inset
+
+] = 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+;
+\end_layout
+
+\begin_layout Standard
+Of course, by defining a non-empty string you can redirect it so something
+ else.
+ The whole default category 
+\family typewriter
+Tables:
+\family default
+ can be removed by
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+$LINKS[
+\begin_inset Quotes eld
+\end_inset
+
+Tables:
+\begin_inset Quotes erd
+\end_inset
+
+] = 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+;
+\end_layout
+
+\begin_layout Standard
+Notice that 
+\family typewriter
+undef($LINKS[
+\begin_inset Quotes eld
+\end_inset
+
+Tables:
+\begin_inset Quotes erd
+\end_inset
+
+])
+\family default
+ will not work because it is equivalent to non-defining 
+\family typewriter
+$LINKS
+\family default
+ at all, which triggers the default link creation.
+ When you remove the default category, you should provide 
+\emph on
+all
+\emph default
+ links by hand, otherwise your application would be completely link-less.
+\end_layout
+
+\begin_layout Subsection
+The Generic Template Mechanism
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Templates"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Templates are used to separate the presentation layer from the business
+ logic.
+ In other frameworks, this is called a 
+\begin_inset Quotes eld
+\end_inset
+
+Model-View-Controller
+\begin_inset Quotes erd
+\end_inset
+
+ (MVC) architecture.
+ While our model is maintained by 
+\family typewriter
+$SCHEMA
+\family default
+ / 
+\family typewriter
+$EXTRA
+\family default
+ and the controller is simply the Athomaris PHP Library invoked by Apache,
+ views (in that terminology) are implemented via our templates.
+\end_layout
+
+\begin_layout Standard
+Templates reside in ASCII files having the extension 
+\family typewriter
+.tpl
+\family default
+.
+ The template compiler (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Template-Compiler"
+
+\end_inset
+
+) finds all files with that extension and translates it into fast PHP code.
+\end_layout
+
+\begin_layout Standard
+At the outermost level, a template file can contain the following elements:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{include
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+filename
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+/}
+\family default
+ Includes another file as if its contents were written at the insertion
+ point.
+ After that, you may 
+\emph on
+redefine
+\emph default
+ any templates or textlists.
+ Since redefinitions replace the previous definition, you can easily create
+ variants of template sets this way.
+ In particular, new skins can be created rather quickly.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{textlist}...{/textlist}
+\family default
+ The content at 
+\family typewriter
+...
+
+\family default
+ must be a sequence of ASCII lines, each terminated by a newline.
+ Each line defines a simple macro via the following syntax:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+\emph on
+name
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+=
+\begin_inset space ~
+\end_inset
+
+substitution_text
+\family default
+ The usage of simple macros is explained later (see element 
+\family typewriter
+{text 
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+name
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+}
+\family default
+).
+ Example: change the default link-header category 
+\family typewriter
+Tables:
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Link-Headers"
+
+\end_inset
+
+) to something else by
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\family typewriter
+{textlist}
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+Tables: = Hey, here you can browse the following tables:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+{/textlist}
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+{template
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+name
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+}...{/template}
+\family default
+ Defines a new template.
+ The template compiler translates this into a PHP function 
+\family typewriter
+tpl_
+\emph on
+name
+\emph default
+($data) {...}
+\family default
+ which can be called like any ordinary PHP function.
+ When called, this function simply outputs the text between 
+\family typewriter
+{template
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+name
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+}
+\family default
+ and 
+\family typewriter
+{/template}
+\family default
+.
+ The text may contain further directives and macro expansions as follows:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+{$
+\emph on
+var
+\emph default
+/}
+\family default
+ Output the PHP parameter 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+var
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+, as provided to the template invocation.
+ If the substitution text contains any HTML special characters, they are
+ quoted to avoid XSS attacks onto your system.
+ Deeper levels of the 
+\family typewriter
+$data
+\family default
+ structure may be accessed via the syntax 
+\family typewriter
+{$
+\emph on
+var
+\emph default
+->subvar}
+\family default
+ which outputs 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+var
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+][
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+subvar
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+.
+ Note that 
+\family typewriter
+{$
+\emph on
+var
+\emph default
+->$
+\emph on
+subvar
+\emph default
+}
+\family default
+ would result in something different: 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+var
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+][$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+subvar
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+]]
+\family default
+.
+ As a simple rule of thumb, just remember that the number of 
+\family typewriter
+$
+\family default
+ signs in your code indicates nothing more but the number of substitutions
+ carried out at runtime.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{text
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+name
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+/}
+\family default
+ Output the simple macro defined in a 
+\family typewriter
+{textlist}
+\family default
+.
+ If 
+\family typewriter
+\emph on
+name
+\family default
+\emph default
+ does not exist anywhere, its name is outputted unmodified in place of the
+ non-existing definition (fallback).
+ Note there is no quote-protection against HTML code, because the 
+\family typewriter
+{textlist}
+\family default
+ should have been written by a trusted programmer who even 
+\emph on
+needs
+\emph default
+ to include raw HTML code for his purposes.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{text
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+var
+\emph default
+/}
+\family default
+ Same as before, but the 
+\emph on
+name
+\emph default
+ is (indirectly) fetched from 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+var
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+.
+ The same principle applies orthogonally to all examples where a string
+ in double quotes is used: instead of the string constant, you may always
+ use a variable instead.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{ascii
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+var
+\emph default
+/}
+\family default
+ Like 
+\family typewriter
+{$
+\emph on
+var
+\emph default
+}
+\family default
+, but the text is written in typewriter font (monospaced), blanks are translated
+ to 
+\family typewriter
+&nbsp;
+\family default
+, and newlines are translated into 
+\family typewriter
+<br/>
+\family default
+.
+ This way, a kind of 
+\begin_inset Quotes eld
+\end_inset
+
+verbatim output
+\begin_inset Quotes erd
+\end_inset
+
+ is produced.
+ Handy for displaying raw computer data which should be protected from HTML
+ interpretation.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{preview
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+var
+\emph default
+/}
+\family default
+ Same as 
+\family typewriter
+{ascii
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+var
+\emph default
+}
+\family default
+, but when the text is very long, it is abbreviated with 
+\family typewriter
+...
+
+\family default
+ and a link is displayed.
+ When the user clicks on the link, the full text will be displayed in a
+ new window.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{param
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+var
+\emph default
+/}
+\family default
+ Like 
+\family typewriter
+{$
+\emph on
+var
+\emph default
+}
+\family default
+, but URL escaping instead of HTML escaping is used.
+ Especially useful fro generating URL parameters like 
+\family typewriter
+?paramname={param $myvalue}
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{raw
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+var
+\emph default
+/} 
+\family default
+Dangerous! Like 
+\family typewriter
+{$
+\emph on
+var
+\emph default
+}
+\family default
+, but bypasses the HTML quote protection.
+ Use only if you really know what you are doing!
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{header
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+var
+\emph default
+/} Generate a raw HTML header.
+ This must be called 
+\emph on
+before
+\emph default
+ any other output.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{row
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+var
+\emph default
+/} 
+\family default
+Only for very special cases.
+ Assumes that 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+var
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+ is a structured data record.
+ This outputs an escaped string which encodes the whole record, such that
+ it can be decoded again via the library function 
+\family typewriter
+_tlp_decode_row()
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{printf
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+format
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+var
+\emph default
+1
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+var2
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+.../} 
+\family default
+Obvious semantics for C programmers (see also the function 
+\family typewriter
+sprintf()
+\family default
+ in PHP).
+ The output is quote-protected.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{var
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+name
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+=
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+expression
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+/}
+\family default
+ Assign a new value to 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+name
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+.
+ The 
+\family typewriter
+\emph on
+expression
+\family default
+\emph default
+ may be an arbitrary PHP expression which 
+\emph on
+must not contain any spaces
+\emph default
+, and you can access only the variable 
+\family typewriter
+$data
+\family default
+ and subfields thereof.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{unset
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+name
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+/}
+\family default
+ Deletes the variable 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+name
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{tpl
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+othername
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+/}
+\family default
+ Calls the template 
+\family typewriter
+tpl_
+\emph on
+othername
+\family default
+\emph default
+ with unchanged argument 
+\family typewriter
+$data
+\family default
+.
+ The template 
+\family typewriter
+\emph on
+othername
+\family default
+\emph default
+ must exist, otherwise an error is produced.
+ If you want to submit a different argument structure to the callee, you
+ can use one of the following variants:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+{tpl
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+name
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+($
+\emph on
+otherdata
+\emph default
+)/}
+\family default
+ Uses 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+otherdata
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+ instead of 
+\family typewriter
+$data
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{tpl
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+name
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+key1
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+=>
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+value1
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+key2
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+=>
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+var2
+\emph default
+,
+\begin_inset space ~
+\end_inset
+
+.../}
+\family default
+ The callee is provided with new or altered values for the given keys.
+ When you combine this with 
+\family typewriter
+{if}
+\family default
+, you can even do recursive calls.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+{hook
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+othername
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+/}
+\family default
+ Like 
+\family typewriter
+{tpl/}
+\family default
+, but no error is thrown if the callee does not exist.
+ This is handy for introducing self-documenting hooks, simplifying plugin
+ architectures.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{if
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+condition1
+\emph default
+}...{elseif
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+condition2
+\emph default
+}...{else}...{/if}
+\family default
+ Obvious semantics for PHP programmers.
+ Of course, the 
+\family typewriter
+{elseif}
+\family default
+ and 
+\family typewriter
+{else}
+\family default
+ parts may be omitted.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{loop
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+var
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+as
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+value
+\emph default
+}...{/loop}
+\family default
+ The loop body is repeated for each substructure member of 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+var
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+, and 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+value
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+ is assigned the corresponing value during the loop.
+ After the loop has finished, 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+value
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+ is restored to its previous value.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{loop
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+var
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+as
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+key
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+=>
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+value
+\emph default
+}...{/loop}
+\family default
+ Variant thereof: both 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+key
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+ and 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+value
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+ are assigned the hash key and the hash value of 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+var
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+ during the loop, respectively.
+ Both are restored afterwards.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+{loop
+\begin_inset space ~
+\end_inset
+
+as
+\begin_inset space ~
+\end_inset
+
+$
+\emph on
+value
+\emph default
+}...{/loop}
+\family default
+ Variant: by omitting 
+\family typewriter
+$
+\emph on
+var
+\family default
+\emph default
+, you can iterate over the top-level 
+\family typewriter
+$data
+\family default
+ instead of over one of its substructures.
+ Recommendation: try to avoid this in your designs, because later addition
+ of sibling fields is impossible.
+ Just use an additional dummy level like 
+\family typewriter
+$DATA
+\family default
+, even if you currently don't need it.
+\end_layout
+
+\end_deeper
+\begin_layout Subsection
+Default Templates
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Default-Templates"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The template mechanism as described in the previous section may be used
+ in almost arbitrary ways.
+ However, application programming can greatly improve efficiency if some
+ appropriate 
+\series bold
+conventions
+\series default
+ are introduced.
+\end_layout
+
+\begin_layout Standard
+The following conventions are used in 
+\family typewriter
+../common/app.php
+\family default
+ and are recommended as a basis for your own extensions:
+\end_layout
+
+\begin_layout Standard
+...
+\end_layout
+
+\begin_layout Section
+Advanced Features
+\end_layout
+
+\begin_layout Subsection
+Business Process Engine
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Business-Process-Engine"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Concepts
+\end_layout
+
+\begin_layout Standard
+Most business process langugages such as BPEL use a 
+\emph on
+procedural
+\emph default
+ paradigm for describing a workflow, similar to classical programming languages.
+ These models are extremely complex: the current BPEL specification prints
+ to 140 pages DINA4 in very small font.
+ In contrast, the Athomaris engine tries to remain simple, but to reach
+ at least the same 
+\emph on
+expressive power
+\emph default
+.
+ In future releases, we want to implement translators from BPEL to our model.
+\end_layout
+
+\begin_layout Standard
+The Athomaris business process engine uses the well-known concept of 
+\series bold
+finite automatons
+\series default
+ as established in computer science for decades.
+ The most important difference to the theoretical concept is 
+\series bold
+explicit state
+\series default
+: 
+\emph on
+automatic instantiation
+\emph default
+ of new automatons, as soon as a new tuple is added to the database.
+ In other words: a new finite automaton is automatically instantiated for
+ 
+\emph on
+any
+\emph default
+ tuple of the database (whether it be a newly inserted tuple, or a previously
+ modified tuple), working on that tuple independently from other automatons.
+ The only triggering condition is that some 
+\emph on
+rule
+\emph default
+ must match on that tuple.
+ Thanks to imlicitly matching 
+\emph on
+any
+\emph default
+ tuple, the system can achieve almost arbitrary parallelism and scalability.
+ If you want a purely sequential workflow, just don't produce new tuples
+ which would be 
+\begin_inset Quotes eld
+\end_inset
+
+watched
+\begin_inset Quotes erd
+\end_inset
+
+ by the Athomaris engine - instead just update the explicit state which
+ is kept inside your old tuple.
+ Another benefit of 
+\emph on
+explicit state
+\emph default
+ is that other applications can query and work with it.
+\end_layout
+
+\begin_layout Standard
+The Athomaris model is much more similar to a rule-based computation paradigm
+ called 
+\begin_inset Quotes eld
+\end_inset
+
+blackboard systems
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Another similar model is called 
+\begin_inset Quotes eld
+\end_inset
+
+coordination models and languages
+\begin_inset Quotes erd
+\end_inset
+
+ which has attracted a lot of research some years ago.
+\end_layout
+
+\begin_layout Standard
+Here is a small comparison of concepts between procedural models like BPEL
+ and our non-procedural 
+\begin_inset Quotes eld
+\end_inset
+
+descriptive
+\begin_inset Quotes erd
+\end_inset
+
+ approach:
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="3" columns="5">
+<features>
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+model
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+execution state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+parallelism
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+control flow
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+data flow
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+procedural
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+implicit
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+explicit
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+explicit
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+implicit
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rule-based
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+explicit
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+implicit
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+implicit
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+implicit
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Note: this description is for technicians only.
+ We deserve to write another (friendlier) description for business managers,
+ employing their terminology and buzzwords.
+\end_layout
+
+\begin_layout Subsubsection
+Usage
+\end_layout
+
+\begin_layout Standard
+The business process engine is enabled by 
+\family typewriter
+USE_BUSINESS_ENGINE => true
+\family default
+ in 
+\family typewriter
+$CONFIG
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:$CONFIG-configuration"
+
+\end_inset
+
+).
+ This adds some orchestration tables to $SCHEMA as described in the next
+ section.
+ After you have filled those tables which orchestration rules or have updated
+ them, you have to invoke the orchestration compiler via the following URL:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+http://localhost/demo_business/orchestrator.php
+\end_layout
+
+\begin_layout Standard
+In a future release of Athomaris, we want to have a graphical tool under
+ this URL where you can view and create orchestrations, probably even with
+ drag and drop.
+ For now, there is only a batchmode compiler.
+\end_layout
+
+\begin_layout Standard
+When compilation is successful, a file 
+\family typewriter
+compiled/engine_table.php
+\family default
+ is created.
+ Afterwards, you may invoke the business process engine from the commandline
+ by supplying username and password as arguments:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+cd /www/athomaris/demo_business; php business_engine.php 
+\begin_inset Quotes eld
+\end_inset
+
+root
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\begin_inset Quotes eld
+\end_inset
+
+secret
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Tables for the Orchestration Level
+\end_layout
+
+\begin_layout Standard
+Once the business process engine has been enabled via the 
+\family typewriter
+USE_BUSINESS_ENGINE
+\family default
+ attribute of 
+\family typewriter
+$CONFIG
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:$CONFIG-configuration"
+
+\end_inset
+
+), the following tables are automatically added to the schema:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+bps
+\family default
+ (abbreviation for 
+\emph on
+business processes
+\emph default
+).
+ This table mainly describes the 
+\emph on
+interface
+\emph default
+ to a business process.
+ When used standalone without joining to other tables such as 
+\family typewriter
+rules
+\family default
+, you get an 
+\emph on
+abstract
+\emph default
+ business process (borrowing terminology from other languages such as BPEL).
+ However, when you join this with 
+\family typewriter
+rules
+\family default
+ and 
+\family typewriter
+conts
+\family default
+ (see below), you get an 
+\emph on
+executable
+\emph default
+ business process.
+ In addition to the usual temporal columns such as 
+\family typewriter
+bp_id
+\family default
+ and 
+\family typewriter
+bp_version
+\family default
+, this table consists of the following columns:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+bp_name
+\family default
+ Secondary key.
+ This is used to uniquely identify each business process in the system.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+bp_statefield
+\family default
+ Defines on which 
+\emph on
+cell candidates
+\emph default
+ the business process should work.
+ Must be a string of the form 
+\family typewriter
+\emph on
+tablename
+\emph default
+.
+\emph on
+fieldname
+\family default
+\emph default
+ where 
+\family typewriter
+\emph on
+tablename
+\family default
+\emph default
+ is a valid name of another table from $SCHEMA and 
+\family typewriter
+\emph on
+fieldname
+\family default
+\emph default
+ a valid column name therein.
+\begin_inset Newline newline
+\end_inset
+
+Currently not yet implemented: if you leave this field empty, a kind of
+ 
+\begin_inset Quotes eld
+\end_inset
+
+procedural model
+\begin_inset Quotes erd
+\end_inset
+
+ will be executed.
+ State is choosen automatically, but the business process needs to be 
+\emph on
+called explicitly
+\emph default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+bp_input
+\family default
+s,
+\begin_inset space ~
+\end_inset
+
+
+\family typewriter
+bp_outputs 
+\family default
+Not yet implemented.
+ In future releases, this will be used for argument checking when calling
+ procedural-style business processes and sub-processes.
+ Leave it empty for now.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+bp_joinwith
+\family default
+ Usually left empty.
+ When you specify a comma-separated list of other table names, these tables
+ will be naturally joined with 
+\family typewriter
+\emph on
+tablename
+\family default
+\emph default
+.
+ In consequence, you may use their fields in 
+\family typewriter
+@{
+\emph on
+otherfield
+\emph default
+}
+\family default
+ macros (see below).
+ This way you can easily access related data.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+bp_comment
+\family default
+ For documentation at the orchestration level.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+rules
+\family default
+ This table describes the left-hand part of an automaton rule.
+ In addition to the usual temporal columns such as 
+\family typewriter
+rule_id
+\family default
+ and 
+\family typewriter
+rule_version
+\family default
+, it consists of the following columns:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+bp_name
+\family default
+ References 
+\family typewriter
+bps
+\family default
+.
+ Tells to which business process the current rule belongs.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+rule_prio
+\family default
+ This is used to define an 
+\emph on
+order
+\emph default
+ on all rules working for the same business process.
+ In other words, the combined secondary key of 
+\family typewriter
+rules
+\family default
+ is defined as 
+\family typewriter
+UNIQUE => array(
+\begin_inset Quotes eld
+\end_inset
+
+bp_name,rule_prio
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+rule_startvalue
+\family default
+ Defines which value a 
+\emph on
+cell candidate
+\emph default
+ must have if this rule shall 
+\begin_inset Quotes eld
+\end_inset
+
+fire
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Once the rule has fired on a candidate, the execution engine remembers
+ the identity of this firing cell (in the following, we mean this single
+ instance when we speak of 
+\begin_inset Quotes eld
+\end_inset
+
+cell
+\begin_inset Quotes erd
+\end_inset
+
+).
+ In order to allow multiple modes of testing and matching against cell candidate
+s, the following syntax must be used:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+=
+\emph on
+value
+\family default
+\emph default
+ Tests the candidate for equality with the given constant.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+%
+\emph on
+value
+\family default
+\emph default
+ Matches if 
+\family typewriter
+\emph on
+value
+\family default
+\emph default
+ is a substring of the candidate cell.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+/
+\emph on
+regex
+\emph default
+/
+\family default
+ Matches 
+\family typewriter
+\emph on
+regex
+\family default
+\emph default
+ against the candidate cell.
+ You can use Perl-compatible regular expressions with parentheses.
+ Later these may be used for 
+\family typewriter
+@{
+\emph on
+n
+\emph default
+}
+\family default
+ macro substitutions (see 
+\family typewriter
+rule_action
+\family default
+ below).
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+rule_condition
+\family default
+ Defines additional conditions which must hold if the rule shall fire.
+ The syntax is as follows:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\emph on
+<empty>
+\emph default
+ When left empty, the condition is always true, i.e.
+ there is no additional condition.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+?
+\emph on
+fieldname
+\emph default
+=
+\emph on
+value
+\family default
+\emph default
+ Similar to 
+\family typewriter
+rule_startvalue
+\family default
+, but you may test arbitrary other fields.
+ If you have used natural joins at 
+\family typewriter
+bp_joinwith
+\family default
+, this is very useful for formulating complex 
+\family typewriter
+rule_condition
+\family default
+s.
+ You may denote the same variants of tests as with 
+\family typewriter
+rule_fieldvalue
+\family default
+, for example 
+\family typewriter
+?
+\emph on
+fieldname
+\emph default
+%
+\emph on
+value
+\family default
+\emph default
+ or 
+\family typewriter
+?
+\emph on
+fieldname
+\emph default
+/
+\emph on
+regex
+\emph default
+/
+\family default
+.
+ You may specify multiple conditions on different lines; these are logically
+ anded together.
+ In a future release, we plan to support full-fledged boolean expressions.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+rule_location
+\family default
+ Not yet implemented.
+ This will specify the hostname or a group of hostnames where the rule should
+ be executed.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+rule_firevalue
+\family default
+ As soon as the rule fires, this value will be immediately written to the
+ cell.
+ This is used for proper restarting in case of system crashes.
+ It simply records the fact that a rule has fired and thus an action has
+ started (and probably must be rolled back).
+ You may provide one of the following syntaxes:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\emph on
+<empty>
+\emph default
+ When left empty, a reasonable default is written into the cell.
+ If the cell contained an integer number, this number is incremented by
+ 1.
+ If it contained a string, the string is 
+\emph on
+pre
+\emph default
+pended with 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+start_
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+ Recommendation: don't use the default, always specify this value explicitly!
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
++
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+n
+\family default
+\emph default
+ When starting with a plus sign followed by a blank and a number, this number
+ is added to the old cell contents.
+ Works only well if the cell had an integer type.
+\end_layout
+
+\begin_layout Description
+
+\emph on
+<anything
+\begin_inset space ~
+\end_inset
+
+else>
+\emph default
+ Will be literally copied to the cell.
+ However, it may contain 
+\family typewriter
+@
+\family default
+ macros, which are 
+\emph on
+substituted
+\emph default
+ as follows:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+@{
+\emph on
+fieldname
+\emph default
+}
+\family default
+ This is substituted by the value of 
+\family typewriter
+\emph on
+fieldname
+\family default
+\emph default
+.
+ It may stem from the matching tuple, or even from a more complex join delivered
+ by 
+\family typewriter
+bp_joinwith
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+@{
+\emph on
+n
+\emph default
+}
+\family default
+ When 
+\family typewriter
+\emph on
+n
+\family default
+\emph default
+ is a number, it is substituted by the 
+\family typewriter
+\emph on
+n
+\family default
+\emph default
+-th matching parenthesis of the regular expression denoted in 
+\family typewriter
+rule_startvalue
+\family default
+.
+ This way, you can build your own parser and propagate almost arbitrary
+ values from there.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+@(
+\emph on
+subcommand
+\begin_inset space ~
+\end_inset
+
+args...
+\emph default
+)
+\family default
+ This is substituted with the standard output of 
+\family typewriter
+\emph on
+subcommand
+\family default
+\emph default
+, executed in a subshell.
+ For example, you may do simple calculations such as 
+\family typewriter
+@(expr @{foo_state} + 1)
+\family default
+.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+rule_action
+\family default
+ Tells what to do when the rule fires.
+ The following kinds of actions are currently implemented (further actions
+ such as SOAP are planned):
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+script
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+command
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+args
+\emph default
+...
+
+\family default
+ Executes the given command with parameters in a Unix shell.
+ Inside your text, you may use the same macro substitutions as explained
+ earlier.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+url
+\begin_inset space ~
+\end_inset
+
+http://...
+
+\family default
+ This is equivalent to 
+\family typewriter
+script wget -O - 'http://...'
+\family default
+.
+ You can query arbitrary web or ftp servers this way.
+ When combined with the macro features explained above, you may easily create
+ arbitrary REST queries, just for example.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+insert
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+othertablename
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+fieldname1='value1',
+\begin_inset space ~
+\end_inset
+
+fieldname2='
+\emph default
+@{
+\emph on
+something
+\emph default
+}
+\emph on
+'
+\emph default
+...
+
+\family default
+ Inserts a new tuple into the database.
+ When some (other) rules are defined for this table, you can easily create
+ non-procedural sub-business-processes this way.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+rule_timeout
+\family default
+ When non-zero, each started business process is monitored.
+ Whenever it does not respond either on 
+\family typewriter
+stdout
+\family default
+ or 
+\family typewriter
+stderr
+\family default
+ within the given timeout (measured in seconds), a pseudo-event 
+\family typewriter
+TIMEOUT
+\family default
+ is generated (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Pseudo-Events"
+
+\end_inset
+
+).
+ The pseudo-event can then be handled as described below.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+rule_comment
+\family default
+ For documentation at the orchestration level.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Note that the table 
+\family typewriter
+rules
+\family default
+ describes only which business process to start under some preconditions.
+ The 
+\emph on
+consequences
+\emph default
+ of a business process execution are solely handled by 
+\emph on
+continuations
+\emph default
+:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+conts
+\family default
+ (abbreviation for 
+\emph on
+continuations
+\emph default
+).
+ This table describes the 
+\emph on
+possible consequences
+\emph default
+ of a rule execution.
+ In addition to the usual temporal columns such as 
+\family typewriter
+cont_id
+\family default
+, it consists of the following columns:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+bp_name
+\family default
+,
+\begin_inset space ~
+\end_inset
+
+
+\family typewriter
+rule_prio
+\family default
+ Together they references 
+\family typewriter
+rules
+\family default
+.
+ Tells to which rule the current continuation belongs.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+cont_prio
+\family default
+ This is used to define an order on all continuations which are 
+\emph on
+candidates
+\emph default
+ for handling the same rule invocation.
+ 
+\family typewriter
+conts
+\family default
+ has the following secondary key: 
+\family typewriter
+UNIQUE => array(
+\begin_inset Quotes eld
+\end_inset
+
+bp_name,rule_prio,cont_prio
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+cont_match
+\family default
+ Regular expression which matches 
+\emph on
+each line
+\emph default
+ from 
+\family typewriter
+stdout
+\family default
+ and 
+\family typewriter
+stderr
+\family default
+ of the 
+\family typewriter
+rule_action
+\family default
+, as well as pseudo events such as 
+\family typewriter
+TIMEOUT 
+\emph on
+n
+\family default
+\emph default
+ or 
+\family typewriter
+STATUS 
+\emph on
+n
+\family default
+\emph default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Pseudo-Events"
+
+\end_inset
+
+).
+ When the regular expression matches, the continuation is 
+\emph on
+selected
+\emph default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+cont_action
+\family default
+ Not yet implemented.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+cont_endvalue
+\family default
+ After this cont has been selected and the 
+\family typewriter
+cont_action
+\family default
+ has sucessfully completed, this value is written back into the cell.
+ Used to record the fact that the action has completed.
+ When you leave this empty, no value is written and the next continuation
+ according to 
+\family typewriter
+cont_prio
+\family default
+ is examined whether this can be selected (continue the candidate selection
+ process).
+ When non-empty, you may use the 
+\begin_inset Quotes eld
+\end_inset
+
++ n
+\begin_inset Quotes erd
+\end_inset
+
+ notation and macros as described at 
+\family typewriter
+rule_firevalue
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+cont_comment
+\family default
+ For documentation at the orchestration level.
+\end_layout
+
+\end_deeper
+\begin_layout Subsubsection
+Pseudo Events
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Pseudo-Events"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A pseudo event is generated by the business process execution engine, and
+ it is treated 
+\emph on
+uniformly
+\emph default
+ in the same way as a line of output from the script will be treated.
+ Currently the following events are defined:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+START
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+pid
+\family default
+\emph default
+ Tells that a script has started with process id 
+\family typewriter
+\emph on
+pid
+\family default
+\emph default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+STATUS
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+n
+\family default
+\emph default
+ Tells that the script has terminated with Unix status 
+\family typewriter
+exit(
+\emph on
+n
+\emph default
+)
+\family default
+.
+ Afterwards, you will never receive any further events.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+INSERT
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+ok
+\family default
+\emph default
+ Tells whether an 
+\family typewriter
+insert
+\family default
+ action was successful.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+TIMEOUT
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+n
+\family default
+\emph default
+ Tells that the action is hanging or the script has not responded in any
+ way for at least 
+\family typewriter
+\emph on
+n
+\family default
+\emph default
+ seconds.
+\end_layout
+
+\begin_layout Subsection
+Automatic Data Synchronization
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Data-Synchronization"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Subrecords and Display/Editing of References
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Subrecords"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Programmers API to the Database
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Programmers-API-Database"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This section is devoted to experienced PHP programmers for whom the default
+ 
+\family typewriter
+app.php
+\family default
+ is not enough, or if they like to program their own interfaces or complex
+ database access engines.
+\end_layout
+
+\begin_layout Standard
+...
+\end_layout
+
+\end_body
+\end_document

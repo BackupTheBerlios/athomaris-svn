@@ -1,0 +1,218 @@
+body {
+  background: #E0E0E0;
+  font-family: Arial;
+  font-size: 14px;
+}
+
+@media print{
+  body {
+    background: white;
+    font-family: Times;
+  }
+}
+
+@page {
+  orphans: 4;
+  widows: 4;
+}
+
+a {
+  padding-left: 2px;
+  padding-right: 2px;
+  color: darkblue;
+  text-decoration: none;
+}
+
+a:visited {}
+
+a:active {}
+
+a:hover {
+  color: red;
+  border-top: 2px solid white;
+  border-bottom: 2px solid white;
+}
+
+a:link {
+  text-decoration: none;
+}
+
+a.ajax {
+  padding-left: 2px;
+  padding-right: 2px;
+  color: darkblue;
+  font-size: 9pt;
+  text-decoration: none;
+}
+
+a.ajax:hover {
+  color: darkred;
+  border-top: 2px solid white;
+  border-bottom: 2px solid white;
+}
+
+div.links {
+  text-align: left;
+  color: darkred;
+  margin-top: 1.2em;
+  margin-bottom: 1.2em;
+}
+
+table {
+  margin-right: auto;
+  background-color: white;
+}
+
+@media print {
+table {
+  border-collapse: collapse;
+  border-color: silver;
+}
+}
+
+@media screen {
+table {
+  /*border-style: solid;*/
+}
+}
+
+tr {
+  text-align: left;
+  padding-left: 3px;
+  padding-right: 2px;
+  padding-top: 2px;
+  padding-bottom: 1px;
+  background-color: white;
+}
+
+td {
+  border-style: solid;
+  border-width: thin;
+}
+
+.outdated {
+  background-color: lightgrey;
+  border-top-style: dashed;
+  border-bottom-style: dashed;
+}
+
+.deleted {
+  background-color: red;
+}
+
+.noborder { 
+  border-style: none;
+}
+
+td.left {
+  text-align: left;
+}
+
+td.right {
+  text-align: right;
+}
+
+td.center {
+  text-align: center;
+}
+
+td.dbid {
+  background-color: lightgrey;
+  text-align: left;
+  font-size: 0.7em;
+}
+
+td.dbbad {
+  background-color: red;
+}
+
+td.dbverybad {
+  background-color: darkred;
+}
+
+td.dbother {
+  background-color: yellow;
+}
+
+td.dbgrey {
+  background-color: grey;
+}
+
+td.dbstrong {
+  border-width: thick;
+  background-color: lightgreen;
+}
+
+th {
+  background-color: lightgrey;
+  border-style: solid;
+  border-width: thin;
+  font-size: 0.7em;
+  padding-left: 3px;
+  padding-right: 2px;
+}
+
+th.left {
+  text-align: left;
+}
+
+th.right {
+  text-align: right;
+}
+
+th.center {
+  text-align: center;
+}
+
+@media screen {
+th {
+  //background-image: url(bluetab.gif);
+}
+}
+
+@media print {
+th {
+  background-color: silver;
+}
+}
+
+
+div.content {
+  float: left;
+  text-align: left;
+  padding-left: 30px;
+  padding-top: 0px;
+  margin-left: 2px;
+  margin-top: 25px;
+}
+
+.green { 
+  color: green;
+}
+
+.red { 
+  color: red;
+}
+
+div.main {
+  float: left;
+  /*width: 100%;*/
+  /*height: 800px;*/
+  margin-left: -8px;
+  margin-top: -8px;
+  padding: 0px;
+}
+
+#nr1 { 
+  float: left;
+}
+
+#nr2 { 
+  float: right;
+}
+
+div.tooltip { 
+  margin: 8px;
+  background-color: orange;
+}
+

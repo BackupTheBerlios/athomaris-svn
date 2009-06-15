@@ -1,0 +1,57 @@
+{TEMPLATE "table_test"}
+ <table>
+  <thead>
+   {LOOP $0 AS $key => $val}
+     <th>{TEXT $key/}</th>
+   {/LOOP}
+  </thead>
+  <tbody>
+   {LOOP AS $row}
+    <tr>
+     {LOOP $row AS $key => $val}
+      <td>{$val/}</td>
+     {/LOOP}
+    </tr>
+   {/LOOP}
+  </tbody>
+ </table>
+{/TEMPLATE}
+
+{TEMPLATE "myname"}
+ mist
+{/TEMPLATE}
+
+{TEMPLATE "othername"/}
+ kein mist: {TPL "myname"}
+{/TEMPLATE}
+
+{TEMPLATE "myname"}
+ {IF $var != 0}
+   xxx
+ {ELSEIF $xxx->yyy}
+   zzz
+ {/IF}
+
+ {LOOP $array AS $i}
+  loop1 
+  {$i/}
+  {TEXT $i/}
+  {PRINTF "%s %07s\n" $x $y}
+  {VAR $x = $y+1/}
+  {PHP $ii = $i;}
+ {/LOOP}
+
+ {LOOP AS $i => $j}
+  loop2 {$i} {$j} {$k}
+  Sauber: {$x->$y->z/}
+  {TPL "othername" ($i) "X" => "X", "Z" => $Z /}
+  {UNSET $var/}
+ {/LOOP}
+{/TEMPLATE}
+
+{TEXTLIST}
+ID1 = Sometext
+ID2 = Some other Text.
+{/TEXTLIST}
+
+{INCLUDE "lang/deutsch/testlist.inc"/}
