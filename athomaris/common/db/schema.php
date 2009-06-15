@@ -155,11 +155,7 @@ $SYNTAX_SCHEMA =
 	      "FIELDNAME_DELETED" => $SYNTAX_ID,
 	      "FIELDNAME_MODIFIED_FROM" => $SYNTAX_ID,
 	      "FIELDNAME_MODIFIED_BY" => $SYNTAX_ID,
-	      "ADD_PROFILE_TABLE" => "",
-	      "PROFILE_TABLE" => $SYNTAX_FIELD,
-	      "ADD_PROFILE_FIELD" => "",
-	      "PROFILE_FIELD" => $SYNTAX_FIELD,
-	      "USER_RESTRICT" => "",
+
 	      "FIELDS" =>
 	      array(
 		    "" => $SYNTAX_FIELD,
@@ -171,6 +167,13 @@ $SYNTAX_SCHEMA =
 	      "DB" => "",
 	      "ENGINE" => "",
 	      "ACCESS" => "/^[nrRwW]$/",
+
+	      // the following is questionable and will be changed to a better systematics
+	      "ADD_PROFILE_TABLE" => "",
+	      "PROFILE_TABLE" => $SYNTAX_FIELD,
+	      "ADD_PROFILE_FIELD" => "",
+	      "PROFILE_FIELD" => $SYNTAX_FIELD,
+	      "USER_RESTRICT" => "",
 	      ),
 	);
 

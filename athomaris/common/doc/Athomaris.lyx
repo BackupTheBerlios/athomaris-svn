@@ -1,4 +1,4 @@
-#LyX 1.6.3 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.0 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -509,11 +509,11 @@ root
 must
 \emph default
  have already set a root password for MySQL (which is not the same as the
- root password of the operating system), and you really 
+ root password of the operating system), and you normally really 
 \emph on
 need
 \emph default
- 
+
 \begin_inset Foot
 status open
 
@@ -524,7 +524,7 @@ Exception: you are a database expert who knows how to grant appropriate
 
 \end_inset
 
-root access in order to be able to create a new database
+ root access in order to be able to create a new database
 \begin_inset Foot
 status open
 
@@ -711,6 +711,48 @@ schema02.php
  of the schema.
 \end_layout
 
+\begin_layout Quote
+What's the 
+\begin_inset Quotes eld
+\end_inset
+
+big clue
+\begin_inset Quotes erd
+\end_inset
+
+ with that? When using advanced features such as 
+\family typewriter
+profiles
+\family default
+ (see 
+\family typewriter
+demo_advanced
+\family default
+) or when implicitly adding further tables (e.g.
+ for the business process engine, see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Business-Process-Engine"
+
+\end_inset
+
+), these tables will be automatically 
+\emph on
+kept consistent
+\emph default
+ with the global schema 
+\begin_inset Formula $\Longrightarrow$
+\end_inset
+
+ aka 
+\series bold
+schema management
+\series default
+.
+ In future Athomaris releases, we want to provide web interfaces for schema
+ management, then you no longer will need to deal with PHP variables.
+\end_layout
+
 \begin_layout Standard
 In order to use the database, open the following URL:
 \end_layout
@@ -722,7 +764,7 @@ http://localhost/demo_basic/
 \end_layout
 
 \begin_layout Standard
-You can enter new tuples to the database, view the data in various orders
+You can enter new tuples into the database, browse the data in various orders
  and selections, update and delete the data as you like.
  It should be rather self-explanatory what you can do.
  Just try it!
@@ -743,11 +785,18 @@ If you want to customize the user interface, look at the file
 \family default
  and copy some of its template definitions over to 
 \family typewriter
-/www/athomaris/demo_basic/lang/generic/generic.php
+/www/athomaris/demo_basic/lang/generic/generic.tpl
 \family default
 .
- There you can modify the HTML code in it (details on the template syntax,
- macro substitutions, hooks etc will be provided later).
+ There you may modify the HTML code (details on the template syntax, macro
+ substitutions, hooks are in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Templates"
+
+\end_inset
+
+).
  After having done that, you must restart the template compiler via the
  following URL:
 \begin_inset CommandInset label
@@ -772,7 +821,7 @@ When run successfully, it translates all the templates to PHP code which
 compiled/generic_generic.php
 \family default
 .
- This code does not aim to be readable, but is very fast on execution!
+ This code does not aim to be readable, but is very fast on execution.
 \end_layout
 
 \begin_layout Subsection
@@ -788,7 +837,7 @@ The easiest way to start a new project is by copying one of the demo projects
 \begin_layout Itemize
 
 \family typewriter
-cd /www/athomaris/; sudo cp -a demo_advanced myproject
+cd /www/athomaris/; sudo cp -a demo_business myproject
 \end_layout
 
 \begin_layout Standard
@@ -825,8 +874,8 @@ Alias /myproject "/www/athomaris/myproject"
 \end_layout
 
 \begin_layout Standard
-Don't forget to restart Apache after that! You can then access the new project
- over the following URLs:
+Don't forget to restart Apache after that! You should be able to access
+ the new project over the following URLs:
 \end_layout
 
 \begin_layout Itemize
@@ -885,6 +934,11 @@ $BASEDIR/../common/app.php
 \begin_layout Standard
 and calling only a few functions.
  Details are explained later.
+ If you want to learn how the default page layout works, inspect 
+\family typewriter
+common/generic.php
+\family default
+.
 \end_layout
 
 \begin_layout Section
@@ -1077,71 +1131,6 @@ PRIMARY
 \begin_layout Description
 
 \family typewriter
-SINGULAR
-\family default
- => 
-\emph on
-string
-\emph default
-.
- When omitted, it defaults to the tablename without trailing 
-\begin_inset Quotes eld
-\end_inset
-
-s
-\begin_inset Quotes erd
-\end_inset
-
-.
-\begin_inset Newline newline
-\end_inset
-
-The Athomaris convention is to use English plural forms for table names,
- in contrast to column names which have the corresponding singular form.
- This way, (generated) SQL code becomes better understandable for humans
- (and foreign code bypassing the Athomaris PHP library becomes more intuitive).
- For example, table 
-\family typewriter
-foos
-\family default
- uses column names such 
-\family typewriter
-foo_id
-\family default
- (here as the primary key).
- Because there are some linguistic exceptions in English (e.g.
- 
-\begin_inset Quotes eld
-\end_inset
-
-classes
-\begin_inset Quotes erd
-\end_inset
-
- 
-\begin_inset Formula $\rightarrow$
-\end_inset
-
- 
-\begin_inset Quotes eld
-\end_inset
-
-class
-\begin_inset Quotes erd
-\end_inset
-
-), you can set the singular form here.
- The singular is used as a basis for automatic creation of column names,
- such 
-\family typewriter
-*_id
-\family default
-.
-\end_layout
-
-\begin_layout Description
-
-\family typewriter
 PRIMARY
 \family default
  => 
@@ -1172,6 +1161,82 @@ false
 \family default
 , or when interfacing with external databases having different schema convention
 s, you can set a different name here.
+\begin_inset Newline newline
+\end_inset
+
+
+\series bold
+Hint
+\series default
+: recommended 
+\emph on
+best practice
+\emph default
+ is to use the default only as a 
+\emph on
+hidden
+\emph default
+ primary key.
+ This means that the 
+\emph on
+end
+\emph default
+-user should never use its value for any purpose; he/she should not even
+ 
+\emph on
+see
+\emph default
+ this value.
+ Instead, the end-user should only see and use 
+\family typewriter
+UNIQUE
+\family default
+ keys as described below.
+ This has tremendous advantages: defining the user-visible identification
+ attributes as 
+\emph on
+dependent attributes
+\emph default
+ allows to change them at runtime.
+ When combined with 
+\family typewriter
+REFERENCES
+\family default
+ and 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+on update cascade
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ (see below), you get a 
+\emph on
+vital
+\emph default
+ flexibility which is often desperatly needed in large enterprises!
+\begin_inset Newline newline
+\end_inset
+
+
+\series bold
+Exception
+\series default
+ when interfacing to external databases: if don't have control over the
+ schema (e.g.
+ when connecting to 
+\emph on
+existing
+\emph default
+ databases), you can also specify a 
+\emph on
+combined key
+\emph default
+ by enumerating the column names separated with comma.
 \end_layout
 
 \begin_layout Description
@@ -1294,7 +1359,7 @@ r
 \family default
 ,
 \family typewriter
-
+ 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1306,7 +1371,7 @@ R
 \family default
 ,
 \family typewriter
-
+ 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1318,7 +1383,7 @@ w
 \family default
 ,
 \family typewriter
-
+ 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1353,8 +1418,7 @@ W
 
 
 \family default
-.
- Can be omitted.
+ when omitted.
 \begin_inset CommandInset label
 LatexCommand label
 name "des:ACCESS"
@@ -1396,6 +1460,315 @@ w write access to the database, but the user can only read it over the GUI.
 
 \begin_layout Description
 W write access for both the database and for the user.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+SINGULAR
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ When omitted, it defaults to the tablename without trailing 
+\begin_inset Quotes eld
+\end_inset
+
+s
+\begin_inset Quotes erd
+\end_inset
+
+.
+\begin_inset Newline newline
+\end_inset
+
+The 
+\series bold
+Athomaris convention
+\series default
+ is to use English plural forms for table names, in contrast to column names
+ which alwas should start with the corresponding singular form whenever
+ they 
+\emph on
+logically belong
+\emph default
+
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Here are some excpetions which don't 
+\begin_inset Quotes eld
+\end_inset
+
+logically belong
+\begin_inset Quotes erd
+\end_inset
+
+ to some given table:
+\end_layout
+
+\begin_layout Itemize
+Foreign keys (see 
+\family typewriter
+REFERENCES
+\family default
+ in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:FIELDS"
+
+\end_inset
+
+): please use the name from the referenced table.
+ This way, almost all possible joins can be expressed as 
+\emph on
+natural joins
+\emph default
+, and the schema is self-documenting for humans.
+\end_layout
+
+\begin_layout Itemize
+Anything which references to external information, such as filesystem data.
+ This way, you explicitly express that the corresponding 
+\emph on
+domain
+\emph default
+ is not under your control.
+ If you have many such cases, it is wise to even introduce some systematics
+ for that.
+\end_layout
+
+\end_inset
+
+ the the same table.
+ This way, (generated) SQL code becomes better understandable for humans
+ (and foreign code bypassing the Athomaris PHP library becomes more intuitive).
+ For example, table 
+\family typewriter
+foos
+\family default
+ uses column names such 
+\family typewriter
+foo_id
+\family default
+ (here as the primary key).
+ Because there are some linguistic exceptions in English (e.g.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+classes
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\begin_inset Formula $\rightarrow$
+\end_inset
+
+ 
+\begin_inset Quotes eld
+\end_inset
+
+class
+\begin_inset Quotes erd
+\end_inset
+
+), you can set the singular form here.
+ The singular is used as a basis for automatic creation of column names,
+ such 
+\family typewriter
+*_id
+\family default
+.
+\begin_inset Newline newline
+\end_inset
+
+However, when interfacing to external / existing databases, you often have
+ to obey foreign conventions conflicting with the default systematics of
+ Athomaris.
+ In such a case, you can use the following directives for further fine-grained
+ control (the meaning of most of them is described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Temporal-tables"
+
+\end_inset
+
+):
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+FIELDNAME_ID
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Defaults to 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+singular
+\emph default
+_id
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+\begin_inset Newline newline
+\end_inset
+
+This is not necessarily the same as 
+\family typewriter
+PRIMARY
+\family default
+, because 
+\family typewriter
+PRIMARY
+\family default
+ may be a 
+\emph on
+combined key
+\emph default
+, while 
+\family typewriter
+FIELDNAME_ID
+\family default
+ specifies which column should get an 
+\family typewriter
+AUTO_INCREMENT
+\family default
+ attribute.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+FIELDNAME_VERSION
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Defaults to 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+singular
+\emph default
+_version
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+FIELDNAME_DELETED
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Defaults to 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+singular
+\emph default
+_deleted
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+FIELDNAME_MODIFIED_FROM
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Defaults to 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+singular
+\emph default
+_modified_from
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+FIELDNAME_MODIFIED_BY
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Defaults to 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+singular
+\emph default
+_modified_by
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
 \end_layout
 
 \end_deeper
@@ -1541,6 +1914,43 @@ longtext
  Most databases store variable-length texts columns in a seaparate heap,
  not in the data record.
  This affects nonfunctional access properties at runtime.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+blob,
+\begin_inset space ~
+\end_inset
+
+tinyblob,
+\begin_inset space ~
+\end_inset
+
+mediumblob,
+\begin_inset space ~
+\end_inset
+
+longblob
+\family default
+ Ditto.
+ In difference to 
+\family typewriter
+text
+\family default
+, no comparion for equality is possible.
+\end_layout
+
+\begin_layout Standard
+Note: although some of these types look like being 
+\family typewriter
+mysql
+\family default
+-specific, other drivers such as 
+\family typewriter
+sybase
+\family default
+ will internally convert them to the most closest type available there.
 \end_layout
 
 \end_deeper
@@ -1878,8 +2288,7 @@ W
 
 
 \family default
-.
- Can be omitted.
+ when omitted.
 \begin_inset Newline newline
 \end_inset
 
@@ -2806,8 +3215,7 @@ false
 \family typewriter
 false
 \family default
-.
- Can be omitted.
+ when omitted.
 \begin_inset Newline newline
 \end_inset
 
