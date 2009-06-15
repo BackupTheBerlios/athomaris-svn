@@ -1,4 +1,4 @@
-#LyX 1.6.0 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.3 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -1489,9 +1489,9 @@ The
 \series bold
 Athomaris convention
 \series default
- is to use English plural forms for table names, in contrast to column names
- which alwas should start with the corresponding singular form whenever
- they 
+ is to use English plural forms for table names.
+ In contrast, column names should always start with the corresponding singular
+ form whenever they 
 \emph on
 logically belong
 \emph default
@@ -1544,7 +1544,7 @@ domain
 
 \end_inset
 
- the the same table.
+ to that table.
  This way, (generated) SQL code becomes better understandable for humans
  (and foreign code bypassing the Athomaris PHP library becomes more intuitive).
  For example, table 
@@ -1579,7 +1579,7 @@ class
 
 ), you can set the singular form here.
  The singular is used as a basis for automatic creation of column names,
- such 
+ such as 
 \family typewriter
 *_id
 \family default
@@ -1969,8 +1969,9 @@ string
 \begin_inset Newline newline
 \end_inset
 
-Best practice is to always provide defaults for any column, and to use some
- value which indicates that initialization has been omitted.
+Best practice is to always provide defaults for any column.
+ The default should clearly indicate that initialization has been omitted.
+ This way, you can see when somebody has used the default.
 \begin_inset Newline newline
 \end_inset
 
@@ -2080,7 +2081,15 @@ array(a, b)
 \emph on
 maxlen
 \emph default
-) is used as default.
+) is used as default where 
+\emph on
+maxlen
+\emph default
+ stems from the 
+\family typewriter
+TYPE
+\family default
+ definition.
 \begin_inset Newline newline
 \end_inset
 
@@ -3684,7 +3693,8 @@ reference "Template-Compiler"
 
 \end_inset
 
-) finds all files with that extension and translates it into fast PHP code.
+) finds all files with that extension and translates them into fast PHP
+ code.
 \end_layout
 
 \begin_layout Standard
@@ -3725,7 +3735,11 @@ redefine
  any templates or textlists.
  Since redefinitions replace the previous definition, you can easily create
  variants of template sets this way.
- In particular, new skins can be created rather quickly.
+ In particular, new 
+\emph on
+skins
+\emph default
+ can be created rather quickly.
 \end_layout
 
 \begin_layout Description
@@ -3867,7 +3881,12 @@ name
 {/template}
 \family default
 .
- The text may contain further directives and macro expansions as follows:
+ The text may contain further directives and macro expansions (working on
+ the parameter 
+\family typewriter
+$data
+\family default
+) as follows:
 \end_layout
 
 \begin_deeper
@@ -4027,7 +4046,7 @@ name
 \family typewriter
 {textlist}
 \family default
- should have been written by a trusted programmer who even 
+ should have been written by a trusted programmer who probably even 
 \emph on
 needs
 \emph default
@@ -4070,7 +4089,7 @@ var
 .
  The same principle applies orthogonally to all examples where a string
  in double quotes is used: instead of the string constant, you may always
- use a variable instead.
+ use a variable instead, or vice versa.
 \end_layout
 
 \begin_layout Description
@@ -4173,10 +4192,10 @@ var
 \emph default
 }
 \family default
-, but URL escaping instead of HTML escaping is used.
- Especially useful fro generating URL parameters like 
+, but URL escaping is used instead of HTML escaping.
+ Especially useful for generating URL parameters like 
 \family typewriter
-?paramname={param $myvalue}
+?paramname={param $myvalue/}
 \family default
 .
 \end_layout
@@ -4217,12 +4236,14 @@ $
 \emph on
 var
 \emph default
-/} Generate a raw HTML header.
- This must be called 
-\emph on
-before
-\emph default
- any other output.
+/}
+\family default
+ Generate a raw HTML header.
+ This must be called before any other output (see also PHP function 
+\family typewriter
+header()
+\family default
+).
 \end_layout
 
 \begin_layout Description
@@ -4305,11 +4326,11 @@ var2
 
 .../} 
 \family default
-Obvious semantics for C programmers (see also the function 
+Obvious semantics for C programmers (see also the PHP function 
 \family typewriter
 sprintf()
 \family default
- in PHP).
+).
  The output is quote-protected.
 \end_layout
 
@@ -4948,7 +4969,7 @@ explicit state
 automatic instantiation
 \emph default
  of new automatons, as soon as a new tuple is added to the database.
- In other words: a new finite automaton is automatically instantiated for
+ In other words: a new finite automaton is instantiated automatically for
  
 \emph on
 any
@@ -4960,11 +4981,12 @@ any
 rule
 \emph default
  must match on that tuple.
- Thanks to imlicitly matching 
+ Thanks to implicitly matching 
 \emph on
 any
 \emph default
- tuple, the system can achieve almost arbitrary parallelism and scalability.
+ existing tuple, the system can achieve almost arbitrary parallelism and
+ scalability.
  If you want a purely sequential workflow, just don't produce new tuples
  which would be 
 \begin_inset Quotes eld
@@ -5287,7 +5309,7 @@ bps
 business processes
 \emph default
 ).
- This table mainly describes the 
+ This table describes the 
 \emph on
 interface
 \emph default
@@ -5521,7 +5543,7 @@ fire
 
 .
  Once the rule has fired on a candidate, the execution engine remembers
- the identity of this firing cell (in the following, we mean this single
+ the identity of the firing cell (in the following, we mean this single
  instance when we speak of 
 \begin_inset Quotes eld
 \end_inset
@@ -5594,6 +5616,15 @@ n
 rule_action
 \family default
  below).
+ Note that full-line matches must be indiated by 
+\family typewriter
+/
+\backslash
+A...
+\backslash
+Z/
+\family default
+ or similar.
 \end_layout
 
 \end_deeper
@@ -5637,7 +5668,8 @@ rule_startvalue
 \family typewriter
 bp_joinwith
 \family default
-, this is very useful for formulating complex 
+, you can use them here.
+ This is very useful for formulating complex 
 \family typewriter
 rule_condition
 \family default
@@ -6294,6 +6326,10 @@ name "sub:Data-Synchronization"
 
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsection
 Subrecords and Display/Editing of References
 \begin_inset CommandInset label
@@ -6303,6 +6339,10 @@ name "sub:Subrecords"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsection
@@ -6326,9 +6366,1168 @@ app.php
  database access engines.
 \end_layout
 
-\begin_layout Standard
-...
+\begin_layout Subsubsection
+Data Format
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Data-Format"
+
+\end_inset
+
+
 \end_layout
 
+\begin_layout Standard
+All database operations use a common PHP representation for table data,
+ called 
+\family typewriter
+$data
+\family default
+.
+ It is simply an 
+\emph on
+array of records
+\emph default
+.
+ A record is simply a hash, indexed by the column name.
+ For example:
+\end_layout
+
+\begin_layout LyX-Code
+$data =
+\end_layout
+
+\begin_layout LyX-Code
+  array(
+\end_layout
+
+\begin_layout LyX-Code
+        array(
+\end_layout
+
+\begin_layout LyX-Code
+              
+\begin_inset Quotes eld
+\end_inset
+
+foo_id
+\begin_inset Quotes erd
+\end_inset
+
+ => 17,
+\end_layout
+
+\begin_layout LyX-Code
+              
+\begin_inset Quotes eld
+\end_inset
+
+foo_comment
+\begin_inset Quotes erd
+\end_inset
+
+ => 
+\begin_inset Quotes eld
+\end_inset
+
+first_example_record
+\begin_inset Quotes erd
+\end_inset
+
+,
+\end_layout
+
+\begin_layout LyX-Code
+             ),
+\end_layout
+
+\begin_layout LyX-Code
+        array(
+\end_layout
+
+\begin_layout LyX-Code
+              
+\begin_inset Quotes eld
+\end_inset
+
+foo_id
+\begin_inset Quotes erd
+\end_inset
+
+ => 18,
+\end_layout
+
+\begin_layout LyX-Code
+              
+\begin_inset Quotes eld
+\end_inset
+
+foo_comment
+\begin_inset Quotes erd
+\end_inset
+
+ => 
+\begin_inset Quotes eld
+\end_inset
+
+next_example_record
+\begin_inset Quotes erd
+\end_inset
+
+,
+\end_layout
+
+\begin_layout LyX-Code
+             ),
+\end_layout
+
+\begin_layout LyX-Code
+       );
+\end_layout
+
+\begin_layout Standard
+As you can see, the column names are 
+\emph on
+deliberatly
+\emph default
+ repeated.
+ Although OO classes 
+\emph on
+could
+\emph default
+ save 
+\emph on
+some
+\emph default
+ of that runtime space overhead 
+\emph on
+in theory
+\emph default
+, maintaining OO class definitions instead would be a greater effort, and
+ it would lower flexibility.
+ In particular, 
+\family typewriter
+ACCESS => 
+\begin_inset Quotes eld
+\end_inset
+
+n
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Table-Definitions-in-$SCHEMA"
+
+\end_inset
+
+) will omit inacessible fields 
+\emph on
+dynamically at runtime
+\emph default
+.
+ Another use is for 
+\family typewriter
+db_update()
+\family default
+, see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Update-Operations"
+
+\end_inset
+
+: There you can simply specify 
+\emph on
+which
+\emph default
+ fields to update, just by omitting all those fields you don't want to change.
+ Note that in absence of database transactions, this has different 
+\emph on
+atomic properties
+\emph default
+ from first reading a full tuple, updating the PHP structure, and finally
+ writing back the full tuple.
+ The difference becomes clear with MySQL MyISAM tables in presence of concurrent
+ updating.
+\end_layout
+
+\begin_layout Standard
+This kind of flexibility is hardly to achieve with the usually static OO
+ class concept.
+ Thus we use a 
+\begin_inset Quotes eld
+\end_inset
+
+functional
+\begin_inset Quotes erd
+\end_inset
+
+ programming style (inspired by languages like ML, Haskell or good old Lisp),
+ and we pay some (acceptable) runtime space overhead in favor of a simple
+ design.
+ Nevertheless, future releases of the Athomaris PHP library could support
+ automatic generation of class definitions from 
+\family typewriter
+$SCHEMA
+\family default
+.
+\end_layout
+
+\begin_layout Subsubsection
+Update Operations
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Update-Operations"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$ok
+\begin_inset space ~
+\end_inset
+
+=
+\begin_inset space ~
+\end_inset
+
+db_insert(
+\begin_inset Quotes eld
+\end_inset
+
+table
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset space ~
+\end_inset
+
+$data);
+\family default
+ This will insert all the records from 
+\family typewriter
+$data
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Data-Format"
+
+\end_inset
+
+) into the named table.
+ Atomicity is only guaranteed for the consisteny of each tuple; however
+ depending on the database type and the network distribution atomicity for
+ the whole set of records is approximated.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$ok
+\begin_inset space ~
+\end_inset
+
+=
+\begin_inset space ~
+\end_inset
+
+db_update(
+\begin_inset Quotes eld
+\end_inset
+
+table
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset space ~
+\end_inset
+
+$data);
+\family default
+ This will update all 
+\emph on
+present
+\emph default
+ fields of all records from 
+\family typewriter
+$data
+\family default
+.
+ All fields from the 
+\family typewriter
+PRIMARY
+\family default
+ key 
+\emph on
+must
+\emph default
+ be present; otherwise the tuples cannot be identified.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$ok
+\begin_inset space ~
+\end_inset
+
+=
+\begin_inset space ~
+\end_inset
+
+db_replace(
+\begin_inset Quotes eld
+\end_inset
+
+table
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset space ~
+\end_inset
+
+$data);
+\family default
+ When the tuples are not yet present in the databases, this will lead to
+ the same effect as 
+\family typewriter
+db_insert()
+\family default
+.
+ Otherwise, the effect of 
+\family typewriter
+db_update()
+\family default
+ will be achieved.
+\end_layout
+
+\begin_layout Subsubsection
+Reading of Data
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Reading-of-Data"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+$data = db_read(
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+table
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+field1
+\emph default
+,
+\emph on
+field2
+\emph default
+,...
+\begin_inset Quotes erd
+\end_inset
+
+, $cond, $order, $start, $count);
+\end_layout
+
+\begin_layout Standard
+This will retrieve data from the named table.
+ The parameters have the following meaning:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+field1
+\emph default
+,
+\emph on
+field2
+\emph default
+,...
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ When this parameter is empty, all 
+\emph on
+accessible
+\emph default
+ fields (at least 
+\family typewriter
+ACCESS => 
+\begin_inset Quotes eld
+\end_inset
+
+r
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+, see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "des:ACCESS"
+
+\end_inset
+
+) will be retrieved.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$cond
+\family default
+ When empty or 
+\family typewriter
+null
+\family default
+, all tuples from the whole database are retrieved.
+ In it's simplest form, you may provide a hash 
+\family typewriter
+array(
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+fieldname
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+ => 
+\emph on
+fieldvalue
+\emph default
+)
+\family default
+ here with the obvious meaning: only tuples exactly matching the 
+\family typewriter
+\emph on
+fieldvalue
+\family default
+\emph default
+ are selected.
+ When providing multiple hash keys, all conditions are logically anded.
+ More complex boolean expressions may be constructed in the following way:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+the variant 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+fieldname
+\emph default
+ 
+\emph on
+operator
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+ => fieldvalue
+\family default
+ uses 
+\family typewriter
+\emph on
+operator
+\family default
+\emph default
+ instead of the default equality.
+ Following 
+\family typewriter
+\emph on
+operator
+\family default
+\emph default
+s are possible: 
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+=
+\begin_inset space ~
+\end_inset
+
+<>
+\begin_inset space ~
+\end_inset
+
+<
+\begin_inset space ~
+\end_inset
+
+>
+\begin_inset space ~
+\end_inset
+
+<=
+\begin_inset space ~
+\end_inset
+
+>=
+\family default
+ The usual comparison operators.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+%
+\family default
+ Tests for 
+\family typewriter
+like
+\family default
+ as defined by ANSI SQL.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+rlike
+\family default
+ Tests for MySQL 
+\family typewriter
+rlike
+\family default
+.
+ Not portable to other databases.
+\end_layout
+
+\begin_layout Description
+! Tests whether 
+\family typewriter
+\emph on
+fieldname
+\family default
+\emph default
+ is SQL 
+\family typewriter
+NULL
+\family default
+.
+ The 
+\family typewriter
+\emph on
+fieldvalue
+\family default
+\emph default
+ is ignored.
+\end_layout
+
+\begin_layout Description
+@ Tests whether 
+\family typewriter
+\emph on
+fieldname
+\family default
+\emph default
+ is 
+\emph on
+not
+\emph default
+ SQL 
+\family typewriter
+NULL
+\family default
+.
+ The 
+\family typewriter
+\emph on
+fieldvalue
+\family default
+\emph default
+ is ignored.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+in
+\family default
+ The 
+\family typewriter
+\emph on
+fieldvalue
+\family default
+\emph default
+ must be a sub-query as described in sections 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Full-Subqueries"
+
+\end_inset
+
+ or 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Aggregated-Subqueries"
+
+\end_inset
+
+.
+ The meaning is intuitively clear to SQL programmers.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+exists
+\family default
+ The 
+\family typewriter
+\emph on
+fieldname
+\family default
+\emph default
+ must be empty, and the 
+\family typewriter
+\emph on
+fieldvalue
+\family default
+\emph default
+ must be a sub-query as described in sections 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Full-Subqueries"
+
+\end_inset
+
+ or 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Aggregated-Subqueries"
+
+\end_inset
+
+.
+ The meaning is intuitively clear to SQL programmers.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+not
+\begin_inset space ~
+\end_inset
+
+exists
+\family default
+ Similar; the meaning is intuitively clear to SQL programmers.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+when 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+fieldname
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+=>
+\family default
+ is omitted and 
+\family typewriter
+\emph on
+fieldvalue
+\family default
+\emph default
+ is itself a hash obeying the same construction rules, these conditions
+ are logically 
+\emph on
+ored
+\emph default
+ instead of anded.
+ When recursively nesting such expressions, oring and anding will always
+ 
+\emph on
+alternate,
+\emph default
+ depending on odd or equal nesting level.
+\end_layout
+
+\begin_layout Enumerate
+when 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+fieldname
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+=>
+\family default
+ is 
+\emph on
+not
+\emph default
+ omitted and 
+\family typewriter
+\emph on
+fieldvalue
+\family default
+\emph default
+ is an 
+\emph on
+aggregating sub-query
+\emph default
+ as described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Aggregated-Subqueries"
+
+\end_inset
+
+, a nested natural join with the 
+\family typewriter
+\emph on
+table
+\family default
+\emph default
+ is computed (resulting in a 
+\emph on
+dependend
+\emph default
+ subquery), and its result is compared with 
+\family typewriter
+\emph on
+fieldname
+\family default
+\emph default
+.
+ An operator may be appended to 
+\family typewriter
+\emph on
+fieldname
+\family default
+\emph default
+.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+$order
+\family default
+ When empty, the result tuple may be unordered.
+ Otherwise it must be a 
+\emph on
+string
+\emph default
+, containing a comma-separated list of fieldnames.
+ Alternatively, it may be an array of plain fieldnames.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$start
+\family default
+ When empty or 0, the result set is starting at its beginning.
+ Otherwise it must be a number indicating the start position.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$count
+\family default
+ When empty or 0, the number of tuples is not restricted.
+ Otherwise at most 
+\family typewriter
+$count
+\family default
+ tuples will be delivered.
+\end_layout
+
+\begin_layout Subsubsection
+Full Subqueries
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Full-Subqueries"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Queries and subqueries may be uniformly expressed as a single 
+\emph on
+hash
+\emph default
+ containig the following keys:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+TABLE => 
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+table
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+ Specifies the table to query.
+ When a comma-separated list of table names is provided, the 
+\emph on
+natural join
+\emph default
+ of all tables is computed.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+FIELD => $struct
+\family default
+.
+ When empty, all fields are retrieved.
+ When 
+\family typewriter
+$struct
+\family default
+ is a plain string containing a comma-separated list of fieldnames, only
+ those fields are retrieved.
+ When it is a hash, the following variants are possible:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+fieldname
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ Retrieve that field.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+aliasname
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+=>
+\begin_inset space ~
+\end_inset
+
+$subquery
+\family default
+ The subquery must be recursively structured in the same way as described
+ in this section.
+ The inner query is automatically 
+\emph on
+dependent
+\emph default
+ from the outer one by all common fieldnames (similar to a 
+\emph on
+natural join
+\emph default
+), and the result of the subquery is propagated to the outer query under
+ the name 
+\family typewriter
+\emph on
+aliasname
+\family default
+\emph default
+.
+ This way, you may create 
+\begin_inset Quotes eld
+\end_inset
+
+virtual fields
+\begin_inset Quotes erd
+\end_inset
+
+ containing 
+\emph on
+dynamically computed
+\emph default
+ values.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+COND => $cond
+\family default
+.
+ Query condition, as already described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Reading-of-Data"
+
+\end_inset
+
+.
+ Recursive nesting is possible.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+ORDER => $order
+\family default
+.
+ Already described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Reading-of-Data"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+START => $start
+\family default
+.
+ Already described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Reading-of-Data"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+COUNT => $count
+\family default
+.
+ Already described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Reading-of-Data"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection
+Aggregated Subqueries
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Aggregated-Subqueries"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The keys 
+\family typewriter
+TABLE
+\family default
+, 
+\family typewriter
+COND
+\family default
+, 
+\family typewriter
+ORDER
+\family default
+, 
+\family typewriter
+START
+\family default
+ and 
+\family typewriter
+COUNT
+\family default
+ have been already described in the previous section.
+ Instead of 
+\family typewriter
+FIELD
+\family default
+, you provide the follwing key:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+AGG => $struct
+\family default
+.
+ This is another 
+\emph on
+hash
+\emph default
+ consisting of the following two members:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+FIELD => 
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+expression
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+ Allowable is 
+\family typewriter
+min(*)
+\family default
+, 
+\family typewriter
+max(*)
+\family default
+, 
+\family typewriter
+count(*)
+\family default
+ and 
+\family typewriter
+avg(*)
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+GROUP => 
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+fieldlist
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+ This specifies the fields over which aggregation will be performed.
+ The meaning is intuitively clear to SQL programmers knowing 
+\family typewriter
+group by
+\family default
+ statements.
+\end_layout
+
+\end_deeper
 \end_body
 \end_document

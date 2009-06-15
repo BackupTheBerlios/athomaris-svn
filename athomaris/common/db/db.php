@@ -664,7 +664,7 @@ function _db_make_idcond($table, $row) {
 
 // interface
 
-function db_read($tp_table, $fields, $cond, $order, $start, $count) {
+function db_read($tp_table, $fields = array(), $cond = array(), $order = "", $start = 0, $count = 0) {
   $qstruct = 
     array(
 	  "TABLE" => $tp_table,
