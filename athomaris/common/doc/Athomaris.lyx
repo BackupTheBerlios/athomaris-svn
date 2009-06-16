@@ -2,7 +2,8 @@
 \lyxformat 345
 \begin_document
 \begin_header
-\textclass article
+\textclass scrreprt
+\options notitlepage
 \use_default_options true
 \language english
 \inputencoding auto
@@ -16,7 +17,7 @@
 \font_tt_scale 100
 
 \graphics default
-\paperfontsize 10
+\paperfontsize default
 \spacing single
 \use_hyperref true
 \pdf_title "The Common PHP Library"
@@ -70,7 +71,11 @@ A Framework for Business Processes,
 \end_layout
 
 \begin_layout Author
-Version 0.0, Thomas Schöbel-Theuer
+Thomas Schöbel-Theuer
+\end_layout
+
+\begin_layout Date
+Version 0.1 
 \end_layout
 
 \begin_layout Standard
@@ -211,7 +216,7 @@ LatexCommand tableofcontents
 
 \end_layout
 
-\begin_layout Section
+\begin_layout Chapter
 Basic Setup
 \begin_inset CommandInset label
 LatexCommand label
@@ -430,7 +435,7 @@ memory limits
  Some distributions use rather small defaults.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Demo Projects
 \begin_inset CommandInset label
 LatexCommand label
@@ -824,7 +829,7 @@ compiled/generic_generic.php
  This code does not aim to be readable, but is very fast on execution.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 New Projects
 \end_layout
 
@@ -941,11 +946,11 @@ common/generic.php
 .
 \end_layout
 
-\begin_layout Section
+\begin_layout Chapter
 Basic configuration
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Basic 
 \family typewriter
 $SCHEMA
@@ -1013,7 +1018,7 @@ SQLNAME
  attribute (see later).
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Table Definitions in 
 \family typewriter
 $SCHEMA
@@ -1441,7 +1446,6 @@ root
  The access right codes have the following meaning:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 n no access at all.
 \end_layout
@@ -1462,7 +1466,6 @@ w write access to the database, but the user can only read it over the GUI.
 W write access for both the database and for the user.
 \end_layout
 
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -1601,7 +1604,6 @@ reference "sub:Temporal-tables"
 ):
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -1771,13 +1773,12 @@ _modified_by
 .
 \end_layout
 
-\end_deeper
 \begin_layout Description
 ...
  NYD
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 
 \family typewriter
 FIELDS
@@ -1809,7 +1810,6 @@ describes the SQL type of the column.
  Valid types are:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -1953,7 +1953,6 @@ sybase
  will internally convert them to the most closest type available there.
 \end_layout
 
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -2171,7 +2170,6 @@ hash
  must obey the following structure:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -2208,7 +2206,6 @@ natural join
  ANSI SQL meaning:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -2273,8 +2270,6 @@ set
 null
 \end_layout
 
-\end_deeper
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -2333,7 +2328,7 @@ This allows direct throughpassing of MySQL options.
  Try to avoid this!
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Temporal tables
 \begin_inset CommandInset label
 LatexCommand label
@@ -2830,7 +2825,7 @@ foos_tp
 .
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Initializing Data
 \end_layout
 
@@ -2905,7 +2900,7 @@ xx
  in the meantime).
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 
 \family typewriter
 $CONFIG
@@ -2965,7 +2960,6 @@ $SCHEMA
 :
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -2975,7 +2969,6 @@ profiles
  This table contains the following columns:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3060,7 +3053,6 @@ tablename
  
 \end_layout
 
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3077,7 +3069,6 @@ skins
  It contains the following columns:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3115,7 +3106,6 @@ language_descr
  Description, for comments and remarks.
 \end_layout
 
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3124,7 +3114,6 @@ users
  A temporal table having the following columns:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3179,7 +3168,6 @@ user_descr
  Description, for comments and remarks.
 \end_layout
 
-\end_deeper
 \begin_layout Standard
 When 
 \family typewriter
@@ -3205,7 +3193,6 @@ static
  customization of the UI.
 \end_layout
 
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3299,7 +3286,6 @@ hash
  is two or more associations from the following:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3480,12 +3466,11 @@ Readonly
  This feature is crucial for enterprise-grade scalability.
 \end_layout
 
-\end_deeper
-\begin_layout Section
+\begin_layout Chapter
 Basic Customization
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Link-Headers
 \begin_inset CommandInset label
 LatexCommand label
@@ -3645,7 +3630,7 @@ all
  links by hand, otherwise your application would be completely link-less.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 The Generic Template Mechanism
 \begin_inset CommandInset label
 LatexCommand label
@@ -3756,7 +3741,6 @@ skins
  Each line defines a simple macro via the following syntax:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3804,7 +3788,6 @@ reference "sub:Link-Headers"
 ) to something else by
 \end_layout
 
-\begin_deeper
 \begin_layout Itemize
 
 \family typewriter
@@ -3823,8 +3806,6 @@ Tables: = Hey, here you can browse the following tables:
 {/textlist}
 \end_layout
 
-\end_deeper
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3889,7 +3870,6 @@ $data
 ) as follows:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -4477,7 +4457,6 @@ othername
  can use one of the following variants:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -4615,7 +4594,6 @@ var2
 , you can even do recursive calls.
 \end_layout
 
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -4883,8 +4861,7 @@ $DATA
 , even if you currently don't need it.
 \end_layout
 
-\end_deeper
-\begin_layout Subsection
+\begin_layout Section
 Default Templates
 \begin_inset CommandInset label
 LatexCommand label
@@ -4918,11 +4895,11 @@ The following conventions are used in
 ...
 \end_layout
 
-\begin_layout Section
+\begin_layout Chapter
 Advanced Features
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Business Process Engine
 \begin_inset CommandInset label
 LatexCommand label
@@ -4933,7 +4910,7 @@ name "sub:Business-Process-Engine"
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Concepts
 \end_layout
 
@@ -5204,7 +5181,7 @@ Note: this description is for technicians only.
  employing their terminology and buzzwords.
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Usage
 \end_layout
 
@@ -5276,7 +5253,7 @@ secret
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Tables for the Orchestration Level
 \end_layout
 
@@ -5347,7 +5324,6 @@ bp_version
 , this table consists of the following columns:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -5463,7 +5439,6 @@ bp_comment
  For documentation at the orchestration level.
 \end_layout
 
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -5481,7 +5456,6 @@ rule_version
 , it consists of the following columns:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -5557,7 +5531,6 @@ cell
 s, the following syntax must be used:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -5627,7 +5600,6 @@ Z/
  or similar.
 \end_layout
 
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -5637,7 +5609,6 @@ rule_condition
  The syntax is as follows:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \emph on
@@ -5707,7 +5678,6 @@ regex
  In a future release, we plan to support full-fledged boolean expressions.
 \end_layout
 
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -5731,7 +5701,6 @@ rule_firevalue
  You may provide one of the following syntaxes:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \emph on
@@ -5798,7 +5767,6 @@ substituted
  as follows:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -5880,8 +5848,6 @@ subcommand
 .
 \end_layout
 
-\end_deeper
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -5892,7 +5858,6 @@ rule_action
  such as SOAP are planned):
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -5979,7 +5944,6 @@ something
  non-procedural sub-business-processes this way.
 \end_layout
 
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -6017,7 +5981,6 @@ rule_comment
  For documentation at the orchestration level.
 \end_layout
 
-\end_deeper
 \begin_layout Standard
 Note that the table 
 \family typewriter
@@ -6057,7 +6020,6 @@ cont_id
 , it consists of the following columns:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -6207,8 +6169,7 @@ cont_comment
  For documentation at the orchestration level.
 \end_layout
 
-\end_deeper
-\begin_layout Subsubsection
+\begin_layout Subsection
 Pseudo Events
 \begin_inset CommandInset label
 LatexCommand label
@@ -6315,7 +6276,7 @@ n
  seconds.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Automatic Data Synchronization
 \begin_inset CommandInset label
 LatexCommand label
@@ -6330,7 +6291,7 @@ name "sub:Data-Synchronization"
 ...
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Subrecords and Display/Editing of References
 \begin_inset CommandInset label
 LatexCommand label
@@ -6345,7 +6306,7 @@ name "sub:Subrecords"
 ...
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Programmers API to the Database
 \begin_inset CommandInset label
 LatexCommand label
@@ -6366,7 +6327,12 @@ app.php
  database access engines.
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Standard
+The purpose of the following functions is abstracted access to temporal
+ tables, which is independent from SQL dialects.
+\end_layout
+
+\begin_layout Subsection
 Data Format
 \begin_inset CommandInset label
 LatexCommand label
@@ -6389,7 +6355,7 @@ $data
 array of records
 \emph default
 .
- A record is simply a hash, indexed by the column name.
+ A record is simply a hash, indexed by the column names.
  For example:
 \end_layout
 
@@ -6528,7 +6494,7 @@ reference "sub:Table-Definitions-in-$SCHEMA"
 \emph on
 dynamically at runtime
 \emph default
-.
+, individually for each field.
  Another use is for 
 \family typewriter
 db_update()
@@ -6551,13 +6517,16 @@ atomic properties
 \emph default
  from first reading a full tuple, updating the PHP structure, and finally
  writing back the full tuple.
- The difference becomes clear with MySQL MyISAM tables in presence of concurrent
+ The difference becomes clear with MySQL MyISAM tables in presence of 
+\emph on
+concurrent
+\emph default
  updating.
 \end_layout
 
 \begin_layout Standard
 This kind of flexibility is hardly to achieve with the usually static OO
- class concept.
+ class concepts.
  Thus we use a 
 \begin_inset Quotes eld
 \end_inset
@@ -6577,7 +6546,7 @@ $SCHEMA
 .
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Update Operations
 \begin_inset CommandInset label
 LatexCommand label
@@ -6626,8 +6595,9 @@ reference "sub:Data-Format"
 
 ) into the named table.
  Atomicity is only guaranteed for the consisteny of each tuple; however
- depending on the database type and the network distribution atomicity for
- the whole set of records is approximated.
+ depending on the database type and the network distribution, atomicity
+ for the whole set of records could be nethertheless achievedor at least
+ approximated.
 \end_layout
 
 \begin_layout Description
@@ -6663,8 +6633,7 @@ present
 \family typewriter
 $data
 \family default
-.
- All fields from the 
+, with one exception: all fields from the 
 \family typewriter
 PRIMARY
 \family default
@@ -6672,7 +6641,11 @@ PRIMARY
 \emph on
 must
 \emph default
- be present; otherwise the tuples cannot be identified.
+ be present and are 
+\emph on
+not
+\emph default
+ updated; otherwise the tuples could not be uniquely identified.
 \end_layout
 
 \begin_layout Description
@@ -6713,7 +6686,7 @@ db_update()
  will be achieved.
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Reading of Data
 \begin_inset CommandInset label
 LatexCommand label
@@ -6823,7 +6796,7 @@ $cond
 null
 \family default
 , all tuples from the whole database are retrieved.
- In it's simplest form, you may provide a hash 
+ In its simplest form, you may provide a hash 
 \family typewriter
 array(
 \begin_inset Quotes eld
@@ -6843,7 +6816,7 @@ fieldvalue
 \emph default
 )
 \family default
- here with the obvious meaning: only tuples exactly matching the 
+ with the obvious meaning: only tuples exactly matching the 
 \family typewriter
 \emph on
 fieldvalue
@@ -6854,7 +6827,6 @@ fieldvalue
  More complex boolean expressions may be constructed in the following way:
 \end_layout
 
-\begin_deeper
 \begin_layout Enumerate
 the variant 
 \family typewriter
@@ -6892,7 +6864,6 @@ operator
 s are possible: 
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -6943,7 +6914,7 @@ rlike
 rlike
 \family default
 .
- Not portable to other databases.
+ Not portable to other databases! Try to avoid this.
 \end_layout
 
 \begin_layout Description
@@ -7068,7 +7039,50 @@ exists
  Similar; the meaning is intuitively clear to SQL programmers.
 \end_layout
 
-\end_deeper
+\begin_layout Enumerate
+when 
+\family typewriter
+\emph on
+fieldvalue
+\family default
+\emph default
+ is an 
+\emph on
+aggregating sub-query
+\emph default
+ as described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Aggregated-Subqueries"
+
+\end_inset
+
+, a nested natural join with the 
+\family typewriter
+\emph on
+table
+\family default
+\emph default
+ is computed (resulting in a 
+\emph on
+dependent
+\emph default
+ subquery), and its result is compared with 
+\family typewriter
+\emph on
+fieldname
+\family default
+\emph default
+.
+ An operator may be appended to 
+\family typewriter
+\emph on
+fieldname
+\family default
+\emph default
+.
+\end_layout
+
 \begin_layout Enumerate
 when 
 \family typewriter
@@ -7106,71 +7120,6 @@ alternate,
  depending on odd or equal nesting level.
 \end_layout
 
-\begin_layout Enumerate
-when 
-\family typewriter
-
-\begin_inset Quotes eld
-\end_inset
-
-
-\emph on
-fieldname
-\emph default
-
-\begin_inset Quotes erd
-\end_inset
-
-=>
-\family default
- is 
-\emph on
-not
-\emph default
- omitted and 
-\family typewriter
-\emph on
-fieldvalue
-\family default
-\emph default
- is an 
-\emph on
-aggregating sub-query
-\emph default
- as described in section 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sub:Aggregated-Subqueries"
-
-\end_inset
-
-, a nested natural join with the 
-\family typewriter
-\emph on
-table
-\family default
-\emph default
- is computed (resulting in a 
-\emph on
-dependend
-\emph default
- subquery), and its result is compared with 
-\family typewriter
-\emph on
-fieldname
-\family default
-\emph default
-.
- An operator may be appended to 
-\family typewriter
-\emph on
-fieldname
-\family default
-\emph default
-.
-\end_layout
-
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -7207,7 +7156,7 @@ $count
  tuples will be delivered.
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Full Subqueries
 \begin_inset CommandInset label
 LatexCommand label
@@ -7268,7 +7217,6 @@ $struct
  When it is a hash, the following variants are possible:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -7345,7 +7293,6 @@ dynamically computed
  values.
 \end_layout
 
-\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -7411,7 +7358,137 @@ reference "sub:Reading-of-Data"
 .
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Standard
+Instead of calling 
+\family typewriter
+db_read()
+\family default
+, you may use 
+\family typewriter
+_db_read()
+\family default
+ the following way:
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+$data = db_read(
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+table
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+field1
+\emph default
+,
+\emph on
+field2
+\emph default
+,...
+\begin_inset Quotes erd
+\end_inset
+
+, $cond, $order, $start, $count); is equivalent to $data = _db_read(array(
+\begin_inset Quotes eld
+\end_inset
+
+TABLE
+\begin_inset Quotes erd
+\end_inset
+
+ => 
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+table
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+FIELD
+\begin_inset Quotes erd
+\end_inset
+
+ => 
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+field1
+\emph default
+,
+\emph on
+field2
+\emph default
+,...
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+COND
+\begin_inset Quotes erd
+\end_inset
+
+ => $cond, 
+\begin_inset Quotes eld
+\end_inset
+
+ORDER
+\begin_inset Quotes erd
+\end_inset
+
+ => $order, 
+\begin_inset Quotes eld
+\end_inset
+
+START
+\begin_inset Quotes erd
+\end_inset
+
+ => $start, 
+\begin_inset Quotes eld
+\end_inset
+
+COUNT
+\begin_inset Quotes erd
+\end_inset
+
+ => $count);
+\end_layout
+
+\begin_layout Subsection
 Aggregated Subqueries
 \begin_inset CommandInset label
 LatexCommand label
@@ -7464,7 +7541,6 @@ hash
  consisting of the following two members:
 \end_layout
 
-\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -7528,6 +7604,5 @@ group by
  statements.
 \end_layout
 
-\end_deeper
 \end_body
 \end_document
