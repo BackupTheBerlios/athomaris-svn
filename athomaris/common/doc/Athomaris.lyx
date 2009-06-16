@@ -17,7 +17,7 @@
 \font_tt_scale 100
 
 \graphics default
-\paperfontsize default
+\paperfontsize 10
 \spacing single
 \use_hyperref true
 \pdf_title "The Common PHP Library"
@@ -4964,8 +4964,11 @@ any
 \emph default
  existing tuple, the system can achieve almost arbitrary parallelism and
  scalability.
- If you want a purely sequential workflow, just don't produce new tuples
- which would be 
+ If you want a purely sequential workflow, just don't produce 
+\emph on
+new
+\emph default
+ tuples which would be 
 \begin_inset Quotes eld
 \end_inset
 
@@ -4974,12 +4977,13 @@ watched
 \end_inset
 
  by the Athomaris engine - instead just update the explicit state which
- is kept inside your old tuple.
- Another benefit of 
+ is kept inside your 
 \emph on
-explicit state
+old
 \emph default
- is that other applications can query and work with it.
+ tuple.
+ Another benefit of explicit state is that other applications can query
+ and work with it.
 \end_layout
 
 \begin_layout Standard
