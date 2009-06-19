@@ -18,7 +18,7 @@
    */
 
 if(!$BASEDIR)
-  die("script improperly called without \$BASEDIR set\n");
+  die("script improperly called, no \$BASEDIR set\n");
 
 $download = @$_REQUEST["download"];
 if($download)
@@ -35,7 +35,7 @@ app_get_templates();
 
 ///////////////////////////////////////////////////////////////////////////
 
-// call the stuff for generic table management
+// call the "app stuff" for generic table management
 
 if(!$download) {
   $data = array("TITLE" => "inspect_$table", "ACTION" => $_SERVER["PHP_SELF"] . "?table=$table");
@@ -53,9 +53,9 @@ if(isset($_REQUEST["primary"])) {
     $cond[$key] = $_REQUEST[$key];
   }
   if($download) {
-    app_display_download($table, $cond, null, $download, @$_REQUEST["filename"]);
+    app_display_download($table, $cond, $download, @$_REQUEST["filename"]);
   } else {
-    app_display_record($table, $cond, null);
+    app_display_record($table, $cond);
   }
  } else {
   app_input_table($table);

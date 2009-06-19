@@ -142,6 +142,7 @@ $SYNTAX_UPDATE =
 $SYNTAX_FIELD =
   array(
 	"TYPE" => "",
+	"SQL_TYPE" => "",       // not yet in use --> TODO!
 	"OPTIONS" => $SYNTAX_IDLIST,
 	"DEFAULT" => null,
 	"CHANGE_FROM" => $SYNTAX_ID,
@@ -162,6 +163,7 @@ $SYNTAX_FIELD =
 	"ACCESS" => "/^[nrRwW]$/",
 	"REALNAME" => $SYNTAX_ID,
 
+	"DISPLAY_TYPE" => "",
 	"TPL_DISPLAY" => $SYNTAX_IDLIST,
 	"TPL_INPUT" => $SYNTAX_ID,
 	"ENCRYPT" => "",
@@ -647,16 +649,22 @@ function _db_pass_typeinfo($MYSCHEMA) {
   $res = $MYSCHEMA;
   foreach($MYSCHEMA as $table => $tinfo) {
     // default links from the primary and secondary keys to SELF
+    $make_ref = array();
     $primary = _db_primary($table, $MYSCHEMA);
     if($primary) {
-      $res[$table]["FIELDS"][$primary]["TYPE"] = "hidden";
+      foreach(split(",", $primary) as $pr) {
+	if(!@$res[$table]["FIELDS"][$pr]["DISPLAY_TYPE"])
+	  $res[$table]["FIELDS"][$pr]["DISPLAY_TYPE"] = "hidden";
+      }
       $make_ref = array_merge(array($primary), @$tinfo["UNIQUE"]);
     }
-    foreach($make_ref as $field) {
-      if(!@$tinfo["FIELDS"][$field])
-	continue;
-      if(!@$res[$table]["FIELDS"][$field]["TPL_DISPLAY"])
-	$res[$table]["FIELDS"][$field]["TPL_DISPLAY"] = "display_ref"; /* set to default */
+    foreach($make_ref as $fields) {
+      foreach(split(",", $fields) as $field) {
+	if(!@$tinfo["FIELDS"][$field])
+	  continue;
+	if(!@$res[$table]["FIELDS"][$field]["TPL_DISPLAY"])
+	  $res[$table]["FIELDS"][$field]["TPL_DISPLAY"] = "display_ref"; /* set to default */
+      }
     }
     if(!@$tinfo["TOOLS"]) {
       $res[$table]["TOOLS"] = array("tool_search" => true, "tool_history" => true, "tool_page" => true); /* set to default */
@@ -697,7 +705,7 @@ function _db_pass_typeinfo($MYSCHEMA) {
       $type = @$finfo["TYPE"];
       $res[$table]["FIELDS"][$field]["SQL_TYPE"] = $type;
       //echo "matching type '$type'\n";
-      if($field == $primary) {
+      if(array_search($field, split(",", $primary)) !== false) {
 	$restype = "hidden";
       } elseif(preg_match("/^(?:date)?time(stamp)?$/", $type)) {
 	$restype = "string";
@@ -738,7 +746,10 @@ function _db_pass_typeinfo($MYSCHEMA) {
 	$res[$table]["FIELDS"][$field]["REF_FIELD"] = $split[1];
 	$res[$table]["FIELDS"][$field]["REF_FIELDS"] = split(",", $split[1]);
       }
-      $res[$table]["FIELDS"][$field]["TYPE"] = $restype;
+
+      // Finally, store the result
+      $res[$table]["FIELDS"][$field]["DISPLAY_TYPE"] = $restype;
+
       if(isset($finfo["LENGTH"])) {
 	$res[$table]["FIELDS"][$field]["MINLEN"] = $finfo["LENGTH"][0];
 	$res[$table]["FIELDS"][$field]["MAXLEN"] = $finfo["LENGTH"][1];

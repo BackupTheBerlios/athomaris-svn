@@ -73,6 +73,8 @@ function _db_extfield($table, $extension, $MYSCHEMA = null) { // return name of 
 /* return name of primary key
  */
 function _db_primary($table, $MYSCHEMA = null) {
+  if(@$MYSCHEMA[$table]["PRIMARY"])
+    return $MYSCHEMA[$table]["PRIMARY"];
   return _db_extfield($table, "id", $MYSCHEMA);
 }
 
@@ -83,6 +85,14 @@ function _db_unique($table, $MYSCHEMA = null) {
   if(!$MYSCHEMA)
     $MYSCHEMA = $SCHEMA;
   return @$MYSCHEMA[$table]["UNIQUE"][0];
+}
+
+/* return name of autoincrement
+ */
+function _db_autoinc($table, $MYSCHEMA = null) {
+  if(@$MYSCHEMA[$table]["FIELDNAME_ID"])
+    return $MYSCHEMA[$table]["FIELDNAME_ID"];
+  return _db_extfield($table, "id", $MYSCHEMA);
 }
 
 /* Currently the suffix "_tp" cannot be overridden

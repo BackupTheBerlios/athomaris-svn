@@ -500,7 +500,11 @@ function _mysql_make_idcond_base($qstruct, $row) {
       $primary = _db_primary($table);
       $subcond = array();
       foreach($qstruct["DATA"] as $row) {
-	$subcond[] = array($primary => $row[$primary]);
+	$subsubcond = array();
+	foreach(split(",", $primary) as $primfield) {
+	  $subsubcond[$primfield] = $row[$primfield];
+	}
+	$subcond[] = $subsubcond;
       }
       $cond = array($subcond);
     } else {
@@ -653,7 +657,7 @@ function _mysql_make_idwhere($qstruct, $row = null) {
 function _mysql_make_update_flat(&$stack, $qstruct, &$cb_list) {
   $table = $qstruct["TABLE"];
   $realtable = _db_realname($table);
-  $primary = _db_primary($table);
+  $autoinc = _db_autoinc($table);
   $mode = $qstruct["MODE"];
   if($mode == "DELETE") {
     $res = "delete from $realtable where ";
@@ -673,7 +677,7 @@ function _mysql_make_update_flat(&$stack, $qstruct, &$cb_list) {
     $rowcount = 0;
     foreach($qstruct["UPDATE_FIELDS"] as $field) {
       $value = @$row[$field];
-      if($field == $primary && $mode == "INSERT") {
+      if($mode == "INSERT" && $field == $autoinc) {
 	$value = null;
       }
       if(!_mysql_check_allref($stack, $table, $field, $value, $mode, $idcond)) {
@@ -746,7 +750,7 @@ function _mysql_make_update_tp(&$stack, $qstruct, &$cb_list) {
   $table = $qstruct["TABLE"];
   $realtable = _db_realname($table);
   $realtable_tp = _db_2temporal($realtable);
-  $primary = _db_primary($table);
+  $autoinc = _db_autoinc($table);
   $deleted = _db_extfield($table, "deleted");
   $fields = implode(", ", _db_realname($table, $qstruct["ALL_FIELDS"]));
   $count = 0;
@@ -771,11 +775,11 @@ function _mysql_make_update_tp(&$stack, $qstruct, &$cb_list) {
       if($field == $deleted) {
 	$row[$field] = false;
       }
-      if($field == $primary && $mode == "INSERT") { // give AUTO_INCREMENT a chance
+      if($mode == "INSERT" && $field == $autoinc) { // give AUTO_INCREMENT a chance
 	$newdata .= "null";
       } elseif(array_key_exists($field, $row) && in_array($field, $qstruct["UPDATE_FIELDS"])) { // take new value
 	$value = @$row[$field];
-	if($field == $primary && $mode == "INSERT")
+	if($field == $autoinc && $mode == "INSERT")
 	  $value = null;
 	if(!_mysql_check_allref($stack, $table, $field, $value, $mode, $idcond)) {
 	  return null;

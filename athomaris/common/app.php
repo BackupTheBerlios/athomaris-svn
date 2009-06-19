@@ -407,7 +407,7 @@ function app_input_table($tp_table) {
     app_check_error();
   }
   // execute user actions on buttons
-  $primary = $SCHEMA[$table]["PRIMARY"];
+  $primary = _db_primary($table); // TODO: allow combined primary keys (currently goes wrong because no arrays can be submitted as values)
   if(isset($_REQUEST["delete"])) { /* user has clicked on small delete button */
     $id = $_REQUEST["delete"];
     $olddata = array(array($primary => $id));
@@ -477,30 +477,26 @@ function app_display_table($tp_table) {
 
   if(db_access_table($table, "w")) {
     $data["EXTRAHEAD"] = "extra_3buttons_head";
-    $data["EXTRA"]["button_edit"] = $SCHEMA[$table]["PRIMARY"];
-    $data["EXTRA"]["button_clone"] = $SCHEMA[$table]["PRIMARY"];
-    $data["EXTRA"]["button_delete"] = $SCHEMA[$table]["PRIMARY"];
+    $primary = _db_primary($table);
+    $data["EXTRA"]["button_edit"] = $primary;
+    $data["EXTRA"]["button_clone"] = $primary;
+    $data["EXTRA"]["button_delete"] = $primary;
   }
 
   tpl_display_table($data);
 }
 
-function _app_getdata($table, $primary, $value) {
-  if(is_array($primary)) {
-    $cond = $primary;
-    $primary = implode(",", array_keys($cond));
-  } else { //xxx: old code!
-    $cond = array($primary => $value);
-  }
-  $tmp = db_read($table, null, $cond, $primary, 0, 1);
+function _app_getdata($table, $cond) {
+  $order = implode(",", array_keys($cond));
+  $tmp = db_read($table, null, $cond, $order, 0, 1);
   $data = _app_prepare_data($table, $tmp, "change");
   return $data;
 }
 
-function app_display_record($tp_table, $primary, $value) {
+function app_display_record($tp_table, $cond) {
   global $TEMPLATE;
-  $tp = _db_temporal($tp_table, $table);
-  $data = _app_getdata($table, $primary, $value);
+  _db_temporal($tp_table, $table);
+  $data = _app_getdata($table, $cond);
   $call = "display_record_$table";
   if(@$TEMPLATE[$call]) {
     $call = "tpl_$call";
@@ -514,10 +510,10 @@ function app_display_record($tp_table, $primary, $value) {
   }
 }
 
-function app_display_download($tp_table, $primary, $value, $download, $filename) {
+function app_display_download($tp_table, $cond, $download, $filename) {
   global $SCHEMA;
   $tp = _db_temporal($tp_table, $table);
-  $data = _app_getdata($table, $primary, $value);
+  $data = _app_getdata($table, $cond);
 
   $data["FILENAME"] = $filename;
 

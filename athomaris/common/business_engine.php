@@ -193,9 +193,11 @@ function subst_macros(&$env, $cmd, $search = array(), $replace = array()) {
 function do_writeback($rec, $tablename, $fieldname, $fieldvalue, $other = array()) {
   global $ERROR;
   $primary = _db_primary($tablename);
-  $id = $rec[$primary];
-  engine_log("action: table $tablename primary $primary = $id field $fieldname = '$fieldvalue'");
-  $other[$primary] = $id;
+  foreach(split(",", $primary) as $pri) {
+    $id = $rec[$pri];
+    engine_log("action: table $tablename primary $pri = '$id' : field $fieldname = '$fieldvalue'");
+    $other[$pri] = $id;
+  }
   $other[$fieldname] = $fieldvalue;
   $ok = db_update($tablename, array($other));
   if(!$ok || $ERROR) {
@@ -407,8 +409,11 @@ function engine_run_once() {
 	$joinwith = $def["bp_joinwith"];
 	if(!@$cache[$joinwith]) {
 	  if($joinwith) {
-	    $cond = array($primary => $rec[$primary]);
-	    $subdata = db_read("$tablename,$joinwith", null, $cond, null, 0, 0);
+	    $subcond = $cond;
+	    foreach(split(",", $primary) as $pri) {
+	      $subcond[$pri] = $rec[$pri];
+	    }
+	    $subdata = db_read("$tablename,$joinwith", null, $subcond, null, 0, 0);
 	  } else {
 	    $subdata = array($rec);
 	  }

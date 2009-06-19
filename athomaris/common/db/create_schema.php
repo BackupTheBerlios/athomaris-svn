@@ -107,8 +107,11 @@ function _db_gen_indices($SCHEMA, $def, $newtable, $secondary) {
     $indices[$version_field] = $version_field;
     $indices[$both] = $both;
   }
-  $primary = $SCHEMA[$newtable]["FIELDNAME_ID"];
-  $indices[$primary] = $primary;
+  $auto_inc = @$SCHEMA[$newtable]["FIELDNAME_ID"];
+  if($auto_inc)
+    $indices[$auto_inc] = $auto_inc;
+  $primary = _db_primary($newtable, $SCHEMA);
+  $indices[$primary] = $primary; // often this overrides $auto_inc
   if(@$def[$secondary])
     $indices[$secondary] = $secondary;
   if(isset($def["INDEX"])) {

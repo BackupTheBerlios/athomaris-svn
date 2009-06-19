@@ -570,17 +570,26 @@ function _db_push_subdata(&$stack, $table, $field, $subdata, $master_row) {
       $subprimary = _db_primary($subtable);
       $subunique = split(",", _db_unique($subtable));
       foreach($newdata as $idx => $row) {
-	if($test = @$row[$subprimary]) {
-	  $subcond[] = array($subprimary => $test);
+	$ok = true;
+	foreach(split(",", $subprimary) as $subp) {
+	  if(!array_key_exists($subp, $row)) {
+	    $ok = false;
+	    break;
+	  }
+	}
+	$subsubcond = array();
+	if($ok) {
+	  foreach(split(",", $subprimary) as $subp) {
+	    $subsubcond[$subp] = @$row[$subp];
+	  }
 	} else {
-	  $subsubcond = array();
 	  foreach($subunique as $field) {
 	    if(!in_array($field, $joinfields)) {
 	      $subsubcond[$field] = @$row[$field];
 	    }
 	  }
-	  $subcond[] = $subsubcond;
 	}
+	$subcond[] = $subsubcond;
       }
       $cond["not"] = array($subcond);
     }
@@ -628,7 +637,6 @@ function _db_prepare_data($table, $data) {
   global $USER;
   global $FROM;
 
-  //$primary = _db_primary($table);
   $version = _db_extfield($table, "version");
   $modified_from = _db_extfield($table, "modified_from");
   $modified_by = _db_extfield($table, "modified_by");
@@ -721,9 +729,18 @@ function _db_update(&$qstruct) {
 function _db_make_idcond($table, $row) {
   global $ERROR;
   $primary = _db_primary($table);
+  $ok = true;
+  foreach(split(",", $primary) as $pr) {
+    if(!array_key_exists($pr, @$row)) {
+      $ok = false;
+      break;
+    }
+  }
   $cond = array();
-  if($row && array_key_exists($primary, $row)) {
-    $cond[$primary] = $row[$primary];
+  if($row && $ok) {
+    foreach(split(",", $primary) as $pr) {
+      $cond[$pr] = @$row[$pr];
+    }
   } else {
     $keys = split(",", _db_unique($table));
     if(!$keys) {

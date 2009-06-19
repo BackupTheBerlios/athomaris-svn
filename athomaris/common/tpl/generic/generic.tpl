@@ -318,8 +318,8 @@ for(i = 0; i < all.length; i++) \{
 
 {TEMPLATE "input"}\
  {IF PERM $TABLE $FIELD "W" || $FIELD == "hidden"}\
-  {IF $IMAGE && !$TYPE}{VAR $TYPE = "image"/}{/IF}\
-  <input{IF $TYPE} type="{$TYPE/}"{/IF}{IF $NAME} name="{$PREFIX}{$NAME}{$SUFFIX}"{/IF}{IF $ID} id="{$ID/}"{/IF}{IF $IMAGE} src="{$IMAGE/}" alt="{$ALT/}"{/IF}{IF $SIZE} size="{$SIZE/}"{/IF}{IF $MAXLEN} maxlength="{$MAXLEN/}"{/IF}{IF $CHECKED} checked="checked"{/IF}{IF isset($TEXT)} value="{TEXT $TEXT/}"{ELSEIF isset($VALUE)} value="{$VALUE/}"{/IF}{IF $CONFIRM} onclick="return confirm('{TEXT $CONFIRM}')"{/IF} />\
+  {IF $IMAGE && !$DISPLAY_TYPE}{VAR $DISPLAY_TYPE = "image"/}{/IF}\
+  <input{IF $DISPLAY_TYPE} type="{$DISPLAY_TYPE/}"{/IF}{IF $NAME} name="{$PREFIX}{$NAME}{$SUFFIX}"{/IF}{IF $ID} id="{$ID/}"{/IF}{IF $IMAGE} src="{$IMAGE/}" alt="{$ALT/}"{/IF}{IF $SIZE} size="{$SIZE/}"{/IF}{IF $MAXLEN} maxlength="{$MAXLEN/}"{/IF}{IF $CHECKED} checked="checked"{/IF}{IF isset($TEXT)} value="{TEXT $TEXT/}"{ELSEIF isset($VALUE)} value="{$VALUE/}"{/IF}{IF $CONFIRM} onclick="return confirm('{TEXT $CONFIRM}')"{/IF} />\
  {ELSEIF PERM $TABLE $FIELD "R"}\
   {IF isset($TEXT)}{TEXT $TEXT/}{ELSEIF isset($VALUE)}{$VALUE/}{ELSE}(null){/IF}\
  {ELSE}\
@@ -360,7 +360,7 @@ for(i = 0; i < all.length; i++) \{
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "button_submit"}\
- {TPL "button" "TYPE" => "submit" "TEXT" => $VALUE /}\
+ {TPL "button" "DISPLAY_TYPE" => "submit" "TEXT" => $VALUE /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
@@ -378,7 +378,7 @@ for(i = 0; i < all.length; i++) \{
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "input_hidden"}\
-  {TPL "input" "TYPE" => "hidden", "FIELD" => "hidden", "NAME" => $FIELD /}\
+  {TPL "input" "DISPLAY_TYPE" => "hidden", "FIELD" => "hidden", "NAME" => $FIELD /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
@@ -390,16 +390,16 @@ for(i = 0; i < all.length; i++) \{
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "input_upload"}\
-  {TPL "input" "TYPE" => "file", "NAME" => $FIELD, "MAXLEN" => null /}\
+  {TPL "input" "DISPLAY_TYPE" => "file", "NAME" => $FIELD, "MAXLEN" => null /}\
 {/TEMPLATE}
 {TEMPLATE "input_upload_filename"}\
-  {TPL "input" "TYPE" => "file", "NAME" => $FIELD, "MAXLEN" => null, "SUFFIX" => $SUFFIX.":use_filename" /}\
+  {TPL "input" "DISPLAY_TYPE" => "file", "NAME" => $FIELD, "MAXLEN" => null, "SUFFIX" => $SUFFIX.":use_filename" /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "input_string"}\
-  {TPL "input" "TYPE" => "text", "NAME" => $FIELD /}\
+  {TPL "input" "DISPLAY_TYPE" => "text", "NAME" => $FIELD /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
@@ -417,19 +417,19 @@ for(i = 0; i < all.length; i++) \{
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "input_bool"}\
-  {TPL "input" "TYPE" => "checkbox", "NAME" => $FIELD, "CHECKED" => $VALUE, "VALUE" => 1 /}\
+  {TPL "input" "DISPLAY_TYPE" => "checkbox", "NAME" => $FIELD, "CHECKED" => $VALUE, "VALUE" => 1 /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "input_password"}\
-  {TPL "input" "TYPE" => "password", "NAME" => $FIELD, "VALUE" => "" /}\
+  {TPL "input" "DISPLAY_TYPE" => "password", "NAME" => $FIELD, "VALUE" => "" /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "input_mode"}\
-  {TPL "input" "TYPE" => "radio", "NAME" => $FIELD, "CHECKED" => ($VALUE==$code), "VALUE" => $code /}{IF $text}{TEXT $text}{ELSE}{TEXT $code}{/IF}\
+  {TPL "input" "DISPLAY_TYPE" => "radio", "NAME" => $FIELD, "CHECKED" => ($VALUE==$code), "VALUE" => $code /}{IF $text}{TEXT $text}{ELSE}{TEXT $code}{/IF}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
@@ -457,8 +457,8 @@ for(i = 0; i < all.length; i++) \{
 {TEMPLATE "_input_table_loop"}
   {LOOP $SCHEMA->$TABLE->FIELDS AS $FIELD => $FDEF}
     {VAR $VALUE = @$DATA->0->$FIELD/}
-    {VAR $CALL = "input_".$FDEF->TYPE /}
-    {IF $FDEF->TYPE == "hidden"}
+    {VAR $CALL = "input_".$FDEF->DISPLAY_TYPE /}
+    {IF $FDEF->DISPLAY_TYPE == "hidden"}
      {TPL $CALL /}
     {ELSEIF PERM $TABLE $FIELD "W" /}
      {IF $IMMUTABLE->$FIELD}{VAR $CALL = $FDEF->IMMUTABLE /}{ELSEIF $FDEF->TPL_INPUT}{VAR $CALL = $FDEF->TPL_INPUT /}{/IF}
