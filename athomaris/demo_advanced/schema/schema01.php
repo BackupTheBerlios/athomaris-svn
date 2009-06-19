@@ -52,6 +52,12 @@ $SCHEMA =
 		      ),
 		"UNIQUE" => array("foo_name,bar_name"),
 		),
+	  "foos_joinedwith_bars" =>
+	  array("VIEW" =>
+		array(
+		      "TABLE" => "foos,foo2bars,bars",
+		      )
+		),
 	  );
 
 $EXTRA =

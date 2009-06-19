@@ -30,6 +30,7 @@ if(!@$BASEDIR)
 
 # TODO: security checks
 
+$debug = true;
 require_once($BASEDIR . "/../common/db/db.php");
 
 echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
@@ -78,7 +79,7 @@ function __db_create_index($fields, $drop) {
   return $res;
 }
 
-function __db_create_view($SCHEMA, $newtable, $restrict) {
+function __db_create_tpview($SCHEMA, $newtable, $restrict) {
   $id_field = $SCHEMA[$newtable]["FIELDNAME_ID"];
   $version_field = $SCHEMA[$newtable]["FIELDNAME_VERSION"];
   $deleted_field = $SCHEMA[$newtable]["FIELDNAME_DELETED"];
@@ -127,13 +128,39 @@ function _db_gen_indices($SCHEMA, $def, $newtable, $secondary) {
   return $indices;
 }
 
-function _db_create_tables($OLD, $NEW, $database) {
+function _db_create_view($NEW, $alias, $qstruct) {
+  global $SCHEMA;
+  $oldschema = $SCHEMA;
+  $SCHEMA = $NEW;
+  $q2 = _db_mangle_query($databases, $qstruct);
+  if(count($databases) == 1) {
+    $database = key($databases);
+    $query = _db_make_query($database, $subqs, $q2);
+  } else {
+    $SCHEMA = $oldschema;
+    return "/* cannot create distributed view '$alias' */\n";
+  }
+  $SCHEMA = $oldschema;
+  return "drop view if exists $alias;\ncreate view $alias as $query;\n\n";
+}
+
+function _db_create_tables($OLD, $NEW, $database, &$count) {
+  $count = 0;
   $query = "";
   foreach($NEW as $newtable => $newdef) {
-    if($newdef["DB"] != $database) {
-      $query .= "/* skipping $newtable, not in $database */\n";
+    if(@$newdef["VIEW"]) {
+      $query .= _db_create_view($NEW, $newtable, $newdef["VIEW"]);
       continue;
     }
+    if($newdef["DB"] != $database) {
+      $query .= "/* skipping table '$newtable', not in database '$database' */\n";
+      continue;
+    }
+    if(!db_access_table($newtable, "w")) {
+      $query .= "/* skipping table '$newtable', no write access */\n";
+      continue;
+    }
+
     $singular = _db_singular($newtable, $NEW);
     $primary = _db_primary($newtable, $NEW);
     $secondary = $singular . "_name"; // !!! not generic!
@@ -144,6 +171,7 @@ function _db_create_tables($OLD, $NEW, $database) {
     $tablename .= "_tp";
     // completely new table or delta?
     if(!isset($OLD[$newtable])) {
+      $count++;
       $index = "";
       $query .= "create table if not exists $tablename (\n";
       foreach($newdef["FIELDS"] as $field => $value) {
@@ -169,7 +197,7 @@ function _db_create_tables($OLD, $NEW, $database) {
       if(!$engine) $engine = "myisam";
       $query = preg_replace("/,\s*\Z/m", "\n", $query);
       $query .= ") engine=$engine;\n";
-      $query .= __db_create_view($NEW, $newtable, $restrict);
+      $query .= __db_create_tpview($NEW, $newtable, $restrict);
     } else { // isset($OLD[$newtable]) => use "alter table"
       $olddef = $OLD[$newtable];
       $flag = 0;
@@ -181,6 +209,7 @@ function _db_create_tables($OLD, $NEW, $database) {
 	  continue;
 	}
 	if(isset($value["CHANGE_FROM"])) {
+	  $count++;
 	  $oldfield = $value["CHANGE_FROM"];
 	  $query .= "alter table $tablename\n";
 	  $query .= "  change column " . $oldfield . " " . __db_create_field($field, $value) . " $after;\n";
@@ -198,6 +227,7 @@ function _db_create_tables($OLD, $NEW, $database) {
 	    }
 	  }
 	  if($diff) {
+	    $count++;
 	    $query .= "alter table $tablename\n";
 	    $query .= "  modify column " . __db_create_field($field, $value) . " $after;\n";
 	    $flag++;
@@ -210,6 +240,7 @@ function _db_create_tables($OLD, $NEW, $database) {
 	    $flag_col++;
 	  }
 	} else { // create new column
+	  $count++;
 	  $query .= "alter table $tablename\n";
 	  $query .= "  add column" . __db_create_field($field, $value) . " $after;\n";
 	  $flag++;
@@ -222,6 +253,7 @@ function _db_create_tables($OLD, $NEW, $database) {
       $newindices = _db_gen_indices($NEW, $newdef, $newtable, $secondary);
       foreach ($newindices as $index) {
 	if(!in_array($index, $oldindices)) {
+	  $count++;
 	  $query .= "alter table $tablename\n";
 	  $query .= "  add" . __db_create_index($index, false) . ";\n";
 	  $flag++;
@@ -229,6 +261,7 @@ function _db_create_tables($OLD, $NEW, $database) {
       }
       foreach ($oldindices as $index) {
 	if(!in_array($index, $newindices)) {
+	  $count++;
 	  $query .= "alter table $tablename\n";
 	  $query .= "  drop" . __db_create_index($index, true) . ";\n";
 	  $flag++;
@@ -241,6 +274,7 @@ function _db_create_tables($OLD, $NEW, $database) {
 	  continue;
 	}
 	if(!isset($newdef["FIELDS"][$field])) {
+	  $count++;
 	  $query .= "alter table $tablename\n";
 	  $query .= "  drop column $field;\n";
 	  $flag++;
@@ -250,13 +284,16 @@ function _db_create_tables($OLD, $NEW, $database) {
       if($flag_col) {
 	// whenever the *_tp table changes, mysql seems to require
 	// recreation of the view (otherwise the old definition would remain)
-	$query .= __db_create_view($NEW, $newtable, $restrict);
+	$count++;
+	$query .= __db_create_tpview($NEW, $newtable, $restrict);
       } elseif($flag) $query .= "\n";
     }
   }
   foreach($OLD as $oldtable => $olddef) {
     if(!isset($NEW[$newtable])) {
+      $count++;
       $query .= "drop table " . $oldtable . "_tp\n";
+      $count++;
       $query .= "drop view " . $oldtable . "\n\n";
     }
   }
@@ -356,7 +393,11 @@ foreach($CONFIG["CONNECTIONS"] as $database => $ddef) {
 
   $query .= "use $DB_NAME;\n\n";
 
-  $query .= _db_create_tables($OLD, $NEW, $database);
+  $query .= _db_create_tables($OLD, $NEW, $database, $count);
+  if(!$count) {
+    echo "// nothing to do with this database -> skipping<br/><br/>\n";
+    continue;
+  }
 
   $QUERIES[$database] = $query;
   echo "<tt>\n";
@@ -372,6 +413,7 @@ foreach($CONFIG["CONNECTIONS"] as $database => $ddef) {
     echo "CREATE / OVERWRITE database: ";
   }
   echo "<input name='ok' type='submit' value='$database'/>\n";
+  echo "<br/><br/>=======================================================<br/><br/>\n";
   echo "</form>\n";
 }
 

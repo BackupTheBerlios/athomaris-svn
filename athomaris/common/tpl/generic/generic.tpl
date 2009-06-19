@@ -633,9 +633,9 @@ for(i = 0; i < all.length; i++) \{
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "tool_page"}
-Page
+{TEXT "Page:"}
 <input type="text" name="{$PREFIX}tool_page_start" size="2" {IF $tool_page_start}value="{$tool_page_start}"{/IF}/>
-Max
+{TEXT "Max:"}
 <input type="text" name="{$PREFIX}tool_page_size" size="2" {IF $tool_page_size}value="{$tool_page_size}"{/IF}/>
 <input type="submit" name="{$PREFIX}tool_page_submit" value="{TEXT "goto"}"/>
 {/TEMPLATE}
@@ -643,13 +643,13 @@ Max
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "tool_history"}
-Show history: <input type="checkbox" name="{$PREFIX}tool_history" {IF $tool_history}checked="checked"{/IF}/>
+{TEXT "Show history:"} <input type="checkbox" name="{$PREFIX}tool_history" {IF $tool_history}checked="checked"{/IF}/>
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "tool_level"}
-Min-Level:<input type="text" name="{$PREFIX}tool_level" size="2" {IF $tool_level}value="{$tool_level}"{/IF}/>
+{TEXT "Min-Level:"} <input type="text" name="{$PREFIX}tool_level" size="2" {IF $tool_level}value="{$tool_level}"{/IF}/>
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////

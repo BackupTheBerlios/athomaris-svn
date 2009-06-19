@@ -130,18 +130,24 @@ function _mysql_add_deleted($qstruct) {
   $add1 = "";
   $add2 = "";
   foreach($qstruct["TABLE"] as $alias => $tp_table) {
-    _db_temporal($tp_table, $table);
-    if($table != $tp_table) {
+    if(_db_temporal($tp_table, $table)) {
       if(is_int($alias))
 	$alias = $tp_table;
       if($add1) {
 	$add1 .= " or ";
 	$add2 .= " or ";
       }
+      $realtable = _db_realname($table);
+      if(!$realtable)
+	die("cann find realtable for table '$table'\n");
+      $realtable = _db_2temporal($realtable);
       $id = _db_extfield($table, "id");
-      $version = _db_extfield($table, "version");
-      $add1 .= "$version < (select max($version) from ${table}_tp old where old.$id = $alias.$id)";
-      $add2 .= _db_extfield($table, "deleted");
+      $realid = _db_realname($table, $id);
+      if(!$realid)
+	die("cann find realid for field '$id' in table '$table'\n");
+      $version = _db_realname($table, _db_extfield($table, "version"));
+      $add1 .= "$version < (select max($version) from $realtable old where old.$id = $alias.$id)";
+      $add2 .= _db_realname($table, _db_extfield($table, "deleted"));
     }
   }
   if($add1) {
@@ -152,13 +158,17 @@ function _mysql_add_deleted($qstruct) {
 
 function _mysql_make_select(&$subqs, $qstruct, $is_empty) {
   global $SCHEMA;
+  $table = $qstruct["TABLE"];
   $res = "";
   if(($pair = @$qstruct["AGG"])) { // treat aggregate functions
     if(($list = @$pair["FIELD"])) {
       foreach($list as $alias => $field) {
 	if($res)
 	  $res .= ", ";
-	$res .= $field;
+	$realfield = _db_realname($table, $field);
+	if(!$realfield)
+	  die("cannot find aggregate field '$field' in table '$table'\n");
+	$res .= $realfield;
 	if(is_string($alias)) {
 	  $res .= " as $alias";
 	}
@@ -168,35 +178,50 @@ function _mysql_make_select(&$subqs, $qstruct, $is_empty) {
       foreach($list as $alias => $field) {
 	if($res)
 	  $res .= ", ";
-	$res .= $field;
+	$realfield = _db_realname($table, $field);
+	if(!$realfield)
+	  die("cannot find group-by field '$field' in table '$table'\n");
+	$res .= $realfield;
 	if(is_string($alias)) {
 	  $res .= " as $alias";
 	}
       }
     }
-  } elseif(($list = @$qstruct["FIELD"])) { // treat ordinary subqueries
+  } elseif(($list = @$qstruct["FIELD"])) { // treat ordinary queries
     foreach($list as $alias => $field) {
       if(is_string($field)) {
-	if($res)
-	  $res .= ", ";
 	if($is_empty) {
+	  if($res)
+	    $res .= ", ";
 	  $init = null;
 	  foreach($qstruct["BASE_TABLE"] as $table) {
 	    if(($init = @$SCHEMA[$table]["FIELDS"][$field]["DEFAULT"]))
 	      break;
 	  }
-	  if(is_null($init))
+	  if(is_null($init)) {
 	    $init = "null";
+	  }
 	  $res .= $init;
-	  if(!$alias || !is_string($alias))
-	    $alias = $field;
+	  if(!$alias || !is_string($alias)) {
+	    $realfield = _db_realname($table, $field);
+	    if(!$realfield)
+	      die("cannot find alias field '$init' in table '$table'\n");
+	    $alias = $realfield;
+	  }
 	} else { // normal case
-	  $res .= $field;
+	  if($res)
+	    $res .= ", ";
+	  $realfield = _db_realname($table, $field);
+	  if(!$realfield)
+	    die("cannot find real fieldname for '$field'\n");
+	  $res .= $realfield;
 	}
       } elseif(!@$field["TABLE"]) { // we have a boolean sub-expression
-	$subexpr = _mysql_make_where($field);
+	if($res)
+	  $res .= ", ";
+	$subexpr = _mysql_make_where($table, $field);
 	$res .= "($subexpr)";
-      } else { // we have a sub-expression
+      } else { // we have a sub-query
 	global $debug; if($debug) { echo "subquery: "; print_r($field); echo"<br>\n";}
 	$sub_homo = _db_homogenize($field);
 	$dummy = array();
@@ -212,7 +237,7 @@ function _mysql_make_select(&$subqs, $qstruct, $is_empty) {
 	  continue;
 	}
       }
-      if($is_empty || (is_string($alias) && is_string($field) && $alias != $field)) {
+      if($is_empty || (is_string($alias) && is_string($field) && $alias != _db_realname($table, $field))) {
 	$res .= " as $alias";
       }
     }
@@ -233,13 +258,13 @@ function _mysql_make_group($qstruct) {
     foreach($list as $alias => $field) {
       if($res)
 	$res .= ", ";
-      $res .= $field;
+      $res .= $field; // no _db_realname() should be necessary
     }
   }
   return $res;
 }
 
-function _mysql_make_from($qstruct) {
+function _mysql_make_from_old($qstruct) {
   global $SCHEMA;
   $res = "";
   if($list = @$qstruct["TABLE"]) {
@@ -279,11 +304,70 @@ function _mysql_make_from($qstruct) {
   return $res;
 }
 
-function _mysql_make_boolean($field, $value, $use_or) {
+function _mysql_make_from($qstruct, &$joinconditions) {
+  global $SCHEMA;
+  $res = "";
+  $joinconditions = "";
+  if(!$list = @$qstruct["TABLE"]) {
+    print_r($qstruct); echo "<br>\n";
+    die("invalid TABLE information");
+  }
+  $translate = array();
+  $base_table = array();
+  foreach($list as $alias => $tp_table) {
+    if($res)
+      $res .= ", ";
+    if(is_array($tp_table)) {
+      global $debug; if($debug) { echo "subquery: "; print_r($tp_table); echo"<br>\n";}
+      $homo = _db_homogenize($tp_table);
+      $dummy = array();
+      $subquery = mysql_make_query($dummy, $homo);
+      if(!is_string($alias))
+	die("an alias for a subtable is missing");
+      $translate[$alias] = $alias;
+      $res .= "($subquery) $alias";
+    } else {
+      $is_tp = _db_temporal($tp_table, $table);
+      $realtable = _db_realname($table);
+      if($is_tp)
+	$realtable = _db_2temporal($realtable);
+      if(is_string($alias)) {
+	$base_table[$alias] = $table;
+	$translate[$alias] = $realtable;
+	$res .= "$realtable $alias";
+      } else {
+	$base_table[$tp_table] = $table;
+	$translate[$tp_table] = $realtable;
+	$res .= "$realtable";
+      }
+    }
+  }
+  $all_joins = $qstruct["JOIN_ON"];
+  if(@$qstruct["JOIN_DEPENDANT"]) {
+    $all_joins = array_merge($qstruct["JOIN_DEPENDANT"], $all_joins);
+  }
+  foreach($all_joins as $joinstring) {
+    if($joinconditions)
+      $joinconditions .= " and ";
+    // translate $joinstring to the real names
+    if(!preg_match("/^([^.]+).([^=]+)=([^.]+).([^=]+)$/", $joinstring, $matches)) {
+      die("bad joinstring '$joinstring'\n");
+    }
+    $realtable1 = $translate[$matches[1]];
+    $realfield1 = _db_realname($base_table[$matches[1]], $matches[2]);
+    $realtable2 = $translate[$matches[3]];
+    $realfield2 = _db_realname($base_table[$matches[3]], $matches[4]);
+    $joinstring = "$realtable1.$realfield1=$realtable2.$realfield2";
+    $joinconditions .= $joinstring;
+  }
+  return $res;
+}
+
+function _mysql_make_boolean($table, $field, $value, $use_or) {
   global $RAW_DOTID;
   // check nested conditions
   if(is_int($field) && is_array($value)) { // toggle and<->or
-    $subres = _mysql_make_where($value, !$use_or);
+    $subres = _mysql_make_where($table, $value, !$use_or);
     return "($subres)";
   }
 
@@ -295,7 +379,7 @@ function _mysql_make_boolean($field, $value, $use_or) {
       $dummy = array();
       $subres = mysql_make_query($dummy, $value);
     } else {
-      $subres = _mysql_make_where($value, $use_or);
+      $subres = _mysql_make_where($table, $value, $use_or);
     }
     return "$op ($subres)";
   }
@@ -320,7 +404,7 @@ function _mysql_make_boolean($field, $value, $use_or) {
 	  else
 	    $res .= " and ";
 	}
-	$res .= _mysql_make_boolean($field, $item, $use_or);
+	$res .= _mysql_make_boolean($table, $field, $item, $use_or);
       }
       return $res;
     }
@@ -337,20 +421,23 @@ function _mysql_make_boolean($field, $value, $use_or) {
   } elseif(is_null($value)) {
     $op = "!";
   }
-  
+
+  $realfield = _db_realname($table, $field);
+  if(!$realfield)
+    die("cannot find field '$field' in table '$table'\n");
   if($op == "@") {
-    $res = "$field is not null";
+    $res = "$realfield is not null";
   } elseif($op == "%") {
-    $res = "$field like $sql_value";
+    $res = "$realfield like $sql_value";
   } elseif($op == "!") {
-    $res = "$field is null";
+    $res = "$realfield is null";
   } else {
-    $res = "$field $op $sql_value";
+    $res = "$realfield $op $sql_value";
   }
   return $res;
 }
 
-function _mysql_make_where($fields, $use_or = false) {
+function _mysql_make_where($table, $fields, $use_or = false) {
   $res = "";
   if($fields) {
     foreach($fields as $field => $value) {
@@ -360,7 +447,7 @@ function _mysql_make_where($fields, $use_or = false) {
 	else
 	  $res .= " and ";
       }
-      $res .= _mysql_make_boolean($field, $value, $use_or);
+      $res .= _mysql_make_boolean($table, $field, $value, $use_or);
     }
   }
   return $res;
@@ -373,11 +460,19 @@ function mysql_make_query(&$subqs, $qstruct) {
   if($is_empty) {
     return "select $select";
   }
-  $from = _mysql_make_from($qstruct);
+  $from = _mysql_make_from($qstruct, $join_where);
   $query = "select $select from $from";
-  $where = _mysql_make_where(@$qstruct["COND"], false);
-  if($where)
+  $where = _mysql_make_where($qstruct["TABLE"], @$qstruct["COND"], false);
+  if($join_where) {
+    if($where) {
+      $where = "$join_where and ($where)";
+    } else {
+      $where = $join_where;
+    }
+  }
+  if($where) {
     $query .= " where $where";
+  }
   if($group = _mysql_make_group($qstruct)) {
     $query .= " group by $group"; 
   }
@@ -535,10 +630,10 @@ function _mysql_make_idwhere($qstruct, $row = null) {
   $table = $qstruct["TABLE"];
   if($row) {
     $cond = _db_make_idcond($table, $row);
-    return _mysql_make_where($cond);
+    return _mysql_make_where($table, $cond);
   }
   if(($cond = @$qstruct["COND"])) {
-    return _mysql_make_where($cond);
+    return _mysql_make_where($table, $cond);
   }
   $res = "";
   $count = 0;
@@ -557,16 +652,17 @@ function _mysql_make_idwhere($qstruct, $row = null) {
 
 function _mysql_make_update_flat(&$stack, $qstruct, &$cb_list) {
   $table = $qstruct["TABLE"];
+  $realtable = _db_realname($table);
   $primary = _db_primary($table);
   $mode = $qstruct["MODE"];
   if($mode == "DELETE") {
-    $res = "delete from $table where ";
+    $res = "delete from $realtable where ";
     $res .= _mysql_make_idwhere($qstruct);
     $cb_list[] = $qstruct["CB"];
     return $res;
   }
-  $res = "$mode $table(";
-  $res .= implode(", ", $qstruct["UPDATE_FIELDS"]);
+  $res = "$mode $realtable(";
+  $res .= _db_realname($table, implode(", ", $qstruct["UPDATE_FIELDS"]));
   $res .= ") values ";
   $count = 0;
   foreach($qstruct["DATA"] as $row) {
@@ -602,13 +698,15 @@ function _mysql_make_delete_tp(&$stack, $qstruct, &$cb_list) {
     return null;
   }
   $table = $qstruct["TABLE"];
+  $realtable = _db_realname($table);
+  $realtable_tp = _db_2temporal($realtable);
 
   $deleted = _db_extfield($table, "deleted");
   $version = _db_extfield($table, "version");
   $modified_from = _db_extfield($table, "modified_from");
   $modified_by = _db_extfield($table, "modified_by");
 
-  $fields = implode(", ", $qstruct["ALL_FIELDS"]);
+  $fields = implode(", ", _db_realname($table, $qstruct["ALL_FIELDS"]));
   $newdata = "";
   $rowcount = 0;
   foreach($qstruct["ALL_FIELDS"] as $field) {
@@ -623,7 +721,7 @@ function _mysql_make_delete_tp(&$stack, $qstruct, &$cb_list) {
     } elseif($field == $modified_by) {
       $newdata .= db_esc_sql($USER);
     } else {
-      $newdata .= $field;
+      $newdata .= _db_realname($table, $field);
     }
     
     $idcond = _mysql_make_idcond_base($qstruct, null);
@@ -633,7 +731,7 @@ function _mysql_make_delete_tp(&$stack, $qstruct, &$cb_list) {
     }
     
   }
-  $res = "Replace into ${table}_tp($fields) select $newdata from $table where $where";
+  $res = "Replace into $realtable_tp($fields) select $newdata from $realtable where $where";
   $cb_list[] = $qstruct["CB"];
   return $res;
 }
@@ -646,15 +744,17 @@ function _mysql_make_update_tp(&$stack, $qstruct, &$cb_list) {
   }
   $res = "";
   $table = $qstruct["TABLE"];
+  $realtable = _db_realname($table);
+  $realtable_tp = _db_2temporal($realtable);
   $primary = _db_primary($table);
   $deleted = _db_extfield($table, "deleted");
-  $fields = implode(", ", $qstruct["ALL_FIELDS"]);
+  $fields = implode(", ", _db_realname($table, $qstruct["ALL_FIELDS"]));
   $count = 0;
   foreach($qstruct["DATA"] as $row) {
     $idcond = _mysql_make_idcond_base($qstruct, $row);
     if($count++)
       $res .="; ";
-    $res .= "replace into ${table}_tp($fields) ";
+    $res .= "replace into $realtable_tp($fields) ";
 
     $where = _mysql_make_idwhere($qstruct, $row);
     if($ERROR) {
@@ -665,6 +765,7 @@ function _mysql_make_update_tp(&$stack, $qstruct, &$cb_list) {
     $rowcount = 0;
     $oldcount = 0;
     foreach($qstruct["ALL_FIELDS"] as $field) {
+      $realfield = _db_realname($table, $field);
       if($rowcount++)
 	$newdata .=", ";
       if($field == $deleted) {
@@ -681,16 +782,16 @@ function _mysql_make_update_tp(&$stack, $qstruct, &$cb_list) {
 	}
 	$newdata .= db_esc_sql($value);
       } elseif($mode == "REPLACE") { // caution: we cannot be sure that the data already exists, handle that case
-	$newdata .= "case when exists(select $field from $table where $where) then (select max($field) from $table where $where) else null end";
+	$newdata .= "case when exists(select $realfield from $realtable where $where) then (select max($realfield) from $realtable where $where) else null end";
       } else { // fallback to old value from the db
 	$oldcount++;
-	$newdata .= $field;
+	$newdata .= $realfield;
       }
     }
     if($mode == "REPLACE") {
       $res .= "select $newdata";
     } elseif(($oldcount || $mode == "UPDATE") && $mode != "INSERT") {
-      $res .= "select $newdata from $table where $where";
+      $res .= "select $newdata from $realtable where $where";
     } else {
       $res .= "values ($newdata)";
     }
@@ -713,7 +814,10 @@ function _mysql_make_update(&$stack, $qstruct, &$cb_list) {
 function mysql_make_update($qstruct, &$cb_list) {
   // initialize $stack with first qstruct 
   $stack = array("UPDATE" => array($qstruct));
-  $table = $qstruct["TABLE"];
+  $tp_table = $qstruct["TABLE"];
+  if(_db_temporal($tp_table, $table)) {
+    $qstruct["TABLE"] = $table;
+  }
   $mode = $qstruct["MODE"];
   // add special checks/requests only for the _first_ qstruct
   foreach($qstruct["DATA"] as $row) {

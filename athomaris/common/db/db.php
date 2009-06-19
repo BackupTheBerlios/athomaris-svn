@@ -24,6 +24,8 @@ require_once($BASEDIR . "/../common/db/schema.php");
 
 $FROM = @$_SERVER["REMOTE_HOST"] ? $_SERVER["REMOTE_HOST"] : (@$_SERVER["REMOTE_ADDR"] ? $_SERVER["REMOTE_ADDR"] : (@$_SERVER["HTTP_HOST"] ? $_SERVER["HTTP_HOST"] : (@$_ENV["USER"] ? $_ENV["USER"] : (@$argv[0] ? $argv[0] : (@$_SERVER["SCRIPT_FILENAME"] ? $_SERVER["SCRIPT_FILENAME"] : null)))));
 
+/* Remove fields we must not process due to permissions
+ */
 function _db_strip_permissions($qstruct, $fields) {
   $new = array();
   if($fields) {
@@ -42,6 +44,7 @@ function _db_strip_permissions($qstruct, $fields) {
   }
   return $new;
 }
+
 /* replace comma-separated strings by exploded arrays
  */
 function _db_homogenize($qstruct) {
@@ -104,6 +107,82 @@ function _db_add_schema($qstruct) {
   return $homo;
 }
 
+/* Compute reasonable defaults if JOIN_ON has been omitted
+ * => leads to natural join over all possibilities which could be joined.
+ */
+function _db_mangle_joins($qstruct) {
+  global $SCHEMA;
+  if(!@$qstruct["JOINFIELDS"]) { // make defaults: find all equally-named fields
+    $candidate_fields = array();
+    $joinfields = array();
+    foreach($qstruct["TABLE"] as $alias => $tp_table) {
+      if(is_array($tp_table)) {
+	// currently, sub-queries are not taken into account. this could be improved.
+	continue;
+      }
+      _db_temporal($tp_table, $table);
+      if(!$fields = @$SCHEMA[$table]["FIELDS"])
+	die("table $table does not exist");
+      $myfields = array_keys($fields);
+      foreach(array_intersect($candidate_fields, $myfields) as $field) {
+	$joinfields[$field] = $field;
+      }
+      $candidate_fields = array_merge($candidate_fields, $myfields);
+    }
+    $qstruct["JOINFIELDS"] = $joinfields;
+  }
+  if(!@$qstruct["JOIN_ON"]) { // make defaults: all pairs of tables are joined whenever possible
+    // first, compute the set of all occurring aliases
+    $alias_names = array();
+    foreach($qstruct["TABLE"] as $alias => $tp_table) {
+      if(is_array($tp_table)) {
+	// currently, sub-queries are not taken into account. this could be improved.
+	continue;
+      }
+      if(!is_string($alias))
+	$alias = $tp_table;
+      $alias_names[$alias] = $tp_table;
+    }
+    // now, join over all fields which are joinable -> result table will be as restricted as possible
+    $join_on = array();
+    foreach($qstruct["JOINFIELDS"] as $field) {
+      foreach($alias_names as $alias1 => $tp_table1) {
+	_db_temporal($tp_table1, $table1);
+	foreach($alias_names as $alias2 => $tp_table2) {
+	  if($alias1 == $alias2) {
+	    break; // only run over triangular matrix
+	  }
+	  _db_temporal($tp_table2, $table2);
+	  if(!@$SCHEMA[$table1]["FIELDS"][$field] || !@$SCHEMA[$table2]["FIELDS"][$field]) {
+	    continue;
+	  }
+	  $joinstring = "$alias1.$field=$alias2.$field";
+	  $join_on[] = $joinstring;
+	}
+      }
+    }
+    $qstruct["JOIN_ON"] = $join_on;
+  }
+  $schema_fields = array();
+  foreach($qstruct["TABLE"] as $alias => $tp_table) {
+    if(is_array($tp_table)) {
+      // currently, sub-queries are not taken into account. this could be improved.
+      continue;
+    }
+    _db_temporal($tp_table, $table);
+    foreach($SCHEMA[$table]["FIELDS"] as $field => $fdef) {
+      if(!$field || @$schema_fields[$field])
+	continue;
+      $schema_fields[$field] = $fdef;
+    }
+  }
+  $qstruct["SCHEMA_FIELDS"] = $schema_fields;
+  return $qstruct;
+}
+
+/* Prepare a qstruct, unify its internal format,
+ * add some defaults.
+ */
 function _db_mangle_query(&$databases, $qstruct) {
   global $SCHEMA;
   global $SYNTAX_QUERY;
@@ -115,6 +194,7 @@ function _db_mangle_query(&$databases, $qstruct) {
   // make a homogenous array syntax out of comma-separated strings
   $homo = _db_homogenize($qstruct);
   $homo = _db_add_schema($homo);
+  $homo = _db_mangle_joins($homo);
   // check whether all tables are on the same database
   $databases = array();
   foreach($homo["BASE_TABLE"] as $table) {
@@ -324,9 +404,10 @@ function _db_check_field($table, $field, $value) {
   return true;
 }
 
-function _db_check_unique(&$stack, $table, $rec) {
+function _db_check_unique(&$stack, $tp_table, $rec) {
   global $ERROR;
   global $SCHEMA;
+  _db_temporal($tp_table, $table);
   if(($uniques = @$SCHEMA[$table]["UNIQUE"])) {
     foreach ($uniques as $raw_fields) {
       $cond = array();

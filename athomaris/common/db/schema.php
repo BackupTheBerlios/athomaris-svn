@@ -32,6 +32,32 @@ if(!@$PASSWD) {
 
 ////////////////////////////////////////////////////////////////////////
 
+// general (missing in PHP)
+
+/* The default array_merge_recursive() has the semantics that
+ * conflicts on scalar values are resolved by _creating_
+ * an array of both scalar values. Sometimes you don't want
+ * that semantics, you just want that $a2 _always_ takes precendence
+ * over $a1 (overwriting the former value), without changing
+ * scalarness, similar to plain array_merge().
+ * Here is a function doing that:
+ */
+function array_replace_recursive($a1, $a2) {
+  if(!is_array($a1) || !is_array($a2)) {
+    return $a2;
+  }
+  foreach($a2 as $idx => $value) {
+    if(is_string($idx)) {
+      $a1[$idx] = array_replace_recursive(@$a1[$idx], $value);
+    } else {
+      $a1[] = $value;
+    }
+  }
+  return $a1;
+}
+
+////////////////////////////////////////////////////////////////////////
+
   /* Syntax checks.
    * This is only needed for precompiling.
    */
@@ -54,6 +80,7 @@ $SYNTAX_IDLIST = "/^(?:${RAW_ID}(?:,${RAW_ID})*)?$/";
 $SYNTAX_DOTIDLIST = "/^${RAW_DOTID}(?:,${RAW_DOTID})*$/";
 $SYNTAX_EXPRLIST = "/^${RAW_ID}[(]${RAW_DOTID}[)](?:,${RAW_ID}[(]${RAW_DOTID}[)])*$/";
 $SYNTAX_CONDFIELD = "/^${RAW_DOTID}(?:\\s*[<>=!@%]+\\s*(?:${RAW_DOTID})?)?$/";
+$SYNTAX_JOIN_ON = "/^${RAW_ID}\.${RAW_ID}={RAW_ID}\.${RAW_ID}$/";
 
 
 $SYNTAX_COND =
@@ -65,6 +92,8 @@ $SYNTAX_COND =
 $SYNTAX_QUERY =
   array(
 	"JOINFIELDS" => $SYNTAX_IDLIST,
+	"JOIN_ON" => array($SYNTAX_JOIN_ON),
+	"JOIN_DEPENDANT" => array($SYNTAX_JOIN_ON), // only for internal use
 	"TABLE" =>
 	array("|" =>
 	      $SYNTAX_IDLIST,
@@ -110,9 +139,6 @@ $SYNTAX_UPDATE =
 	);
 
 
-
-
-
 $SYNTAX_FIELD =
   array(
 	"TYPE" => "",
@@ -134,6 +160,7 @@ $SYNTAX_FIELD =
 	      ),
 	//"TARGET" => false, // for actual values, not in use
 	"ACCESS" => "/^[nrRwW]$/",
+	"REALNAME" => $SYNTAX_ID,
 
 	"TPL_DISPLAY" => $SYNTAX_IDLIST,
 	"TPL_INPUT" => $SYNTAX_ID,
@@ -149,6 +176,8 @@ $SYNTAX_SCHEMA =
   array(
 	"" =>
 	array(
+	      "VIEW" => $SYNTAX_QUERY,
+
 	      "TEMPORAL" => true,
 	      "FIELDNAME_ID" => $SYNTAX_ID,
 	      "FIELDNAME_VERSION" => $SYNTAX_ID,
@@ -167,6 +196,7 @@ $SYNTAX_SCHEMA =
 	      "DB" => "",
 	      "ENGINE" => "",
 	      "ACCESS" => "/^[nrRwW]$/",
+	      "REALNAME" => $SYNTAX_ID,
 
 	      // the following is questionable and will be changed to a better systematics
 	      "ADD_PROFILE_TABLE" => "",
@@ -215,7 +245,7 @@ $SYNTAX_EXTRA =
 	      ),
 	);
 
-$SYNTAX_SCHEMA = array_merge_recursive($SYNTAX_SCHEMA, $SYNTAX_EXTRA);
+$SYNTAX_SCHEMA = array_replace_recursive($SYNTAX_SCHEMA, $SYNTAX_EXTRA);
 
 require_once($BASEDIR . "/../common/db/syntax.php");
 require_once($BASEDIR . "/../common/db/infra.php");
@@ -480,6 +510,8 @@ $ENGINE_EXTRA =
 function _db_pass_temporal($SCHEMA) {
   global $EXTENSIONS;
   foreach($SCHEMA as $table => $tdef) {
+    if(@$tdef["VIEW"])
+      continue;
     $singular = _db_singular($table, $SCHEMA);
     $vers = array();
     foreach($EXTENSIONS as $ext) {
@@ -545,18 +577,33 @@ function _db_update_profiles($SCHEMA) {
   return $RES;
 }
 
-function _db_pass_main($SCHEMA) {
+function _db_pass_main($MYSCHEMA) {
   // main pass
   $RES = array();
   $maindatabase = _db_maindatabase();
-  foreach($SCHEMA as $table => $tdef) {
+  foreach($MYSCHEMA as $table => $tdef) {
     $newtdef = $tdef;
+    if(@$tdef["VIEW"]) {
+      global $SCHEMA;
+      $oldschema = $SCHEMA;
+      $SCHEMA = $MYSCHEMA;
+      $q2 = _db_mangle_query($databases, $tdef["VIEW"]);
+      $SCHEMA = $oldschema;
+      $tdef["FIELDS"] = $q2["SCHEMA_FIELDS"];
+      $newtdef["ACCESS"] = "R";
+      $newtdef["TEMPORAL"] = false;
+      $newtdef["TOOLS"] = array("tool_search" => true, "tool_page" => true);
+    }
+
+    if(!@$tdef["REALNAME"]) {
+      $newtdef["REALNAME"] = $table;
+    }
     if(!$singular = @$tdef["SINGULAR"]) {
-      $singular = _db_singular($table, $SCHEMA);
+      $singular = _db_singular($table, $MYSCHEMA);
       $newtdef["SINGULAR"] = $singular;
     }
     if(!$primary = @$tdef["PRIMARY"]) {
-      $primary = _db_primary($table, $SCHEMA);
+      $primary = _db_primary($table, $MYSCHEMA);
       $newtdef["PRIMARY"] = $primary;
     }
     if(!@$tdef["DB"]) {
@@ -564,36 +611,25 @@ function _db_pass_main($SCHEMA) {
     }
     $newfields = array();
     foreach($tdef["FIELDS"] as $field => $fdef) {
+      if(!@$fdef["REALNAME"]) {
+	$fdef["REALNAME"] = $field;
+      }
       if(isset($fdef["REFERENCES"])) {
 	$assoc = $fdef["REFERENCES"];
 	foreach($assoc as $foreign => $props) {
 	  $all = preg_split("/\s*\.\s*/s", $foreign, 2);
 	  $ftable = $all[0];
 	  $ffield = $all[1];
-	  if(!isset($SCHEMA[$ftable])) {
+	  if(!isset($MYSCHEMA[$ftable])) {
 	    die("REFERENCES: foreign table '$ftable' does not exist");
 	  }
-	  if(!isset($SCHEMA[$ftable]["FIELDS"][$ffield])) {
+	  if(!isset($MYSCHEMA[$ftable]["FIELDS"][$ffield])) {
 	    die("REFERENCES: foreign field '$ffield' of table '$ftable' does not exist");
 	  }
 	  // the follwing will not work for cyclic references, deliberately
 	  $RES[$ftable]["XREF"][$ffield][] = array($table, $field, $props); 
 	}
       }
-      /*
-      if(isset($fdef["TARGET"])) {
-	$act_table = "act_" . $table;
-	$act_field = "act_" . $field;
-	if(!isset($RES[$act_table])) {
-	  $act_tdef = $tdef;
-	  $act_tdef["FIELDS"] = array();
-	  $act_tdef["INDEX"] = array();
-	  $act_tdef["UNIQUE"] = array();
-	  $RES[$act_table] = $act_tdef;
-	}
-	$RES[$act_table]["FIELDS"][$act_field] = $fdef;
-      }
-      */
       $newfields[$field] = $fdef;
     }
     //echo "<br>newfields: "; print_r($newfields); echo "<br>\n";
@@ -606,14 +642,16 @@ function _db_pass_main($SCHEMA) {
 /* compute additional information for _presentation_.
  *
  */
-function _db_pass_typeinfo($SCHEMA) {
+function _db_pass_typeinfo($MYSCHEMA) {
   // augment with additional info
-  $res = $SCHEMA;
-  foreach($SCHEMA as $table => $tinfo) {
+  $res = $MYSCHEMA;
+  foreach($MYSCHEMA as $table => $tinfo) {
     // default links from the primary and secondary keys to SELF
-    $primary = _db_primary($table, $SCHEMA);
-    $res[$table]["FIELDS"][$primary]["TYPE"] = "hidden";
-    $make_ref = array_merge(array($primary), @$tinfo["UNIQUE"]);
+    $primary = _db_primary($table, $MYSCHEMA);
+    if($primary) {
+      $res[$table]["FIELDS"][$primary]["TYPE"] = "hidden";
+      $make_ref = array_merge(array($primary), @$tinfo["UNIQUE"]);
+    }
     foreach($make_ref as $field) {
       if(!@$tinfo["FIELDS"][$field])
 	continue;
@@ -632,7 +670,7 @@ function _db_pass_typeinfo($SCHEMA) {
 	  $ref_table = $split[0];
 	  $ref_field = $split[1];
 	  // only create a default runtime link when the reference identifies target tuples _uniquely_
-	  if($ref_field == @$SCHEMA[$ref_table]["PRIMARY"] || array_search($ref_field, @$SCHEMA[$ref_table]["UNIQUE"]) !== false) {
+	  if($ref_field == @$MYSCHEMA[$ref_table]["PRIMARY"] || array_search($ref_field, @$MYSCHEMA[$ref_table]["UNIQUE"]) !== false) {
 	    $finfo["REF_LINKS"] = $link;
 	    $res[$table]["FIELDS"][$field]["REF_LINKS"] = $link;
 	    if(!@$finfo["POOL_DATA"]) {
@@ -746,10 +784,10 @@ function _db_pass_typeinfo($SCHEMA) {
   return $res;
 }
 
-function db_mangle_schema($SCHEMA) {
+function db_mangle_schema($MYSCHEMA) {
   global $SYNTAX_SCHEMA;
   global $CONFIG;
-  $error = db_check_syntax($SCHEMA, $SYNTAX_SCHEMA);
+  $error = db_check_syntax($MYSCHEMA, $SYNTAX_SCHEMA);
   if($error)
     die("bad syntax in schema: $error<br>\n");
 
@@ -757,29 +795,29 @@ function db_mangle_schema($SCHEMA) {
 
   if(@$CONFIG["USE_BUSINESS_ENGINE"]) {
     global $ENGINE_SCHEMA, $ENGINE_EXTRA;
-    $tmp = array_merge_recursive($ENGINE_SCHEMA, $ENGINE_EXTRA);
-    $SCHEMA = array_merge_recursive($tmp, $SCHEMA);
+    $tmp = array_replace_recursive($ENGINE_SCHEMA, $ENGINE_EXTRA);
+    $MYSCHEMA = array_replace_recursive($tmp, $MYSCHEMA);
   }
 
   if(@$CONFIG["USE_AUTH"]) {
     global $USER_SCHEMA, $USER_EXTRA;
-    $tmp = array_merge_recursive($USER_SCHEMA, $USER_EXTRA);
-    $SCHEMA = array_merge_recursive($tmp, $SCHEMA);
+    $tmp = array_replace_recursive($USER_SCHEMA, $USER_EXTRA);
+    $MYSCHEMA = array_replace_recursive($tmp, $MYSCHEMA);
     global $PROFILE_SCHEMA;
-    $SCHEMA = array_merge_recursive($PROFILE_SCHEMA, $SCHEMA);
+    $MYSCHEMA = array_replace_recursive($PROFILE_SCHEMA, $MYSCHEMA);
   }
 
   // mangling
 
-  $SCHEMA = _db_pass_temporal($SCHEMA);
+  $MYSCHEMA = _db_pass_temporal($MYSCHEMA);
 
-  $SCHEMA = _db_update_profiles($SCHEMA);
+  $MYSCHEMA = _db_update_profiles($MYSCHEMA);
 
-  $SCHEMA = _db_pass_main($SCHEMA);
+  $MYSCHEMA = _db_pass_main($MYSCHEMA);
+  
+  $MYSCHEMA = _db_pass_typeinfo($MYSCHEMA);
 
-  $SCHEMA = _db_pass_typeinfo($SCHEMA);
-
-  return $SCHEMA;
+  return $MYSCHEMA;
 }
 
 

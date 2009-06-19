@@ -31,6 +31,8 @@ $EXTENSIONS =
 
 // infrastructure
 
+/* Escaping: prevent SQL code injection
+ */
 function db_esc_sql($value) {
   if(is_array($value)) $value = implode(";", $value);
   if(is_null($value)) {
@@ -45,6 +47,8 @@ function db_esc_sql($value) {
   return "ERROR bad type '$value'";
 }
 
+/* Get the singular form of a tablename
+ */
 function _db_singular($table, $MYSCHEMA = null) {
   global $SCHEMA;
   if(!$MYSCHEMA)
@@ -56,6 +60,8 @@ function _db_singular($table, $MYSCHEMA = null) {
   return $singular;
 }
 
+/* Get artificial fieldnames from extension
+ */
 function _db_extfield($table, $extension, $MYSCHEMA = null) { // return name of extension field
   global $SCHEMA;
   if(!$MYSCHEMA)
@@ -64,15 +70,25 @@ function _db_extfield($table, $extension, $MYSCHEMA = null) { // return name of 
   return $MYSCHEMA[$table]["FIELDNAME_" . strtoupper($extension)];
 }
 
-function _db_primary($table, $MYSCHEMA = null) { // return name of primary key
+/* return name of primary key
+ */
+function _db_primary($table, $MYSCHEMA = null) {
   return _db_extfield($table, "id", $MYSCHEMA);
 }
 
-function _db_unique($table, $MYSCHEMA = null) { // return name of first UNIQUE key
+/* return name of first UNIQUE key
+ */
+function _db_unique($table, $MYSCHEMA = null) {
   global $SCHEMA;
   if(!$MYSCHEMA)
     $MYSCHEMA = $SCHEMA;
   return @$MYSCHEMA[$table]["UNIQUE"][0];
+}
+
+/* Currently the suffix "_tp" cannot be overridden
+ */
+function _db_2temporal($table) {
+  return "${table}_tp";
 }
 
 function _db_temporal($tp_table, &$table) {
@@ -84,6 +100,10 @@ function _db_temporal($tp_table, &$table) {
   return $is_tp;
 }
 
+/* return the logical connection of a table.
+ * FIXME: troughout the system, terminology should clearly differentiate
+ * between "connection" and "database". Currently mixed up :(
+ */
 function _db_database($table) {
   global $SCHEMA;
   $host = $SCHEMA[$table]["DB"];
@@ -100,6 +120,55 @@ function _db_maindatabase() {
   return $maindatabase;
 }
 
+/* Get the REALNAME.
+ * Also works for $field arrays.
+ * When $table is an array, search for a matching table.
+ */
+function _db_realname($tp_table, $field = null) {
+  global $SCHEMA;
+  if(is_array($field)) { // structured case
+    $res = array();
+    foreach($field as $item) {
+      $res[] = _db_realname($tp_table, $item);
+    }
+    return $res;
+  }
+  if(is_array($tp_table)) { // no _exact_ table given -> search for one
+    $tlist = "";
+    $res = "";
+    $res2 = "";
+    $count = 0; // number of matches
+    foreach($tp_table as $alias => $test) {
+      if(is_array($test))
+	$test = $alias;
+      $tlist .= "[$test]";
+      $test2 = _db_realname($test, $field);
+      if($test2) {
+	$count++;
+	if(!$res) {
+	  $res = _db_realname($test);
+	  $res2 = $test2;
+	}
+      }
+    }
+    if($res2) {
+      if($count > 1 && $field) { // resolve ambiguity by prepending
+	return "$res.$res2";
+      }
+      return $res2;
+    }
+    die("no table found for field '$field' ($tlist)\n");
+  }
+  // normal case
+  _db_temporal($tp_table, $table);
+  if(!$table || !@$SCHEMA[$table]) { // cannot translate
+    return "";
+  }
+  if($field) {
+    return $SCHEMA[$table]["FIELDS"][$field]["REALNAME"];
+  }
+  return $SCHEMA[$table]["REALNAME"];
+}
 
 //////////////////////////////////////////////////////////////////////
 

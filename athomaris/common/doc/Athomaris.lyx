@@ -75,7 +75,7 @@ Thomas Schöbel-Theuer
 \end_layout
 
 \begin_layout Date
-Version 0.1 
+Version 0.2
 \end_layout
 
 \begin_layout Standard
@@ -175,11 +175,12 @@ Access management
 \begin_layout Itemize
 
 \series bold
-Remote access
+Distributed access
 \series default
- to multiple databases in parallel.
- Unified views (logical integration of multiple data sources into a single
- 
+ to heterogeneous databases.
+ Logical integration of multiple data sources into a single 
+\series bold
+
 \begin_inset Quotes eld
 \end_inset
 
@@ -187,7 +188,17 @@ virtual database
 \begin_inset Quotes erd
 \end_inset
 
- with cross-join capabilities) are planned for a future release.
+
+\series default
+ with 
+\series bold
+cross-join capabilities
+\series default
+ and 
+\series bold
+cross-referential integrity
+\series default
+ are in preparation.
 \end_layout
 
 \begin_layout Itemize
@@ -1446,6 +1457,7 @@ root
  The access right codes have the following meaning:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 n no access at all.
 \end_layout
@@ -1464,6 +1476,40 @@ w write access to the database, but the user can only read it over the GUI.
 
 \begin_layout Description
 W write access for both the database and for the user.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+REALNAME
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Defaults to the tablename when omitted.
+\begin_inset Newline newline
+\end_inset
+
+The physical table name as used by the backend database may differ from
+ the 
+\emph on
+logical
+\emph default
+ name used by Athomaris.
+ By widely using this feature, you may ease 
+\emph on
+schema integration
+\emph default
+ in heterogeneous environments, such as company mergers etc.
+ When combined with the cross-join and cross-referential integrity capabilities
+ of Athomaris, 
+\series bold
+logical integration
+\series default
+ of large systems is possible.
 \end_layout
 
 \begin_layout Description
@@ -1492,7 +1538,7 @@ The
 \series bold
 Athomaris convention
 \series default
- is to use English plural forms for table names.
+ is to use English plural forms for (logical) table names.
  In contrast, column names should always start with the corresponding singular
  form whenever they 
 \emph on
@@ -1810,6 +1856,7 @@ describes the SQL type of the column.
  Valid types are:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -1941,6 +1988,7 @@ text
 , no comparion for equality is possible.
 \end_layout
 
+\end_deeper
 \begin_layout Standard
 Note: although some of these types look like being 
 \family typewriter
@@ -2069,6 +2117,49 @@ following
 \begin_layout Description
 
 \family typewriter
+REALNAME
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Defaults to the fieldname when omitted.
+\begin_inset Newline newline
+\end_inset
+
+The physical column name as used by the backend database may differ from
+ the 
+\emph on
+logical
+\emph default
+ name used by Athomaris
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+In essence, this automatically translates to SQL code like 
+\family typewriter
+select 
+\emph on
+physicalname
+\emph default
+ as 
+\emph on
+logicalname
+\emph default
+, ...
+ from ...
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
 LENGTH
 \family default
  => 
@@ -2170,6 +2261,7 @@ hash
  must obey the following structure:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -2206,6 +2298,7 @@ natural join
  ANSI SQL meaning:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -2270,6 +2363,8 @@ set
 null
 \end_layout
 
+\end_deeper
+\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -2900,6 +2995,189 @@ xx
  in the meantime).
 \end_layout
 
+\begin_layout Subsection
+Views
+\end_layout
+
+\begin_layout Standard
+Athomaris can create and manage SQL views in 
+\family typewriter
+$SCHEMA
+\family default
+.
+ Views may be built upon arbitrary queries, which may join multiple tables
+ as described in sections 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Full-Subqueries"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Aggregated-Subqueries"
+
+\end_inset
+
+.
+ A View may be used like any other table, but with some restrictions:
+\end_layout
+
+\begin_layout Enumerate
+Views must not span tables from different $CONFIG hosts (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:$CONFIG-configuration"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Enumerate
+Views are only readable (equivalent to 
+\family typewriter
+ACCESS => 
+\begin_inset Quotes eld
+\end_inset
+
+R
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+).
+\end_layout
+
+\begin_layout Enumerate
+There is no primary key (equivalent to 
+\family typewriter
+PRIMARY => null
+\family default
+).
+ As a consequence, no 
+\family typewriter
+REFERENCES
+\family default
+ to views are possible.
+\end_layout
+
+\begin_layout Enumerate
+A view cannot reference to the temporal version of another table, but only
+ to the flat one.
+ Instead of 
+\family typewriter
+\emph on
+tablename
+\emph default
+_tp,
+\family default
+ always 
+\family typewriter
+\emph on
+tablename
+\family default
+\emph default
+ must be referenced.
+\end_layout
+
+\begin_layout Enumerate
+A View may reference other views, provided that referenced views occur 
+\emph on
+earlier
+\emph default
+ in 
+\family typewriter
+$SCHEMA
+\family default
+.
+ This way, cyclic forward-references are impossible.
+\end_layout
+
+\begin_layout Standard
+A view is constructed by adding the following to 
+\family typewriter
+$SCHEMA
+\family default
+:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+viewname
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+=>
+\begin_inset space ~
+\end_inset
+
+array(
+\begin_inset Quotes eld
+\end_inset
+
+VIEW
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+=>
+\begin_inset space ~
+\end_inset
+
+
+\family default
+\emph on
+query
+\family typewriter
+\emph default
+)
+\family default
+ The schema compiler will automatically determine the corresponding 
+\family typewriter
+FIELDS
+\family default
+ and other descriptions as you would normally supply in a table definition.
+ You cannot provide other definitions by hand; they will be ignored.
+ The 
+\emph on
+query
+\emph default
+ syntax is described in sections 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Full-Subqueries"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Aggregated-Subqueries"
+
+\end_inset
+
+.
+ 
+\end_layout
+
 \begin_layout Section
 
 \family typewriter
@@ -2960,6 +3238,7 @@ $SCHEMA
 :
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -2969,6 +3248,7 @@ profiles
  This table contains the following columns:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3053,6 +3333,7 @@ tablename
  
 \end_layout
 
+\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3069,6 +3350,7 @@ skins
  It contains the following columns:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3106,6 +3388,7 @@ language_descr
  Description, for comments and remarks.
 \end_layout
 
+\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3114,6 +3397,7 @@ users
  A temporal table having the following columns:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -3168,6 +3452,8 @@ user_descr
  Description, for comments and remarks.
 \end_layout
 
+\end_deeper
+\end_deeper
 \begin_layout Standard
 When 
 \family typewriter
@@ -4915,11 +5201,12 @@ Concepts
 \end_layout
 
 \begin_layout Standard
-Most business process langugages such as BPEL use a 
+Most business process langugages such as BPEL follow a 
 \emph on
 procedural
 \emph default
- paradigm for describing a workflow, similar to classical programming languages.
+ paradigm for describing a workflow, similar to classical procedural programming
+ languages.
  These models are extremely complex: the current BPEL specification prints
  to 140 pages DINA4 in very small font.
  In contrast, the Athomaris engine tries to remain simple, but to reach
@@ -7161,7 +7448,7 @@ $count
 \end_layout
 
 \begin_layout Subsection
-Full Subqueries
+Full Queries / Subqueries
 \begin_inset CommandInset label
 LatexCommand label
 name "sub:Full-Subqueries"
@@ -7362,6 +7649,125 @@ reference "sub:Reading-of-Data"
 .
 \end_layout
 
+\begin_layout Description
+
+\family typewriter
+JOINFIELDS => 
+\begin_inset Quotes eld
+\end_inset
+
+fieldname1,fieldname2,...
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+.
+ May be omitted.
+ Defaults to 
+\emph on
+all
+\emph default
+ fieldnames occurring in more than one table from the 
+\family typewriter
+TABLE
+\family default
+ list.
+\begin_inset Newline newline
+\end_inset
+
+Use these fields for constructing a natural join.
+ Each of the fieldnames must occur in at least two of the tables mentioned
+ by 
+\family typewriter
+TABLE
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+JOIN_ON =>
+\family default
+ 
+\emph on
+array
+\emph default
+ of strings.
+ May be omitted.
+ Defaults to 
+\emph on
+all
+\emph default
+ possible conditions derivable from 
+\family typewriter
+JOINFIELDS
+\family default
+, expressed in the following syntax:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+tablename1
+\emph default
+.
+\emph on
+fieldname1
+\emph default
+=
+\emph on
+tablename2
+\emph default
+.
+\emph on
+fieldname2
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ The tablenames must occur in 
+\family typewriter
+TABLE
+\family default
+, and each fieldname must occur in the corresponding table.
+ When 
+\family typewriter
+\emph on
+tablename1
+\family default
+\emph default
+ and 
+\family typewriter
+\emph on
+tablename2
+\family default
+\emph default
+ are different, non-natural joins may be expressed.
+ When you provide 
+\family typewriter
+JOIN_ON
+\family default
+, 
+\family typewriter
+JOINFIELDS
+\family default
+ is ignored as a whole.
+ By supplying an empty array, you may express the full cartesian product
+ between the tables.
+\end_layout
+
+\end_deeper
 \begin_layout Standard
 Instead of calling 
 \family typewriter
@@ -7493,7 +7899,7 @@ COUNT
 \end_layout
 
 \begin_layout Subsection
-Aggregated Subqueries
+Aggregated Queries / Subqueries
 \begin_inset CommandInset label
 LatexCommand label
 name "sub:Aggregated-Subqueries"
@@ -7545,6 +7951,7 @@ hash
  consisting of the following two members:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -7606,6 +8013,26 @@ fieldlist
 group by
 \family default
  statements.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+In addition, 
+\family typewriter
+JOINFIELDS
+\family default
+ or 
+\family typewriter
+JOIN_ON
+\family default
+ may be added as described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Full-Subqueries"
+
+\end_inset
+
+.
 \end_layout
 
 \end_body

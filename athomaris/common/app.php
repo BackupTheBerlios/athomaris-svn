@@ -96,7 +96,7 @@ if(!isset($_REQUEST["tool_level"])) {
  }
 $tp_table = $table;
 if(@$_REQUEST["tool_history"]) {
-  $tp_table .= "_tp";
+  $tp_table = _db_2temporal($table);
   $version = _db_extfield($table, "version");
   $TOOL["order"] .= ",$version";
  }
