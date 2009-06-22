@@ -223,15 +223,14 @@ function _mysql_make_select(&$subqs, $qstruct, $is_empty) {
 	$res .= "($subexpr)";
       } else { // we have a sub-query
 	global $debug; if($debug) { echo "subquery: "; print_r($field); echo"<br>\n";}
-	$sub_homo = _db_homogenize($field);
 	$dummy = array();
-	$subquery = mysql_make_query($dummy, $sub_homo);
-	if(@$sub_homo["AGG"]) { // we can embed it as ordinary subquery
+	$subquery = mysql_make_query($dummy, $field);
+	if(@$field["AGG"]) { // we can embed it as ordinary subquery
 	  if($res)
 	    $res .= ", ";
 	  $res .= "($subquery)";
 	} else { // we have a true subtable which cannot be executed in a single query
-	  $joinfields = @$sub_homo["JOINFIELDS"];
+	  $joinfields = @$field["JOINFIELDS"];
 	  if($debug) { echo "pushback subquery: alias='$alias' joinfields='$joinfields'<br>\n";}
 	  $subqs[$alias] = array($joinfields, $subquery, $alias);
 	  continue;
@@ -264,54 +263,17 @@ function _mysql_make_group($qstruct) {
   return $res;
 }
 
-function _mysql_make_from_old($qstruct) {
-  global $SCHEMA;
-  $res = "";
-  if($list = @$qstruct["TABLE"]) {
-    $candidate_fields = array();
-    foreach($list as $alias => $tp_table) {
-      if(is_array($tp_table)) {
-	global $debug; if($debug) { echo "subquery: "; print_r($tp_table); echo"<br>\n";}
-	$homo = _db_homogenize($tp_table);
-	$dummy = array();
-	$subquery = mysql_make_query($dummy, $homo);
-	if(!is_string($alias))
-	  die("an alias for a subtable is missing");
-	$res .= "($subquery) $alias";
-      } else {
-	_db_temporal($tp_table, $table);
-	if(!$fields = @$SCHEMA[$table]["FIELDS"])
-	  die("table $table does not exist");
-	$myfields = array_keys($fields);
-	if(!is_string($alias))
-	  $alias = "";
-	if($res) {
-	  $joinfields = array_intersect($candidate_fields, $myfields);
-	  $using = implode(",", $joinfields);
-	  $res .= " join $tp_table $alias using($using)";
-	} else {
-	  $res = "$tp_table $alias";
-	}
-	$candidate_fields = array_merge($candidate_fields, $myfields);
-      }
-    }
-  }
-  if(!$res) {
-    //print_r(apd_callstack()); echo "<br>\n";
-    print_r($qstruct); echo "<br>\n";
-    die("invalid TABLE information");
-  }
-  return $res;
-}
-
 function _mysql_make_from($qstruct, &$joinconditions) {
   global $SCHEMA;
+  global $debug; if($debug) { echo "make_from: "; print_r($qstruct); echo"<br>\n";}
   $res = "";
   $joinconditions = "";
   if(!$list = @$qstruct["TABLE"]) {
     print_r($qstruct); echo "<br>\n";
     die("invalid TABLE information");
   }
+  if(is_string($list))
+    die("table '$list' has not been converted to array - internal homogenization error\n");
   $translate = array();
   $base_table = array();
   foreach($list as $alias => $tp_table) {
@@ -319,9 +281,8 @@ function _mysql_make_from($qstruct, &$joinconditions) {
       $res .= ", ";
     if(is_array($tp_table)) {
       global $debug; if($debug) { echo "subquery: "; print_r($tp_table); echo"<br>\n";}
-      $homo = _db_homogenize($tp_table);
       $dummy = array();
-      $subquery = mysql_make_query($dummy, $homo);
+      $subquery = mysql_make_query($dummy, $tp_table);
       if(!is_string($alias))
 	die("an alias for a subtable is missing");
       $translate[$alias] = $alias;
@@ -329,8 +290,11 @@ function _mysql_make_from($qstruct, &$joinconditions) {
     } else {
       $is_tp = _db_temporal($tp_table, $table);
       $realtable = _db_realname($table);
-      if($is_tp)
+      if($is_tp) {
 	$realtable = _db_2temporal($realtable);
+      }
+      if(!$realtable)
+	die("no realtable set .... this should never happen\n");
       if(is_string($alias)) {
 	$base_table[$alias] = $table;
 	$translate[$alias] = $realtable;

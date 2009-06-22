@@ -67,7 +67,7 @@ A Framework for Business Processes,
 \begin_inset Newline newline
 \end_inset
 
- DB Management and UIs
+ Database Integration and Web Interfaces
 \end_layout
 
 \begin_layout Author
@@ -75,7 +75,7 @@ Thomas Schöbel-Theuer
 \end_layout
 
 \begin_layout Date
-Version 0.2
+Version 0.3
 \end_layout
 
 \begin_layout Standard
@@ -101,10 +101,10 @@ Automated
  business process execution
 \series default
 : 
-\emph on
-orchestration
-\emph default
- of a very generic 
+\series bold
+orchestration level
+\series default
+, execution by a very generic 
 \series bold
 state transition machine
 \series default
@@ -119,7 +119,11 @@ temporal
 \emph default
  databases
 \series default
-: the history of all changes may be recorded, even deletions.
+: the 
+\series bold
+history
+\series default
+ of all changes may be recorded, even deletions.
  Temporal queries possible, in addition to non-temporal views of the data.
 \end_layout
 
@@ -138,28 +142,6 @@ alter table
 \family default
  are generated.
  Live data is left intact whenever possible.
-\end_layout
-
-\begin_layout Itemize
-Generic 
-\series bold
-default user interface
-\series default
-: once 
-\family typewriter
-$SCHEMA
-\family default
- has been created, the database can be accessed instantly via a customizable
- web-based interface.
-\end_layout
-
-\begin_layout Itemize
-Internal Model-View-Controller (MVC) architecture: generic 
-\series bold
-template management
-\series default
- with internationalization and user-profile support.
- Customizable and extensible.
 \end_layout
 
 \begin_layout Itemize
@@ -206,7 +188,17 @@ cross-referential integrity
 \series bold
 Scalable
 \series default
-: supports master/slave replication setups for large enterprises.
+: transparent support for master/slave replication setups in large enterprises.
+ 
+\series bold
+Vertical splitting
+\series default
+ via views.
+ Transparent 
+\series bold
+horizontal splitting
+\series default
+ is in preparation.
 \end_layout
 
 \begin_layout Itemize
@@ -216,6 +208,32 @@ Automatic consistency updates
 \series default
 : tables on different (distributed) databases may be kept always in-sync
  with each other, either symmetrically or asymmetrically in multiple modes.
+\end_layout
+
+\begin_layout Itemize
+Generic 
+\series bold
+default user interface
+\series default
+: once 
+\family typewriter
+$SCHEMA
+\family default
+ has been created, the database can be accessed instantly via a customizable
+ web-based interface (without programming).
+\end_layout
+
+\begin_layout Itemize
+Internal 
+\series bold
+Model-View-Controller
+\series default
+ (MVC) architecture: generic 
+\series bold
+template management
+\series default
+ with internationalization and user-profile support.
+ Customizable and extensible.
 \end_layout
 
 \begin_layout Standard
@@ -1230,11 +1248,11 @@ on update cascade
 
 
 \family default
- (see below), you get a 
+ (see below), your system becomes flexible in a way which is 
 \emph on
 vital
 \emph default
- flexibility which is often desperatly needed in large enterprises!
+ for large enterprises.
 \begin_inset Newline newline
 \end_inset
 
@@ -1242,8 +1260,8 @@ vital
 \series bold
 Exception
 \series default
- when interfacing to external databases: if don't have control over the
- schema (e.g.
+ when interfacing to external databases: if you don't have control over
+ the schema (e.g.
  when connecting to 
 \emph on
 existing
@@ -5207,8 +5225,8 @@ procedural
 \emph default
  paradigm for describing a workflow, similar to classical procedural programming
  languages.
- These models are extremely complex: the current BPEL specification prints
- to 140 pages DINA4 in very small font.
+ These models are extremely complex: the current WS-BPEL specification 2.0
+ prints to 140 pages DINA4 in very small font.
  In contrast, the Athomaris engine tries to remain simple, but to reach
  at least the same 
 \emph on

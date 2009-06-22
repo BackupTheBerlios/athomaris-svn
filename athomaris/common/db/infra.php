@@ -130,6 +130,46 @@ function _db_maindatabase() {
   return $maindatabase;
 }
 
+/* Check whether a given table / field is member in a
+ * given database or set of databases.
+ * When &$database or &$table is an array, search for
+ * a matching member and return it by reference.
+ */
+function _db_check(&$database, &$table, $field = null) {
+  if(!$database) { // find one
+    global $CONFIG;
+    $database = array_keys($CONFIG);
+  }
+  if(is_array($database)) {
+    foreach($database as $item) {
+      if(_db_check($item, $table, $field)) {
+	$database = $item;
+	return true;
+      }
+    }
+    return false;
+  }
+  if(!$table) { // find one
+    global $SCHEMA;
+    $table = array_keys($SCHEMA);
+  }
+  if(is_array($table)) {
+    foreach($table as $item) {
+      if(_db_check($database, $item, $field)) {
+	$table = $item;
+	return true;
+      }
+    }
+    return false;
+  }
+  // now we know everything is flat....
+  global $SCHEMA;
+  if($field) {
+    return ($SCHEMA[$table]["FIELDS"][$field] && $SCHEMA[$table]["DB"] == $database);
+  }
+  return ($SCHEMA[$table]["DB"] == $database);
+}
+
 /* Get the REALNAME.
  * Also works for $field arrays.
  * When $table is an array, search for a matching table.

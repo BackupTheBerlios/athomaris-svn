@@ -359,7 +359,7 @@ if(isset($list[1])) {
     $OLD = $SCHEMA;
   } else {
     $old_schema = "$BASEDIR/schema/$old_schema_name";
-    echo "There is an OLD schema: '$old_schema' HOWEVER IT IS NOT COMPILED (doing this now for you, but the result may be <b>inaccurate</b>!)<br>\n";
+    echo "There is an OLD schema: '$old_schema'. HOWEVER IT IS NOT COMPILED (doing this now for you, but the result may be <b>inaccurate</b> if you upgraded the Athomaris version in the meantime!)<br>\n";
     require($old_schema);
     if(@$EXTRA) $SCHEMA = array_merge_recursive($SCHEMA, $EXTRA);
     $check = db_check_syntax($SCHEMA, $SYNTAX);
@@ -370,7 +370,7 @@ if(isset($list[1])) {
   }
  } else {
   echo "No old schema exists => generate code for creation of complete database<br>\n";
-  $warning = "<p><font color='red' size='+1'>WARNING! the database will be <b>completely erased / overwritten</b> when click on the buttons below. Be sure you know what you are doing!</font></p>\n";
+  $warning = "<p><font color='red' size='+1'>WARNING! the database will be <b>completely erased / overwritten</b> when you click on the buttons below. Be sure you know what you are doing!</font></p>\n";
   echo $warning;
   $OLD = array();
  }

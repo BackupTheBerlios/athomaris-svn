@@ -45,9 +45,31 @@ function _db_strip_permissions($qstruct, $fields) {
   return $new;
 }
 
-/* replace comma-separated strings by exploded arrays
+function _db_stripcond(&$cond, $db_reduce) {
+}
+
+function _db_stripfields(&$fieldlist, $db_reduce) {
+  foreach($fieldlist as $alias => $field) {
+    if(is_string($field)) {
+      // remote functions such as min(), max(), count() etc
+      $field = preg_replace("/\A\s*[a-zAZ]+\s*\(\s*([a-zA-Z0-9])\s*\)\Z/", "\\1", $field);
+      if($db_reduce && !_db_check($db_reduce, null, $field)) {
+	unset($fieldlist[$alias]);
+      }
+    } elseif(is_array($field)) {
+      $fieldlist[$alias] = _db_homogenize($field, $db_reduce);
+    } else {
+      die("bad qstruct (FIELD) - this should not happen\n");
+    }
+  }
+}
+
+/* Replace comma-separated strings by exploded arrays.
+ * When $db_reduce is non-null, remove anything not belonging
+ * to that databases.
  */
-function _db_homogenize($qstruct) {
+function _db_homogenize($qstruct, $db_reduce = null) {
+  global $SCHEMA;
   $homo = $qstruct;
   if(($test = @$qstruct["TABLE"]) && is_string($test)) {
     $homo["TABLE"] = split(",", $test);
@@ -56,29 +78,46 @@ function _db_homogenize($qstruct) {
   foreach($homo["TABLE"] as $alias => $tp_table) {
     if(is_string($tp_table)) {
       _db_temporal($tp_table, $table);
+      if($db_reduce && !_db_check($db_reduce, $table)) {
+	unset($homo["TABLE"][$alias]);
+	continue;
+      }
       if(is_int($alias))
 	$alias = $tp_table;
       $homo["BASE_TABLE"][$alias] = $table;
+    } elseif(is_array($tp_table)) {
+      $homo["TABLE"][$alias] = _db_homogenize($tp_table, $db_reduce);
+    } else {
+      die("bad qstruct (TABLE) - this should not happen\n");
     }
   }
   if(($test = @$qstruct["FIELD"]) && is_string($test)) {
     $homo["FIELD"] = split(",", $test);
   }
   $homo["FIELD"] = _db_strip_permissions($homo, $homo["FIELD"]);
+  _db_stripfields($homo["FIELD"], $db_reduce);
   if($test = @$qstruct["AGG"]["FIELD"]) {
     $homo["AGG"]["FIELD"] = split(",", $test);
     //$homo["AGG"]["FIELD"] = _db_strip_permissions($homo, $homo["AGG"]["FIELD"]);
+    _db_stripfields($homo["AGG"]["FIELD"], $db_reduce);
   }
   if($test = @$qstruct["AGG"]["GROUP"]) {
     $homo["AGG"]["GROUP"] = split(",", $test);
+    _db_stripfields($homo["AGG"]["GROUP"], $db_reduce);
   }
   if($test = @$qstruct["ORDER"]) {
     $homo["ORDER"] = split(",", $test);
+    _db_stripfields($homo["ORDER"], $db_reduce);
   }
-  global $debug; if($debug) { echo "homo: "; print_r($homo); echo"<br>\n";}
+  _db_stripcond($homo["COND"], $db_reduce);
+  global $debug; if($debug) { echo "homogenized: "; print_r($homo); echo"<br>\n";}
   return $homo;
 }
 
+/* Make POOL_DATA and SUB_DATA explicit. 
+ * In contrast to _db_homogenize(), this will not be called
+ * recursively.
+ */
 function _db_add_schema($qstruct) {
   global $SCHEMA;
   $homo = $qstruct;
@@ -96,10 +135,10 @@ function _db_add_schema($qstruct) {
       foreach($fields as $field => $fdef) {
 	if(($test = @$fdef["POOL_DATA"])) {
 	  $newfield = "${field}_pool";
-	  $homo["FIELD"][$newfield] = $test;
+	  $homo["FIELD"][$newfield] = _db_homogenize($test);
 	}
 	if(($test = @$fdef["SUB_DATA"])) {
-	  $homo["FIELD"][$field] = $test;
+	  $homo["FIELD"][$field] = _db_homogenize($test);
 	}
       }
     }
