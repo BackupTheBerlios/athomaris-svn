@@ -59,7 +59,7 @@
 \begin_body
 
 \begin_layout Title
-The Athomaris PHP Library
+The Athomaris Library
 \begin_inset Newline newline
 \end_inset
 
@@ -67,7 +67,7 @@ A Framework for Business Processes,
 \begin_inset Newline newline
 \end_inset
 
- Database Integration and Web Interfaces
+ Database Integration, and Web Interfaces
 \end_layout
 
 \begin_layout Author
@@ -98,13 +98,13 @@ sloppy
 \begin_layout Itemize
 Automated
 \series bold
- business process execution
+ business processes
 \series default
 : 
 \series bold
 orchestration level
 \series default
-, execution by a very generic 
+, and execution by a very generic 
 \series bold
 state transition machine
 \series default
@@ -234,6 +234,15 @@ template management
 \series default
  with internationalization and user-profile support.
  Customizable and extensible.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Security
+\series default
+: generated SQL code and templates are automatically escaped to prevent
+ attacks like SQL injection, XSS, etc.
 \end_layout
 
 \begin_layout Standard
@@ -398,8 +407,11 @@ authn_anon
 \family default
  module of Apache is loaded.
  Many Linux distributions have it disabled by default.
- Typically, you need to add it to /etc/sysconfig/apache2 or to some file
- in 
+ Typically, you need to add it to 
+\family typewriter
+/etc/sysconfig/apache2
+\family default
+ or to some file in 
 \family typewriter
 /etc/apache2/sysconfig.d/
 \family default
@@ -2006,7 +2018,6 @@ text
 , no comparion for equality is possible.
 \end_layout
 
-\end_deeper
 \begin_layout Standard
 Note: although some of these types look like being 
 \family typewriter
@@ -2019,6 +2030,7 @@ sybase
  will internally convert them to the most closest type available there.
 \end_layout
 
+\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -2680,7 +2692,7 @@ marked
 \family typewriter
 foos_tp
 \family default
-.
+ (see below).
 \end_layout
 
 \begin_layout Description

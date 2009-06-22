@@ -94,6 +94,17 @@ function _db_homogenize($qstruct, $db_reduce = null) {
   if(($test = @$qstruct["FIELD"]) && is_string($test)) {
     $homo["FIELD"] = split(",", $test);
   }
+  $makeall = !($test = @$qstruct["FIELD"]) || !count($test);
+  if($makeall) { // make all field names explicit, avoid using "*" because there might be access restrictions
+    foreach($qstruct["BASE_TABLE"] as $table) {
+      foreach($SCHEMA[$table]["FIELDS"] as $field => $fdef) {
+	if(!@$fdef["VIRTUAL"] && db_access_field($table, $field, "r")) {
+	  //echo "listing '$table' '$field'<br>\n";
+	  $homo["FIELD"][$field] = $field;
+	}
+      }
+    }
+  }
   $homo["FIELD"] = _db_strip_permissions($homo, $homo["FIELD"]);
   _db_stripfields($homo["FIELD"], $db_reduce);
   if($test = @$qstruct["AGG"]["FIELD"]) {
@@ -118,27 +129,18 @@ function _db_homogenize($qstruct, $db_reduce = null) {
  * In contrast to _db_homogenize(), this will not be called
  * recursively.
  */
-function _db_add_schema($qstruct) {
+function _db_add_schema($qstruct, $db_reduce = null) {
   global $SCHEMA;
   $homo = $qstruct;
-  $makeall = !($test = @$qstruct["FIELD"]) || !count($test);
   foreach($qstruct["BASE_TABLE"] as $table) {
-    if($makeall) { // make all field names explicit, avoid using "*" because there might be access restrictions
-      foreach($SCHEMA[$table]["FIELDS"] as $field => $fdef) {
-	if(!@$fdef["VIRTUAL"] && db_access_field($table, $field, "r")) {
-	  //echo "listing '$table' '$field'<br>\n";
-	  $homo["FIELD"][$field] = $field;
-	}
-      }
-    }
     if(($fields = @$SCHEMA[$table]["FIELDS"])) {
       foreach($fields as $field => $fdef) {
 	if(($test = @$fdef["POOL_DATA"])) {
 	  $newfield = "${field}_pool";
-	  $homo["FIELD"][$newfield] = _db_homogenize($test);
+	  $homo["FIELD"][$newfield] = _db_homogenize($test, $db_reduce);
 	}
 	if(($test = @$fdef["SUB_DATA"])) {
-	  $homo["FIELD"][$field] = _db_homogenize($test);
+	  $homo["FIELD"][$field] = _db_homogenize($test, $db_reduce);
 	}
       }
     }
@@ -730,7 +732,9 @@ function _db_update(&$qstruct) {
   if(!@$qstruct["RAW_MODE"]) {
     $qstruct["DATA"] = _db_prepare_data($table, $qstruct["DATA"]);
   }
+
   $query = _db_make_update($database, $qstruct, $cb_list);
+
   if(!$query && !$ERROR) {
     $ERROR = "internal error: cannot create SQL statements";
   }
