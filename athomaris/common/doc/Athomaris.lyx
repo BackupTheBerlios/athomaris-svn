@@ -3947,7 +3947,391 @@ all
 \end_layout
 
 \begin_layout Section
-The Generic Template Mechanism
+Generic Application Layer
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Generic-Application-Layer"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+After inclusion of 
+\family typewriter
+common/app.php
+\family default
+, some high-level functions are availabe for easy PHP programming:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+app_get_templates()
+\family default
+ This should be called once after you have included the application layer
+ by 
+\family typewriter
+require_once(
+\begin_inset Quotes eld
+\end_inset
+
+$BASDIR/../common/app.php
+\begin_inset Quotes erd
+\end_inset
+
+)
+\family default
+.
+ This loads the templates as configured for the currently logged-in user.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+app_links()
+\family default
+ When called, the default links as defined by the global structure 
+\family typewriter
+$LINKS
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Link-Headers"
+
+\end_inset
+
+) are displayed.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+app_display_table(
+\begin_inset Quotes eld
+\end_inset
+
+tablename
+\begin_inset Quotes erd
+\end_inset
+
+)
+\family default
+ Displays the table in browsable form.
+ When the access permissions allow writing, buttons for manipulation of
+ the data are also displayed.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+app_input_table(
+\begin_inset Quotes eld
+\end_inset
+
+tablename
+\begin_inset Quotes erd
+\end_inset
+
+)
+\family default
+ Displays all fields for which the current user has write access, and handles
+ all the corresponding input actions.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+app_display_record($table,
+\begin_inset space ~
+\end_inset
+
+$cond)
+\family default
+ Displays a single record.
+ The selection is specified by 
+\family typewriter
+$cond
+\family default
+ as described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Reading-of-Data"
+
+\end_inset
+
+.
+ Upon write permissions, an input table is also added.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+app_display_download($table,
+\begin_inset space ~
+\end_inset
+
+$cond,
+\begin_inset space ~
+\end_inset
+
+$download_fieldname,
+\begin_inset space ~
+\end_inset
+
+$filename)
+\family default
+ Starts the download of the contens of an arbitrary field (most useful for
+ BLOBs).
+ This must be called as the only function in a single request, because it
+ generates an HTML header suggesting a filename for saving the data at the
+ client side.
+\end_layout
+
+\begin_layout Standard
+The following request parameters are used by the above functions:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$_REQUEST["table"]
+\family default
+ The table name we are currently working on.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$_REQUEST["order"]
+\family default
+ Only for 
+\family typewriter
+app_display_table()
+\family default
+.
+ Specifies a comma-separated list of field names for ordering of the table.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$_REQUEST["primary"]
+\family default
+ Tells which fields are identifying the tuple for 
+\family typewriter
+app_display_record()
+\family default
+ or 
+\family typewriter
+app_display_download()
+\family default
+.
+ This must be comma-separated list of field names.
+ You may specify 
+\emph on
+any
+\emph default
+ fields which can 
+\emph on
+together
+\emph default
+ uniquely identify the tuple - it need not be the primary key, but can also
+ be an 
+\family typewriter
+UNIQUE
+\family default
+ key.
+ In addition, you also have to supply field values for these fields.
+ For example, if you specified 
+\family typewriter
+$_REQUEST["table"]=
+\begin_inset Quotes erd
+\end_inset
+
+foos
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ and 
+\family typewriter
+$_REQUEST["primary"]=
+\begin_inset Quotes erd
+\end_inset
+
+foo_id
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+, you also have to supply 
+\family typewriter
+$_REQUEST[
+\begin_inset Quotes eld
+\end_inset
+
+foo_id
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+ in order to uniquely identify the tuple you want to work with.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$_REQUEST["delete"]
+\family default
+ When set, this is a delete request.
+ The tuple is 
+\emph on
+always
+\emph default
+ identified by its primary key.
+ Values for the primary key must also be submitted as additional 
+\family typewriter
+$_REQUEST
+\family default
+ fields.
+ For example, if table 
+\family typewriter
+foos
+\family default
+ has primary key 
+\family typewriter
+foo_id
+\family default
+, the value of 
+\family typewriter
+$_REQUEST[
+\begin_inset Quotes eld
+\end_inset
+
+foo_id
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+ must be supplied to uniquely identify the record which should be deleted.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$_REQUEST["change"]
+\family default
+ When set, this is a change request for an existing tuple.
+ In addition to values for the obligatory primary key, you can specify as
+ many additional fields as you like to change.
+ When you 
+\emph on
+omit
+\emph default
+ a field, its value is left unchanged (see also 
+\family typewriter
+db_update()
+\family default
+ in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Update-Operations"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$_REQUEST["insert"]
+\family default
+ Like 
+\family typewriter
+change
+\family default
+, but a new tuple is always inserted (see also 
+\family typewriter
+db_insert()
+\family default
+ in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Update-Operations"
+
+\end_inset
+
+).
+ You should provide the values of all fields; when you omit one, the 
+\family typewriter
+DEFAULT
+\family default
+ will be inserted instead.
+ Supplying values for the primary key is useless because it is always initialize
+d by 
+\family typewriter
+auto_increment
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$_REQUEST["edit"]
+\family default
+ Tells 
+\family typewriter
+app_input_table()
+\family default
+ which tuple it should prepare for editing.
+ This does not yet alter the tuple, but just generate a form for altering
+ by the user.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+$_REQUEST["clone"]
+\family default
+ Like 
+\family typewriter
+edit
+\family default
+, but instead of altering an existing tuple, a new one is presented for
+ editing, inheriting all field values from the original tuple.
+\end_layout
+
+\begin_layout Description
+<
+\emph on
+none
+\emph default
+> When neither 
+\family typewriter
+edit
+\family default
+ nor 
+\family typewriter
+clone
+\family default
+ is set, a new tuple will be presented for editing with 
+\family typewriter
+DEFAULT
+\family default
+ input fields.
+\end_layout
+
+\begin_layout Section
+Generic Template Mechanism
 \begin_inset CommandInset label
 LatexCommand label
 name "sub:Templates"

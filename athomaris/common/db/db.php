@@ -711,6 +711,7 @@ function _db_update(&$qstruct) {
   global $ERROR;
   global $SCHEMA;
   global $debug;
+  if($debug) { echo "_db_update: "; print_r($qstruct); echo "<br>\n"; }
   $ERROR = "";
   $tp_table = $qstruct["TABLE"];
   // robustness against wrong calling with *_tp

@@ -330,7 +330,7 @@ function _mysql_make_from($qstruct, &$joinconditions) {
 function _mysql_make_boolean($table, $field, $value, $use_or) {
   global $RAW_DOTID;
   // check nested conditions
-  if(is_int($field) && is_array($value)) { // toggle and<->or
+  if(!is_string($field) && is_array($value)) { // toggle and<->or
     $subres = _mysql_make_where($table, $value, !$use_or);
     return "($subres)";
   }
@@ -363,18 +363,24 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
       $res = "";
       foreach($value as $item) {
 	if($res) {
-	  if($use_or)
+	  if($use_or) {
 	    $res .= " or ";
-	  else
+	  } else {
 	    $res .= " and ";
+	  }
 	}
-	$res .= _mysql_make_boolean($table, $field, $item, $use_or);
+	// treat the same as if the operator had been repeated.
+	$res .= _mysql_make_boolean($table, "$field$op", $item, $use_or);
       }
       return $res;
     }
   }
   
   if(is_array($value)) { // sub-sql statement (indicated by _absence_ of operator)
+    if(!$value["TABLE"]) { // test against most sloppiness
+      print_r($value);
+      die("field '$field': badly formed sub-sql statement\n");
+    }
     $dummy = array();
     $sql_value = "(" . mysql_make_query($dummy, $value) . ")";
   } else {
@@ -418,7 +424,7 @@ function _mysql_make_where($table, $fields, $use_or = false) {
 }
 
 function mysql_make_query(&$subqs, $qstruct) {
-  //global $debug; if($debug) { echo "make_query: "; print_r($qstruct); echo"<br>\n";}
+  global $debug; if($debug) { echo "mysql_make_query: "; print_r($qstruct); echo"<br>\n";}
   $is_empty = isset($qstruct["COND"]["EMPTY"]);
   $select = _mysql_make_select($subqs, $qstruct, $is_empty);
   if($is_empty) {
@@ -575,6 +581,7 @@ function _mysql_make_allref(&$stack, $first_qstruct, &$cb_list) {
     if(!_mysql_is_done($done, $qstruct)) {
       // the following may update $stack once again, leading to transitive closure
       $sub_cb_list = array();
+      global $debug; if($debug) { echo "_mysyql_make_update: "; print_r($qstruct); echo "<br>\n"; }
       $subres = _mysql_make_update($stack, $qstruct, $sub_cb_list);
       // pushback to $local_queue because new tests might have been added
       $local_queue[] = array($subres, @$sub_cb_list);

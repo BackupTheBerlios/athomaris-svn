@@ -662,7 +662,7 @@ for(i = 0; i < all.length; i++) \{
 {TEXTLIST}
 really_delete = really delete this?
 prepare = prepare record
-new = create new record
+insert = create new record
 clone = clone this record
 change = change existing record
 

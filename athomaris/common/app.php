@@ -348,7 +348,7 @@ function _app_prepare_data($table, $querydata, $mode) {
     }
   }
   $data["ACTION"] = $action;
-  if($mode == "new") {
+  if($mode == "insert") {
     // check if immutable values are missing
     $immutable = array();
     $oldrec = $data["DATA"][0];
@@ -383,6 +383,27 @@ function _app_prepare_data($table, $querydata, $mode) {
   return $data;
 }
 
+/* Get the identifying field valuess as denoted by
+ * the primary key. Returns a condition suitable for query.
+ */
+function app_get_id($tp_table, $primary = null) {
+  if(!$primary) {
+    _db_temporal($tp_table, $table);
+    $primary = _db_primary($table);
+  }
+  if(is_string($primary)) {
+    $primary = split(",", $primary);
+  }
+  $cond = array();
+  foreach($primary as $key) {
+    if(!isset($_REQUEST[$key])) {
+      die("request parameter for primary key '$key' is missing\n");
+    }
+    $cond[$key] = $_REQUEST[$key];
+  }
+  return $cond;
+}
+
 /* output the input table: this contains all input fields.
  * and do all the user-requested actions associated with that.
  */
@@ -390,13 +411,13 @@ function app_input_table($tp_table) {
   global $SCHEMA;
   global $ERROR;
 
-  $tp = _db_temporal($tp_table, $table);
+  _db_temporal($tp_table, $table);
 
   if(!db_access_table($table, "w")) {
     return;
   }
   // execute user actions on data
-  if(isset($_REQUEST["new"]) || isset($_REQUEST["new_clone"])) { /* user tries to insert a new record */
+  if(isset($_REQUEST["insert"]) || isset($_REQUEST["new_clone"])) { /* user tries to insert a new record */
     $newdata = _app_get_data($table);
     //echo "db_inserting: "; print_r($newdata); echo "<br>\n";
     db_insert($table, $newdata);
@@ -427,7 +448,7 @@ function app_input_table($tp_table) {
     $mode = "new_clone";
     $data = _app_prepare_data($table, $olddata, $mode);
   } else { /* no preselection => present empty input fields */
-    $mode = "new";
+    $mode = "insert";
     $olddata = db_getemptyrec($table);
     if(@$ERROR && @$newdata) {
       // exception: the user does not want to loose bad input
@@ -446,7 +467,7 @@ function app_display_table($tp_table) {
   global $TOOL;
   global $debug;
 
-  $tp = _db_temporal($tp_table, $table);
+  _db_temporal($tp_table, $table);
 
   if(!db_access_table($table, "r")) {
     return;

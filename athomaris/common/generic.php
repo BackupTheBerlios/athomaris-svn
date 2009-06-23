@@ -47,11 +47,7 @@ if(!$download) {
  }
 
 if(isset($_REQUEST["primary"])) {
-  $primary = split(",", $_REQUEST["primary"]);
-  $cond = array();
-  foreach($primary as $key) {
-    $cond[$key] = $_REQUEST[$key];
-  }
+  $cond = app_get_id($table, $_REQUEST["primary"]);
   if($download) {
     app_display_download($table, $cond, $download, @$_REQUEST["filename"]);
   } else {
