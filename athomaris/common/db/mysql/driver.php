@@ -351,6 +351,7 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
   // check binary operators
   $op = "=";
   $regex = "/^($RAW_DOTID)\\s*?(=|<>|<|>|<=|>=|!|@|%| rlike| in)?\\s*($RAW_DOTID)?$/";
+  $old_field = $field;
   if(!preg_match($regex, $field, $matches)) {
     global $ERROR;
     $ERROR = "bad field expression '$field'";
@@ -370,7 +371,7 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
 	  }
 	}
 	// treat the same as if the operator had been repeated.
-	$res .= _mysql_make_boolean($table, "$field$op", $item, $use_or);
+	$res .= _mysql_make_boolean($table, $old_field, $item, $use_or);
       }
       return $res;
     }
@@ -379,7 +380,7 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
   if(is_array($value)) { // sub-sql statement (indicated by _absence_ of operator)
     if(!$value["TABLE"]) { // test against most sloppiness
       print_r($value);
-      die("field '$field': badly formed sub-sql statement\n");
+      die("field '$old_field': badly formed sub-sql statement\n");
     }
     $dummy = array();
     $sql_value = "(" . mysql_make_query($dummy, $value) . ")";
