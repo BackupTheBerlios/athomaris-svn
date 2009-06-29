@@ -69,6 +69,8 @@ function compile_engine() {
     $bp_name = $def["bp_name"];
     $rule_prio = $def["rule_prio"];
     $statefield = $def["bp_statefield"];
+    $def["rule_condition"] = split("/\s*/\n\s*/", $def["rule_condition"]);
+    $def["rule_action"] = split("/\s*/\n\s*/", $def["rule_action"]);
     if(!$statefield) { // use default: bpstates
       //...
       die("NYI\n");
@@ -78,6 +80,9 @@ function compile_engine() {
 
     $subcond = array("bp_name" => $bp_name, "rule_prio" => $rule_prio);
     $subdata = db_read("conts", null, $subcond, "cont_prio", 0, 0);
+    foreach($subdata as $subidx => $subdef) {
+      $subdata[$subidx]["cont_action"] = split("/\s*/\n\s*/", $subdef["cont_action"]);
+    }
     $def["CONTI"] = array_merge($subdata, $APPEND);
 
     $table[$statefield][] = $def;

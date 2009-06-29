@@ -96,7 +96,7 @@ function _db_homogenize($qstruct, $db_reduce = null) {
   }
   $makeall = !($test = @$qstruct["FIELD"]) || !count($test);
   if($makeall) { // make all field names explicit, avoid using "*" because there might be access restrictions
-    foreach($qstruct["BASE_TABLE"] as $table) {
+    foreach($homo["BASE_TABLE"] as $table) {
       foreach($SCHEMA[$table]["FIELDS"] as $field => $fdef) {
 	if(!@$fdef["VIRTUAL"] && db_access_field($table, $field, "r")) {
 	  //echo "listing '$table' '$field'<br>\n";

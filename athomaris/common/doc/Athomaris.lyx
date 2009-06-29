@@ -5596,10 +5596,6 @@ The following conventions are used in
 \end_layout
 
 \begin_layout Chapter
-Advanced Features
-\end_layout
-
-\begin_layout Section
 Business Process Engine
 \begin_inset CommandInset label
 LatexCommand label
@@ -5610,7 +5606,7 @@ name "sub:Business-Process-Engine"
 
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Concepts
 \end_layout
 
@@ -5886,7 +5882,7 @@ Note: this description is for technicians only.
  employing their terminology and buzzwords.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Usage
 \end_layout
 
@@ -5958,7 +5954,7 @@ secret
 
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Tables for the Orchestration Level
 \end_layout
 
@@ -6029,6 +6025,7 @@ bp_version
 , this table consists of the following columns:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -6144,6 +6141,7 @@ bp_comment
  For documentation at the orchestration level.
 \end_layout
 
+\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -6161,6 +6159,7 @@ rule_version
 , it consists of the following columns:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -6236,6 +6235,7 @@ cell
 s, the following syntax must be used:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -6305,6 +6305,7 @@ Z/
  or similar.
 \end_layout
 
+\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -6314,6 +6315,7 @@ rule_condition
  The syntax is as follows:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \emph on
@@ -6383,6 +6385,7 @@ regex
  In a future release, we plan to support full-fledged boolean expressions.
 \end_layout
 
+\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -6406,6 +6409,7 @@ rule_firevalue
  You may provide one of the following syntaxes:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \emph on
@@ -6472,6 +6476,7 @@ substituted
  as follows:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -6553,6 +6558,8 @@ subcommand
 .
 \end_layout
 
+\end_deeper
+\end_deeper
 \begin_layout Description
 
 \family typewriter
@@ -6563,6 +6570,7 @@ rule_action
  such as SOAP are planned):
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -6652,6 +6660,36 @@ something
 \begin_layout Description
 
 \family typewriter
+update
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+fieldname1='value1',
+\begin_inset space ~
+\end_inset
+
+fieldname2='
+\emph default
+@{
+\emph on
+something
+\emph default
+}
+\emph on
+'
+\emph default
+...
+
+\family default
+ Update the original tuple.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
 rule_timeout
 \family default
  When non-zero, each started business process is monitored.
@@ -6686,6 +6724,7 @@ rule_comment
  For documentation at the orchestration level.
 \end_layout
 
+\end_deeper
 \begin_layout Standard
 Note that the table 
 \family typewriter
@@ -6725,6 +6764,7 @@ cont_id
 , it consists of the following columns:
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -6874,7 +6914,8 @@ cont_comment
  For documentation at the orchestration level.
 \end_layout
 
-\begin_layout Subsection
+\end_deeper
+\begin_layout Section
 Pseudo Events
 \begin_inset CommandInset label
 LatexCommand label
@@ -6979,6 +7020,10 @@ n
 \family default
 \emph default
  seconds.
+\end_layout
+
+\begin_layout Chapter
+Advanced Features
 \end_layout
 
 \begin_layout Section

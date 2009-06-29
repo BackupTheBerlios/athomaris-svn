@@ -374,6 +374,7 @@ $USER_EXTRA =
 	);
 
 $ENGINE_VALUE = "(=.*|%.*|\/.*\/)";
+$SYNTAX_RULEACTION = "\A(?:script|url|insert|update)\s+.*";
 
 $ENGINE_SCHEMA =
   array(
@@ -448,7 +449,7 @@ $ENGINE_SCHEMA =
 		    "rule_action" =>
 		    array("TYPE" => "text",
 			  "DEFAULT" => "''",
-			  "REGEX" => "\A(?:script|url|insert)\s+.*",
+			  "REGEX" => $SYNTAX_RULEACTION,
 			  ),
 		    "rule_timeout" =>
 		    array("TYPE" => "int",
@@ -487,7 +488,7 @@ $ENGINE_SCHEMA =
 		    "cont_action" =>
 		    array("TYPE" => "text",
 			  "DEFAULT" => "''",
-			  "REGEX" => "\A(?:script|url|insert)\s+.*",
+			  "REGEX" => $SYNTAX_RULEACTION,
 			  ),
 		    "cont_endvalue" =>
 		    array("TYPE" => "varchar(255)",

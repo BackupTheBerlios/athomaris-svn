@@ -215,9 +215,9 @@ function _db_realname($tp_table, $field = null) {
     return "";
   }
   if($field) {
-    return $SCHEMA[$table]["FIELDS"][$field]["REALNAME"];
+    return @$SCHEMA[$table]["FIELDS"][$field]["REALNAME"];
   }
-  return $SCHEMA[$table]["REALNAME"];
+  return @$SCHEMA[$table]["REALNAME"];
 }
 
 //////////////////////////////////////////////////////////////////////

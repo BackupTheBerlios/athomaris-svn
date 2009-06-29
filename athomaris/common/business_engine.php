@@ -128,6 +128,14 @@ function test_condition(&$env, $cnd) {
   if(!$cnd) { // empty condition field => accept always
     return true;
   }
+  if(is_array($cnd)) {
+    foreach($cnd as $sub) {
+      if(!test_condition($env, $sub)) {
+	return false;
+      }
+    }
+    return true;
+  }
   if(preg_match("/\A\?\s*([A-Za-z_0-9]+)\s*(.*)\Z/", $cnd, $matches)) {
     $field = $matches[1];
     $rest = $matches[2];
@@ -139,8 +147,8 @@ function test_condition(&$env, $cnd) {
     return value_matches($env, $rest, $check);
   } else {
     engine_error("cannot parse the condition '$cnd'. correct your rules!");
+    return false;
   }
-  return false;
 }
 
 /* Substitute macros in strings
@@ -191,6 +199,11 @@ function subst_macros(&$env, $cmd, $search = array(), $replace = array()) {
 /* Write back results to the database.
  */
 function do_writeback($rec, $tablename, $fieldname, $fieldvalue, $other = array()) {
+  if(true) {
+    $primary = _db_primary($tablename);
+    $id = @$rec[$primary];
+    echo "writeback id=$id $tablename.$fieldname='$fieldvalue'\n";
+  }
   global $ERROR;
   $primary = _db_primary($tablename);
   foreach(split(",", $primary) as $pri) {
@@ -226,7 +239,7 @@ function check_answer(&$env, $line) {
     if(value_matches($env, $value, $line)) { // the candidate has been selected
       $action = $conti["cont_action"];
       $newenv = array_merge($env, $conti);
-      //...
+      do_action($newenv, $action);
       $count++;
       if(!$newenv["cont_endvalue"]) {
 	// the orchestrator requested to continue examining continuation candidates...
@@ -247,6 +260,9 @@ function check_answer(&$env, $line) {
  */
 function run_script(&$env, $cmd) {
   if(true) {
+    // clean the connection cache: mysql seems to be disturbed by fork()
+    _db_close();
+    // fork a process for each script
     $pid = pcntl_fork();
     if($pid < 0) { // error
       engine_error("could not fork() a new process for command '$cmd'");
@@ -258,7 +274,6 @@ function run_script(&$env, $cmd) {
     }
     // son
     $env["IS_SON"] = true;
-    _db_close(); // clean the connection cache
     //global $debug; $debug = true;
   }
 
@@ -313,10 +328,20 @@ function run_script(&$env, $cmd) {
 
 /* Interpret what to do.
  */
-function do_action(&$env) {
+function do_action(&$env, $action) {
+  global $RAW_ID;
+  if(is_array($action)) {
+    foreach($action as $sub) {
+      if(!do_action($env, $sub)) {
+	return false;
+      }
+    }
+    return true;
+  }
   $ok = false;
-  $action = $env["rule_action"];
-  if(preg_match("/\A(script|url)\s+(.*)/", $action, $matches)) {
+  if(!$action) {
+    return true;
+  } elseif(preg_match("/\A(script|url)\s+(.*)/", $action, $matches)) {
     $op = $matches[1];
     $cmd = $matches[2];
     if($op == "url")
@@ -335,6 +360,19 @@ function do_action(&$env) {
     }
     $ok = db_insert($table, $data);
     check_answer($env, "INSERT $ok");
+  } else if(preg_match("/\Aupdate\s+(.*)/", $action, $matches)) {
+    $table = $env["TABLE"];
+    $rest = $matches[1];
+    $primary = _db_primary($table);
+    $data = array(array($primary => $env[$primary]));
+    while(preg_match("/\A\s*($RAW_ID)\s*=\s*'((?:[^\\']|\\.)*)'(.*)/", $rest, $matches)) {
+      $field = $matches[1];
+      $value = $matches[2];
+      $rest = $matches[3];
+      $data[0][$field] = subst_macros($env, $value, "'", "\\'");
+    }
+    $ok = db_update($table, $data);
+    check_answer($env, "UPDATE $ok");
   } else {
     engine_error("cannot parse action '$action'. correct your rules!");
   }
@@ -366,7 +404,7 @@ function treat_rec($tablename, $fieldname, $rec, $deflist) {
 	// now do the action...
 	$env["VALUE"] = $cell;
 
-	$ok = do_action($env);
+	$ok = do_action($env, $env["rule_action"]);
 
 	if($ok && @$env["HAS_FORKED"]) {
 	  break;
@@ -379,8 +417,8 @@ function treat_rec($tablename, $fieldname, $rec, $deflist) {
 	}
 	do_writeback($env, $tablename, $fieldname, $endvalue);
 
-	if($env["IS_SON"]) { // mission completed...
-	  if($debug) echo "mission completed...\n";
+	if(@$env["IS_SON"]) { // mission completed...
+	  if($debug) echo "process mission completed.\n";
 	  exit(0);
 	}
 	break;
