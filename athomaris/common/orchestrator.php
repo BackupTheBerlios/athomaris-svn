@@ -69,8 +69,8 @@ function compile_engine() {
     $bp_name = $def["bp_name"];
     $rule_prio = $def["rule_prio"];
     $statefield = $def["bp_statefield"];
-    $def["rule_condition"] = split("/\s*/\n\s*/", $def["rule_condition"]);
-    $def["rule_action"] = split("/\s*/\n\s*/", $def["rule_action"]);
+    $def["rule_condition"] = split("\n", $def["rule_condition"]);
+    $def["rule_action"] = split("\n", $def["rule_action"]);
     if(!$statefield) { // use default: bpstates
       //...
       die("NYI\n");

@@ -374,7 +374,7 @@ $USER_EXTRA =
 	);
 
 $ENGINE_VALUE = "(=.*|%.*|\/.*\/)";
-$SYNTAX_RULEACTION = "\A(?:script|url|insert|update)\s+.*";
+$SYNTAX_RULEACTION = "\A(?:(?:script|url|insert|update|delete)\s+.*(?:\n|\Z))*";
 
 $ENGINE_SCHEMA =
   array(

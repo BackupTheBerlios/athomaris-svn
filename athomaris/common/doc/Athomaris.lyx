@@ -5721,8 +5721,9 @@ descriptive
 \begin_layout Standard
 \align center
 \begin_inset Tabular
-<lyxtabular version="3" rows="3" columns="5">
+<lyxtabular version="3" rows="3" columns="6">
 <features>
+<column alignment="center" valignment="top" width="0">
 <column alignment="center" valignment="top" width="0">
 <column alignment="center" valignment="top" width="0">
 <column alignment="center" valignment="top" width="0">
@@ -5752,6 +5753,15 @@ execution state
 
 \begin_layout Plain Layout
 parallelism
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+waiting
 \end_layout
 
 \end_inset
@@ -5812,6 +5822,15 @@ explicit
 
 \end_inset
 </cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+explicit
+\end_layout
+
+\end_inset
+</cell>
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
@@ -5837,6 +5856,15 @@ rule-based
 
 \begin_layout Plain Layout
 explicit
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+implicit
 \end_layout
 
 \end_inset
@@ -6380,7 +6408,10 @@ regex
 /
 \family default
 .
- You may specify multiple conditions on different lines; these are logically
+\end_layout
+
+\begin_layout Standard
+You may specify multiple conditions on different lines; these are logically
  anded together.
  In a future release, we plan to support full-fledged boolean expressions.
 \end_layout
@@ -6653,8 +6684,8 @@ something
 
 \family default
  Inserts a new tuple into the database.
- When some (other) rules are defined for this table, you can easily create
- non-procedural sub-business-processes this way.
+ Notice: when some (other) rules are defined for this table, this effectively
+ results in creating a new non-procedural sub-business-process.
 \end_layout
 
 \begin_layout Description
@@ -6683,7 +6714,97 @@ something
 ...
 
 \family default
- Update the original tuple.
+ Update the original candidate tuple the current rule is working on.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+update
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+tablename
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+fieldname1='value1',
+\begin_inset space ~
+\end_inset
+
+fieldname2='
+\emph default
+@{
+\emph on
+something
+\emph default
+}
+\emph on
+'
+\emph default
+...
+
+\family default
+ Same, but update a tuple from 
+\family typewriter
+\emph on
+tablename
+\family default
+\emph default
+.
+ When 
+\family typewriter
+\emph on
+tablename
+\family default
+\emph default
+ is mentioned in 
+\family typewriter
+bp_joinwith
+\family default
+, you need not supply the primary key because it can be determined automatically.
+ Otherwise, the primary key of the tuple must be explicitly given.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+delete
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+tablename
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+fieldname1='value1'
+\emph default
+...
+
+\family default
+ As the name suggests, a tuple is deleted from the database.
+ The primary key must be always given.
+ Be careful with it!
+\end_layout
+
+\begin_layout Standard
+Multiple actions may be supplied if they are on different lines.
+ They will be executed sequentially.
+ Note that a failing action (such as a database error) will immediately
+ terminate the action chain - the following actions will not be started
+ in such a case.
 \end_layout
 
 \end_deeper
@@ -6726,7 +6847,7 @@ rule_comment
 
 \end_deeper
 \begin_layout Standard
-Note that the table 
+Note that table 
 \family typewriter
 rules
 \family default
@@ -6870,7 +6991,15 @@ selected
 \family typewriter
 cont_action
 \family default
- Not yet implemented.
+ Same syntax as described at 
+\family typewriter
+rule_action
+\family default
+.
+ Although it is possible to start another scripts again, their output is
+ not parsed again.
+ So use this only for small actions not involving different state changes
+ at the cell.
 \end_layout
 
 \begin_layout Description
@@ -6996,6 +7125,44 @@ ok
  Tells whether an 
 \family typewriter
 insert
+\family default
+ action was successful.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+UPDATE
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+ok
+\family default
+\emph default
+ Tells whether an 
+\family typewriter
+update
+\family default
+ action was successful.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+DELETE
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+ok
+\family default
+\emph default
+ Tells whether a 
+\family typewriter
+delete
 \family default
  action was successful.
 \end_layout

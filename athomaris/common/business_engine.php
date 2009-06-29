@@ -259,10 +259,14 @@ function check_answer(&$env, $line) {
 /* Execute the given @cmd as a new subprocess.
  */
 function run_script(&$env, $cmd) {
-  if(true) {
+  /* Only fork once, if there are many sequential script invocations.
+   * The father returns "success", and the son will treat the rest
+   * of the action chain.
+   */
+  if(!@$env["HAS_FORKED"] && !@$env["IS_SON"]) {
     // clean the connection cache: mysql seems to be disturbed by fork()
     _db_close();
-    // fork a process for each script
+    // fork a process for execution of the script
     $pid = pcntl_fork();
     if($pid < 0) { // error
       engine_error("could not fork() a new process for command '$cmd'");
@@ -335,6 +339,9 @@ function do_action(&$env, $action) {
       if(!do_action($env, $sub)) {
 	return false;
       }
+      if(@$env["HAS_FORKED"]) {
+	return true;
+      }
     }
     return true;
   }
@@ -348,31 +355,40 @@ function do_action(&$env, $action) {
       $cmd = "wget -O - '$cmd'";
     $cmd = subst_macros($env, $cmd);
     $ok = run_script($env, $cmd);
-  } else if(preg_match("/\Ainsert\s+($RAW_ID)\s+(.*)/", $action, $matches)) {
-    $table = $matches[1];
-    $rest = $matches[2];
-    $data = array();
-    while(preg_match("/\A\s*($RAW_ID)\s*=\s*'((?:[^\\']|\\.)*)'(.*)/", $rest, $matches)) {
-      $field = $matches[1];
-      $value = $matches[2];
-      $rest = $matches[3];
-      $data[0][$field] = subst_macros($env, $value, "'", "\\'");
-    }
-    $ok = db_insert($table, $data);
-    check_answer($env, "INSERT $ok");
-  } else if(preg_match("/\Aupdate\s+(.*)/", $action, $matches)) {
+  } else if(preg_match("/\A(insert|update|delete)\s+(?:($RAW_ID)\s+)?($RAW_ID\s*=.*)/", $action, $matches)) {
+    $mode = $matches[1];
     $table = $env["TABLE"];
-    $rest = $matches[1];
-    $primary = _db_primary($table);
-    $data = array(array($primary => $env[$primary]));
+    if(@$matches[2])
+      $table = $matches[2];
+    $rest = $matches[3];
+    $data = array();
+    if($mode == "update" || $mode == "delete") {
+      $primary = _db_primary($table);
+      if(@$env[$primary]) {
+	$data[0][$primary] = $env[$primary];
+      }
+    }
     while(preg_match("/\A\s*($RAW_ID)\s*=\s*'((?:[^\\']|\\.)*)'(.*)/", $rest, $matches)) {
       $field = $matches[1];
       $value = $matches[2];
       $rest = $matches[3];
       $data[0][$field] = subst_macros($env, $value, "'", "\\'");
     }
-    $ok = db_update($table, $data);
-    check_answer($env, "UPDATE $ok");
+    echo "$mode $table:";
+    foreach($data[0] as $field => $value) {
+      echo " $field = '$value'";
+    }
+    echo "\n";
+    if($mode == "delete") {
+      $ok = db_delete($table, $data);
+      check_answer($env, "DELETE $ok");
+    } elseif($mode == "update") {
+      $ok = db_update($table, $data);
+      check_answer($env, "UPDATE $ok");
+    } else {
+      $ok = db_insert($table, $data);
+      check_answer($env, "INSERT $ok");
+    }
   } else {
     engine_error("cannot parse action '$action'. correct your rules!");
   }
@@ -405,7 +421,6 @@ function treat_rec($tablename, $fieldname, $rec, $deflist) {
 	$env["VALUE"] = $cell;
 
 	$ok = do_action($env, $env["rule_action"]);
-
 	if($ok && @$env["HAS_FORKED"]) {
 	  break;
 	}
@@ -413,12 +428,12 @@ function treat_rec($tablename, $fieldname, $rec, $deflist) {
 	// record final result of execution,
 	$endvalue = "-1 ENGINE_ERROR"; // sorry, but this should never happen: the SUCCESS_FLAG must always be set because of the $APPEND fallbacks
 	if($ok && @$env["SUCCESS_FLAG"]) {
-	  $endvalue = make_default($env["cont_endvalue"], $env["VALUE"], "end", 2);
+	  $endvalue = make_default(@$env["cont_endvalue"], $env["VALUE"], "end", 2);
 	}
 	do_writeback($env, $tablename, $fieldname, $endvalue);
 
 	if(@$env["IS_SON"]) { // mission completed...
-	  if($debug) echo "process mission completed.\n";
+	  if($debug) echo "forked mission completed.\n";
 	  exit(0);
 	}
 	break;
