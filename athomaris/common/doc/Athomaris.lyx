@@ -8697,11 +8697,55 @@ FAQ
 \end_layout
 
 \begin_layout Description
+Q: Is Athomaris really a 
+\begin_inset Quotes eld
+\end_inset
+
+framework
+\begin_inset Quotes erd
+\end_inset
+
+?
+\end_layout
+
+\begin_layout Description
+A: Many people think that a 
+\begin_inset Quotes eld
+\end_inset
+
+framework
+\begin_inset Quotes erd
+\end_inset
+
+ must be object-oriented (OO).
+ However, most definitions of 
+\begin_inset Quotes eld
+\end_inset
+
+framework
+\begin_inset Quotes erd
+\end_inset
+
+ don't require that.
+ Athomaris can be classified as a (non-object-oriented) 
+\series bold
+domain framework
+\series default
+ (in contrast to the more widely-known 
+\emph on
+application frameworks
+\emph default
+) for the very general domain of SQL databases, business processes, and
+ web interfaces.
+\end_layout
+
+\begin_layout Description
 Q: What's the difference to Hibernate (or other OR mappers)?
 \end_layout
 
 \begin_layout Description
-A: OR mappers transform from one paradigm to another one: from the 
+A: OR mappers transform from some particular paradigm to another one: from
+ the 
 \emph on
 relational data model
 \emph default
@@ -8710,17 +8754,26 @@ relational data model
 OO programming language
 \emph default
  model.
- Although many people don't like to hear it, I'll say it: this transformation
+ Although some people don't like to hear it, I'll say it: this transformation
  is 
 \emph on
 lossy
 \emph default
 .
- The relational data model is 
+ The relational 
+\emph on
+data model
+\emph default
+ is 
 \series bold
 more powerful
 \series default
- than the OO one (see also the papers from Codd from the 1970s).
+ than the OO one (see also some papers from Codd from the 1970s which I
+ 
+\emph on
+really
+\emph default
+ recommend to read).
  For example, high-level symmetric 
 \emph on
 join opportunities
@@ -8730,8 +8783,229 @@ join opportunities
 pointers
 \emph default
 .
- In contrast to OR mappers, Athomaris stays at the SQL model and even extends
- its power with additional features such as temporal tables.
+ In contrast to object-relational (OR) mappers, Athomaris stays at the SQL
+ model and even extends its power with additional features such as temporal
+ tables.
+\end_layout
+
+\begin_layout Description
+Q: Why isn't Athomaris object-oriented?
+\end_layout
+
+\begin_layout Description
+A: Well.
+ Why should it be? 
+\family typewriter
+;)
+\family default
+
+\begin_inset Newline newline
+\end_inset
+
+Seriously, Athomaris' design bears some principles from the 
+\series bold
+functional programming paradigm
+\series default
+ (e.g.
+ found in languages like ML, Haskell, Lisp etc).
+ Where necessary, callback functions are passed as arguments to other functions.
+\begin_inset Newline newline
+\end_inset
+
+Ok, you can do that also with OO.
+ So why not OO? Because conventional OO 
+\emph on
+type systems
+\emph default
+ require some 
+\series bold
+overhead
+\series default
+ for maintaining class definitions: any time something in 
+\family typewriter
+$SCHEMA
+\family default
+ changes, new class definitions for the 
+\emph on
+programming language
+\emph default
+ (
+\begin_inset Quotes eld
+\end_inset
+
+syntactic sugar
+\begin_inset Quotes erd
+\end_inset
+
+) must be generated.
+ Even more worse, 
+\emph on
+code
+\emph default
+ for accessing the data elements must be generated and maintained (Java,
+ for examples, spends a lot of effort on 
+\emph on
+accessors
+\emph default
+).
+ If Athomaris would copy that method, dynamic runtime evaluation of our
+ 
+\family typewriter
+ACCESS
+\family default
+ attributes and profile support would be much more difficult.
+ Can you tell the 
+\begin_inset Quotes eld
+\end_inset
+
+type
+\begin_inset Quotes erd
+\end_inset
+
+ of a table when in situation A some columns are readonly or even inaccessible,
+ but in situation B another 
+\emph on
+disjoint
+\emph default
+ set of columns has to be used? Notice that a 
+\begin_inset Quotes eld
+\end_inset
+
+missing
+\begin_inset Quotes erd
+\end_inset
+
+ field should not even 
+\emph on
+tried
+\emph default
+ to be read (which is 
+\emph on
+different
+\emph default
+ from reading 
+\family typewriter
+null
+\family default
+ values, since 
+\family typewriter
+NULL
+\family default
+ is a valid SQL value).
+ We don't want to generate class definitions for each member of the full
+ cartesian product of all 
+\family typewriter
+FIELD
+\family default
+s with all possible 
+\family typewriter
+ACCESS
+\family default
+ permissions.
+ Thus we take an approach different from contemporary OO styles: we take
+ the 
+\begin_inset Quotes eld
+\end_inset
+
+type
+\begin_inset Quotes erd
+\end_inset
+
+ as a dynamic runtime 
+\emph on
+parameter
+\emph default
+, and we implement some kind of 
+\emph on
+
+\begin_inset Quotes eld
+\end_inset
+
+interpreter
+\begin_inset Quotes erd
+\end_inset
+
+
+\emph default
+ dealing with 
+\begin_inset Quotes eld
+\end_inset
+
+types
+\begin_inset Quotes erd
+\end_inset
+
+ at runtime.
+ Current OO type systems would 
+\emph on
+hinder
+\emph default
+ that because of their static nature.
+\end_layout
+
+\begin_layout Description
+Q: are you really sure that Athomaris is 
+\emph on
+not
+\emph default
+ object-oriented?
+\end_layout
+
+\begin_layout Description
+A: No.
+ I'm not sure.
+ Athomaris uses some 
+\emph on
+concepts
+\emph default
+ from OO, but it does not employ conventional OO 
+\emph on
+programming style
+\emph default
+.
+ Ok?
+\begin_inset Newline newline
+\end_inset
+
+Ok, what are these OO concepts? See my paper 
+\begin_inset Quotes eld
+\end_inset
+
+On variants of genericity
+\begin_inset Quotes erd
+\end_inset
+
+ (availabe via Google).
+ While the interpreter for the 
+\begin_inset Quotes eld
+\end_inset
+
+type system
+\begin_inset Quotes erd
+\end_inset
+
+ uses 
+\emph on
+universal genericity
+\emph default
+, the template system employs 
+\emph on
+extensional genericity
+\emph default
+ simply via 
+\family typewriter
+{include/}
+\family default
+ and 
+\emph on
+overwriting
+\emph default
+ of old definitions.
+ As explained in my paper, OO does nothing more at the 
+\emph on
+conceptual
+\emph default
+ level.
 \end_layout
 
 \end_body
