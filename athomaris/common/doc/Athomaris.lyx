@@ -5625,6 +5625,67 @@ The following conventions are used in
 ...
 \end_layout
 
+\begin_layout Section
+Default Template Callbacks
+\end_layout
+
+\begin_layout Standard
+These are very simple: for any template 
+\family typewriter
+\emph on
+myname
+\family default
+\emph default
+, another template 
+\family typewriter
+\emph on
+myname
+\emph default
+_before
+\family default
+ will be automatically called before its execution, and 
+\family typewriter
+\emph on
+myname
+\emph default
+_after
+\family default
+ will be called after it has finished.
+\end_layout
+
+\begin_layout Standard
+Normally, such templates are not defined, thus they will not be called.
+ Notice that you build even your own chains like 
+\family typewriter
+\emph on
+myname
+\emph default
+_before_after_before
+\family default
+, but this is no recommended style.
+\end_layout
+
+\begin_layout Standard
+These callbacks are especially useful for augmenting the default templates
+ with your own extensions.
+\end_layout
+
+\begin_layout Standard
+Note: the easiest way to use Athomaris as an application framework is simply
+ to override some of the default templates with your own version (see 
+\family typewriter
+{include/}
+\family default
+ in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Templates"
+
+\end_inset
+
+).
+\end_layout
+
 \begin_layout Chapter
 Business Process Engine
 \begin_inset CommandInset label
@@ -8691,6 +8752,240 @@ reference "sub:Full-Subqueries"
 .
 \end_layout
 
+\begin_layout Subsection
+DB Callbacks for PHP Programming
+\end_layout
+
+\begin_layout Standard
+The following hooks may be defined either in
+\family typewriter
+ $SCHEMA
+\family default
+, or they may be defined in 
+\family typewriter
+$EXTRA
+\family default
+.
+ 
+\family typewriter
+$EXTRA
+\family default
+ is meant for application-specific extensions which might vary among different
+ applications accessing the same core schema.
+ Following are table attributes:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+CB_BEFORE_INSERT
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Name of the PHP function to call before 
+\family typewriter
+db_insert()
+\family default
+ really inserts new tuples, but after basic checks such as for referential
+ integritiy have been successful.
+ The called PHP function must have the following prototype:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+called_function($table,
+\begin_inset space ~
+\end_inset
+
+$data)
+\family default
+ In essence, the data is the same as supplied to db_insert(), but some changes
+ such as automatic filling of fields like 
+\family typewriter
+\emph on
+table
+\emph default
+_modified_from
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Temporal-tables"
+
+\end_inset
+
+) are already applied.
+ The function 
+\series bold
+must
+\series default
+ return the data which shall be inserted.
+ If you return an emtpy array, nothing will be inserted.
+ You may use this for implementing arbitrary filters, or for doing advanced
+ kinds of referential integrity by hand.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+CB_AFTER_INSERT
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Same as before, but the hook will only be called after successful insertions.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+CB_BEFORE_UPDATE,
+\begin_inset space ~
+\end_inset
+
+CB_BEFORE_REPLACE,
+\begin_inset space ~
+\end_inset
+
+CB_BEFORE_DELETE
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ As the name suggests, these are called before 
+\family typewriter
+db_update()
+\family default
+, 
+\family typewriter
+db_replace()
+\family default
+, or 
+\family typewriter
+db_delete()
+\family default
+ executes the respective operation.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+CB_AFTER_*
+\family default
+ In the same systematics, these are called 
+\emph on
+after
+\emph default
+ the respective operation.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+CB_BEFORE,
+\begin_inset space ~
+\end_inset
+
+CB_AFTER
+\family default
+ These hooks are called whenever 
+\emph on
+any
+\emph default
+ of insert, update, replace, or delete are executed.
+\end_layout
+
+\begin_layout Section
+Application callbacks
+\end_layout
+
+\begin_layout Standard
+The following hooks are called by the application layer in 
+\family typewriter
+common/app.php
+\family default
+.
+ They may be defined either in 
+\family typewriter
+$SCHEMA
+\family default
+ or in 
+\family typewriter
+$EXTRA
+\family default
+.
+\end_layout
+
+\begin_layout Standard
+Following are callbacks at the table level:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+CB_SUBMIT
+\family default
+ This is called whenever the user submits tuple data via HTPP GET or POST
+ operations.
+ The format is as always with data callbacks:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+called_function($table,
+\begin_inset space ~
+\end_inset
+
+$data)
+\family default
+ The 
+\family typewriter
+$table
+\family default
+ is known from the HTTP parameter 
+\family typewriter
+table=
+\emph on
+tablename
+\family default
+\emph default
+, while the table data is supplied by the user.
+ The function 
+\series bold
+must
+\series default
+ return the data for further processing.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Following are callbacks at the 
+\family typewriter
+FIELDS
+\family default
+ level:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+CB_DOWNLOAD
+\family default
+ This hook is called whenever the user clicks on a download link.
+\end_layout
+
 \begin_layout Chapter
 \start_of_appendix
 FAQ
@@ -8726,7 +9021,20 @@ framework
 \begin_inset Quotes erd
 \end_inset
 
- don't require that.
+ don't require that
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+A common wide-spread definition: a software framework, in computer programming,
+ is an abstraction in which common code providing generic functionality
+ can be selectively overridden or specialized by user code providing specific
+ functionality.
+\end_layout
+
+\end_inset
+
+.
  Athomaris can be classified as a (non-object-oriented) 
 \series bold
 domain framework
@@ -9001,7 +9309,8 @@ extensional genericity
 overwriting
 \emph default
  of old definitions.
- As explained in my paper, OO does nothing more at the 
+ As explained in my paper, the latter is also used by OO inheirtance at
+ the 
 \emph on
 conceptual
 \emph default

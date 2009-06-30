@@ -393,7 +393,7 @@ function do_action(&$env, $action) {
     engine_error("cannot parse action '$action'. correct your rules!");
   }
   if($ok) {
-    $env["SUCCESS_FLAG"] = true;
+    $env["HIT_FLAG"] = true;
   }
   return $ok;
 }
@@ -426,9 +426,9 @@ function treat_rec($tablename, $fieldname, $rec, $deflist) {
 	}
 
 	// record final result of execution,
-	$endvalue = "-1 ENGINE_ERROR"; // sorry, but this should never happen: the SUCCESS_FLAG must always be set because of the $APPEND fallbacks
-	if($ok && @$env["SUCCESS_FLAG"]) {
-	  $endvalue = make_default(@$env["cont_endvalue"], $env["VALUE"], "end", 2);
+	$endvalue = "-1 ENGINE_ERROR"; // sorry, but this should never happen: the HIT_FLAG must always be set because of the $APPEND fallbacks
+	if(@$env["HIT_FLAG"] && @$env["cont_endvalue"]) {
+	  $endvalue = make_default($env["cont_endvalue"], $env["VALUE"], "end", 2);
 	}
 	do_writeback($env, $tablename, $fieldname, $endvalue);
 
