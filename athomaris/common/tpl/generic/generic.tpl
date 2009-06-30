@@ -98,12 +98,12 @@ for(i = 0; i < all.length; i++) \{
       {TEXT $category/}
       {LOOP $cat_def AS $LINK => $VALUE}
         {IF !$SCHEMA->$LINK}
-            <a href="{$VALUE}">{TEXT $LINK}</a>
+            <a class="link" href="{$VALUE}">{TEXT $LINK}</a>
         {ELSEIF $VALUE}
           {IF PERM $LINK "W"}
-            <a href="{$VALUE}"><tt>{TEXT $LINK}</tt></a>
+            <a class="link" href="{$VALUE}"><tt>{TEXT $LINK}</tt></a>
           {ELSEIF PERM $LINK "R"}
-            <a href="{$VALUE}">({TEXT $LINK})</a>
+            <a class="link" href="{$VALUE}">({TEXT $LINK})</a>
           {/IF}
         {/IF}
       {/LOOP}
@@ -150,7 +150,7 @@ for(i = 0; i < all.length; i++) \{
     {IF $EXTRAHEAD}{TPL $EXTRAHEAD}{/IF}
     {LOOP $SCHEMA->$TABLE->FIELDS AS $FIELD => $FDEF}
      {IF PERM $TABLE $FIELD "R"}
-      <th><a href="{$ACTION}&order={$FIELD}">{TEXT $FIELD/}</a></th>
+      <th><a class="link" href="{$ACTION}&order={$FIELD}">{TEXT $FIELD/}</a></th>
      {/IF}
     {/LOOP}
    </tr>
@@ -260,19 +260,25 @@ for(i = 0; i < all.length; i++) \{
 
 /////////////////////////////////////////////////////////////////////////
 
+{TEMPLATE "params_primary"}\
+{LOOP $LOOP AS $KEY}&{$KEY}={PARAM $ROW->$KEY}{/LOOP}\
+{/TEMPLATE}
+
+/////////////////////////////////////////////////////////////////////////
+
 {TEMPLATE "display_ref"}\
 {IF $REF_FIELDS}\
  {LOOP $FDEF->EXTRA_FIELD AS $KEY}{IF $first++} | {/IF}{TEXT $KEY}:{$ROW->$KEY}{/LOOP}\
- <a href="{$ACTION_SELF}?table={PARAM $REF_TABLE}&primary={PARAM $REF_FIELD}{LOOP $REF_FIELDS AS $KEY}&{$KEY}={PARAM $ROW->$KEY}{/LOOP}">{LOOP $REF_FIELDS AS $KEY}{IF $first++} | {/IF}{TEXT $KEY}:{$ROW->$KEY}{/LOOP}</a>\
+ <a class="link" href="{$ACTION_SELF}?table={PARAM $REF_TABLE}&primary={PARAM $REF_FIELD}{TPL "params_primary" "LOOP" => $REF_FIELDS/}">{LOOP $REF_FIELDS AS $KEY}{IF $first++} | {/IF}{TEXT $KEY}:{$ROW->$KEY}{/LOOP}</a>\
 {ELSE}\
- <a href="{$ACTION_SELF}?table={PARAM $REF_TABLE}&primary={PARAM $REF_FIELD}&{$REF_FIELD}={PARAM $VALUE}">{$VALUE}</a>\
+ <a class="link" href="{$ACTION_SELF}?table={PARAM $REF_TABLE}&primary={PARAM $REF_FIELD}&{$REF_FIELD}={PARAM $VALUE}">{$VALUE}</a>\
 {/IF}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "display_download"}
-<a href="{$ACTION_SELF}?table={$TABLE}&primary={$PRIMARY}&{$PRIMARY}={$DATA->$IDX->$PRIMARY}&download={$FIELD}&filename={$DATA->$IDX->$UNIQUE}">download: {$DATA->$IDX->$UNIQUE}</a>
+<a class="link" href="{$ACTION_SELF}?table={$TABLE}&primary={$PRIMARY}&{$PRIMARY}={$DATA->$IDX->$PRIMARY}&download={$FIELD}&filename={$DATA->$IDX->$UNIQUE}">download: {$DATA->$IDX->$UNIQUE}</a>
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
@@ -280,7 +286,7 @@ for(i = 0; i < all.length; i++) \{
 {TEMPLATE "display_download_preview"}
 {IF $VALUE}
 {PREVIEW $VALUE}<br>
-<a href="{$ACTION_SELF}?table={$TABLE}&primary={$PRIMARY}&{$PRIMARY}={$DATA->$IDX->$PRIMARY}&download={$FIELD}">view: {$DATA->$IDX->$UNIQUE}</a><br>
+<a class="link" href="{$ACTION_SELF}?table={$TABLE}&primary={$PRIMARY}&{$PRIMARY}={$DATA->$IDX->$PRIMARY}&download={$FIELD}">view: {$DATA->$IDX->$UNIQUE}</a><br>
 {TPL "display_download"/}
 {ELSE}
 (nothing to download)
@@ -291,7 +297,7 @@ for(i = 0; i < all.length; i++) \{
 
 {TEMPLATE "display_url"}
 {LOOP SPLIT "/\s+/" $VALUE AS $URL}
-<a href="{$URL}">{$URL}</a><br/>
+<a class="link" href="{$URL}">{$URL}</a><br/>
 {/LOOP}
 {/TEMPLATE}
 
@@ -329,32 +335,38 @@ for(i = 0; i < all.length; i++) \{
 
 /////////////////////////////////////////////////////////////////////////
 
-{TEMPLATE "button"}\
- {TPL "input" "IMAGE" => "images/".$NAME.".png", "ALT" => "button_".$NAME /}\
+{TEMPLATE "imgbutton"}\
+<a class="imgbutton" href="{$ACTION/}&{$NAME}=true{TPL "params_primary" "LOOP" => $PRIMARIES/}" {IF $CONFIRM} onclick="return confirm('{TEXT $CONFIRM}')"{/IF}><img src="images/{$NAME}.png" alt="button_{$NAME}"/></a
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "button_add"}\
- {TPL "button" "NAME" => "add" /}\
+ {TPL "imgbutton" "NAME" => "add" /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "button_edit"}\
- {TPL "button" "NAME" => "edit" /}\
+ {TPL "imgbutton" "NAME" => "edit" /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "button_clone"}\
- {TPL "button" "NAME" => "clone" /}\
+ {TPL "imgbutton" "NAME" => "clone" /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "button_delete"}\
- {TPL "button" "NAME" => "delete" "CONFIRM" => "really_delete"/}\
+ {TPL "imgbutton" "NAME" => "delete" "CONFIRM" => "really_delete"/}\
+{/TEMPLATE}
+
+/////////////////////////////////////////////////////////////////////////
+
+{TEMPLATE "button"}\
+ {TPL "input" "IMAGE" => "images/".$NAME.".png", "ALT" => "button_".$NAME /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////

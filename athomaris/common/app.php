@@ -333,7 +333,9 @@ function _app_prepare_data($table, $querydata, $mode) {
   $data["DATA"] = db_force_data($table, $querydata);
   $data["TABLE"] = $table;
   $data["PRIMARY"] = _db_primary($table);
+  $data["PRIMARIES"] = split(",", $data["PRIMARY"]);
   $data["UNIQUE"] = _db_unique($table);
+  $data["UNIQUES"] = split(",", $data["UNIQUE"]);
   $data["PREFIX"] = "";
   $data["SUFFIX"] = "";
   $data["PERM"] = $PERM;
@@ -383,10 +385,13 @@ function _app_prepare_data($table, $querydata, $mode) {
   return $data;
 }
 
-/* Get the identifying field valuess as denoted by
+/* Get the identifying field values as denoted by
  * the primary key. Returns a condition suitable for query.
  */
-function app_get_id($tp_table, $primary = null) {
+function app_get_id($tp_table, $primary = null, $data = null) {
+  if(!$data) {
+    $data = $_REQUEST;
+  }
   if(!$primary) {
     _db_temporal($tp_table, $table);
     $primary = _db_primary($table);
@@ -396,10 +401,10 @@ function app_get_id($tp_table, $primary = null) {
   }
   $cond = array();
   foreach($primary as $key) {
-    if(!isset($_REQUEST[$key])) {
-      die("request parameter for primary key '$key' is missing\n");
+    if(!isset($data[$key])) {
+      die("parameter for primary key '$key' is missing\n");
     }
-    $cond[$key] = $_REQUEST[$key];
+    $cond[$key] = $data[$key];
   }
   return $cond;
 }
@@ -430,20 +435,19 @@ function app_input_table($tp_table) {
   // execute user actions on buttons
   $primary = _db_primary($table); // TODO: allow combined primary keys (currently goes wrong because no arrays can be submitted as values)
   if(isset($_REQUEST["delete"])) { /* user has clicked on small delete button */
-    $id = $_REQUEST["delete"];
-    $olddata = array(array($primary => $id));
+    $olddata = array(app_get_id($table));
     db_delete($table, $olddata);
     app_check_error();
   }
   if(isset($_REQUEST["edit"])) { /* user has clicked on small edit button */
-    $id = $_REQUEST["edit"];
-    $olddata = db_read($table, null, array($primary => $id), null, 0, 1);
+    $cond = app_get_id($table);
+    $olddata = db_read($table, null, $cond, null, 0, 1);
     //echo "edit olddata: "; print_r($olddata); echo "<br>\n";
     $mode = "change";
     $data = _app_prepare_data($table, $olddata, $mode);
   } elseif(isset($_REQUEST["clone"])) { /* user has clicked on cloning button */
-    $id = $_REQUEST["clone"];
-    $olddata = db_read($table, null, array($primary => $id), null, 0, 1);
+    $cond = app_get_id($table);
+    $olddata = db_read($table, null, $cond, null, 0, 1);
     //echo "edit olddata: "; print_r($olddata); echo "<br>\n";
     $mode = "new_clone";
     $data = _app_prepare_data($table, $olddata, $mode);

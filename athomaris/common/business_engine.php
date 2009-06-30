@@ -199,17 +199,19 @@ function subst_macros(&$env, $cmd, $search = array(), $replace = array()) {
 /* Write back results to the database.
  */
 function do_writeback($rec, $tablename, $fieldname, $fieldvalue, $other = array()) {
-  if(true) {
-    $primary = _db_primary($tablename);
-    $id = @$rec[$primary];
-    echo "writeback id=$id $tablename.$fieldname='$fieldvalue'\n";
-  }
   global $ERROR;
   $primary = _db_primary($tablename);
+  $keytxt = "";
   foreach(split(",", $primary) as $pri) {
     $id = $rec[$pri];
     engine_log("action: table $tablename primary $pri = '$id' : field $fieldname = '$fieldvalue'");
     $other[$pri] = $id;
+    if($keytxt)
+      $keytxt .= ", ";
+    $keytxt .= "$pri = '$id'";
+  }
+  if(true) {
+    echo "writeback ($keytxt) $tablename.$fieldname = '$fieldvalue'\n";
   }
   $other[$fieldname] = $fieldvalue;
   $ok = db_update($tablename, array($other));
@@ -364,8 +366,10 @@ function do_action(&$env, $action) {
     $data = array();
     if($mode == "update" || $mode == "delete") {
       $primary = _db_primary($table);
-      if(@$env[$primary]) {
-	$data[0][$primary] = $env[$primary];
+      foreach(split(",", $primary) as $pri) {
+	if(isset($env[$pri])) {
+	  $data[0][$pri] = $env[$pri];
+	}
       }
     }
     while(preg_match("/\A\s*($RAW_ID)\s*=\s*'((?:[^\\']|\\.)*)'(.*)/", $rest, $matches)) {
