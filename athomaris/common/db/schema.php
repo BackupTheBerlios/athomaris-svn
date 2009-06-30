@@ -198,6 +198,7 @@ $SYNTAX_SCHEMA =
 	      "DB" => "",
 	      "ENGINE" => "",
 	      "ACCESS" => "/^[nrRwW]$/",
+	      "SCHEMA_CONTROL" => true,
 	      "REALNAME" => $SYNTAX_ID,
 
 	      // the following is questionable and will be changed to a better systematics
@@ -598,6 +599,9 @@ function _db_pass_main($MYSCHEMA) {
       $newtdef["TOOLS"] = array("tool_search" => true, "tool_page" => true);
     }
 
+    if(!@$tdef["SCHEMA_CONTROL"]) {
+      $newtdef["SCHEMA_CONTROL"] = true;
+    }
     if(!@$tdef["REALNAME"]) {
       $newtdef["REALNAME"] = $table;
     }

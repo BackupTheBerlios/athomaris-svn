@@ -75,7 +75,7 @@ Thomas Schöbel-Theuer
 \end_layout
 
 \begin_layout Date
-Version 0.3
+Version 0.4
 \end_layout
 
 \begin_layout Standard
@@ -1075,6 +1075,36 @@ name "sub:Table-Definitions-in-$SCHEMA"
 \begin_layout Standard
 Each table is described by a nested PHP hash which may contain some of the
  following attributes:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+SCHEMA_CONTROL
+\family default
+ => 
+\emph on
+boolean
+\emph default
+.
+ Defaults to 
+\family typewriter
+true
+\family default
+ when omitted.
+\begin_inset Newline newline
+\end_inset
+
+When set to 
+\family typewriter
+false
+\family default
+, no SQL statements for schema management will be generated at 
+\family typewriter
+create_schema.php
+\family default
+.
+ Use this for external tables where you don't have control over it.
 \end_layout
 
 \begin_layout Description
@@ -8659,6 +8689,49 @@ reference "sub:Full-Subqueries"
 \end_inset
 
 .
+\end_layout
+
+\begin_layout Chapter
+\start_of_appendix
+FAQ
+\end_layout
+
+\begin_layout Description
+Q: What's the difference to Hibernate (or other OR mappers)?
+\end_layout
+
+\begin_layout Description
+A: OR mappers transform from one paradigm to another one: from the 
+\emph on
+relational data model
+\emph default
+ of SQL to the 
+\emph on
+OO programming language
+\emph default
+ model.
+ Although many people don't like to hear it, I'll say it: this transformation
+ is 
+\emph on
+lossy
+\emph default
+.
+ The relational data model is 
+\series bold
+more powerful
+\series default
+ than the OO one (see also the papers from Codd from the 1970s).
+ For example, high-level symmetric 
+\emph on
+join opportunities
+\emph default
+ are replaced with asymmetric low-level 
+\emph on
+pointers
+\emph default
+.
+ In contrast to OR mappers, Athomaris stays at the SQL model and even extends
+ its power with additional features such as temporal tables.
 \end_layout
 
 \end_body

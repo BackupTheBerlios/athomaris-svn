@@ -163,6 +163,10 @@ function _db_create_tables($OLD, $NEW, $database, &$count) {
       $query .= "/* skipping table '$newtable', no write access */\n";
       continue;
     }
+    if(!@$newdef["SCHEMA_CONTROL"]) {
+      $query .= "/* skipping table '$newtable', no schema control over it */\n";
+      continue;
+    }
 
     $singular = _db_singular($newtable, $NEW);
     $primary = _db_primary($newtable, $NEW);
