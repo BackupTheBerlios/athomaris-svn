@@ -22,6 +22,8 @@
 require_once("$BASEDIR/../common/app.php");
 require_once("$BASEDIR/compiled/engine_table.php");
 
+$trace = false;
+
 // helper RE obeying correct parenthesis and single_quote nesting...
 $SUBEXPR = ".*";
 for($i = 0; $i < 5; $i++) {
@@ -36,7 +38,7 @@ function engine_log($txt) {
   global $debug;
   if($debug) {
     echo "INFO: $txt <br>\n";
-  }
+  } 
 }
 
 function engine_warn($txt) {
@@ -55,9 +57,10 @@ function engine_error($txt) {
  * has omitted some values.
  */
 function make_default($value, $basis, $prefix, $plus = 1) {
+  //echo "aha....($value)($basis)($prefix)($plus)\n";
   if($value) {
-    if(preg_match("/\A\+\s+(-?[0-9]+)/", $basis, $matches)) {
-      return $value + $matches[1];
+    if(preg_match("/\A\+\s+(-?[0-9]+)/", $value, $matches)) {
+      return (int)$basis + (int)$matches[1];
     }
     return $value;
   }
@@ -125,6 +128,7 @@ function value_matches(&$env, $value, $check) {
 /* Test whether a given condition @cnd is true on a given environment @env.
  */
 function test_condition(&$env, $cnd) {
+  global $RAW_ID;
   if(!$cnd) { // empty condition field => accept always
     return true;
   }
@@ -136,7 +140,7 @@ function test_condition(&$env, $cnd) {
     }
     return true;
   }
-  if(preg_match("/\A\?\s*([A-Za-z_0-9]+)\s*(.*)\Z/", $cnd, $matches)) {
+  if(preg_match("/\A\?\s*($RAW_ID)\s*(.*)\Z/", $cnd, $matches)) {
     $field = $matches[1];
     $rest = $matches[2];
     if(!array_key_exists($field, $env)) {
@@ -156,7 +160,7 @@ function test_condition(&$env, $cnd) {
 function subst_macros(&$env, $cmd, $search = array(), $replace = array()) {
   global $SUBEXPR;
   $count = 0;
-  while(preg_match("/\A(.*?)@(?:\{([A-Za-z_0-9]+)\}|\(($SUBEXPR)\))(.*)/", $cmd, $mymatches)) {
+  while(preg_match("/\A(.*?)@(?:\{([0-9A-Za-z_]+(?:[-][>][0-9A-Za-z_]+)*)\}|\(($SUBEXPR)\))(.*)/", $cmd, $mymatches)) {
     $field = $mymatches[2];
     $subcmd = $mymatches[3];
     if($subcmd) { // inline expansion of shell commands
@@ -166,20 +170,22 @@ function subst_macros(&$env, $cmd, $search = array(), $replace = array()) {
       fclose($fd);
       $cmd = $mymatches[1] . str_replace($search, $replace, $text) . $mymatches[4];      
     } else { // ordinary macro expansion
-      if(preg_match("/\A\s*[0-9]+/", $field)) { // expand outer_matches
-	$field = (int)$field;
-	if(!array_key_exists($field, $env)) {
-	  engine_warn("macro substitution: subexpression '$field' does not exist in regular expression at runtime");
+      $subst = $env;
+      while(preg_match("/\A(?:->)?([0-9A-Za-z_]+)(.*)/", $field, $matches)) {
+	$subfield = $matches[1];
+	$field = $matches[2];
+	if(preg_match("/\A\s*[0-9]+\s*\Z/", $subfield)) { // convert to integer
+	  $subfield = (int)$subfield;
 	}
-	$subst = @$env[$field];
-	engine_log("macro subst '$field' -> '$subst'");
-	$cmd = $mymatches[1] . str_replace($search, $replace, $subst) . $mymatches[4];
+	if(!array_key_exists($subfield, $subst)) {
+	  engine_warn("macro substitution '$subfield' does not exist at runtime");
+	}
+	$subst = @$subst[$subfield];
+      }
+      if($field) {
+	engine_error("variable substitution '$field' is syntactically incorrect");
 	continue;
       }
-      if(!array_key_exists($field, $env)) {
-	engine_warn("macro substitution '$field' does not exist in tuple at runtime");
-      }
-      $subst = @$env[$field];
       engine_log("macro subst '$field' -> '$subst'");
       $cmd = $mymatches[1] . str_replace($search, $replace, $subst) . $mymatches[4];
     }
@@ -191,6 +197,12 @@ function subst_macros(&$env, $cmd, $search = array(), $replace = array()) {
   return $cmd;
 }
 
+function echo_rule($env) {
+  $rule_id = $env["rule_id"];
+  $rule_prio = $env["rule_prio"];
+  $cont_prio = @$env["cont_prio"];
+  echo "rule ($rule_id,$rule_prio,$cont_prio)\t";
+}
 
 /////////////////////////////////////////////////////////////////////
 
@@ -198,12 +210,12 @@ function subst_macros(&$env, $cmd, $search = array(), $replace = array()) {
 
 /* Write back results to the database.
  */
-function do_writeback($rec, $tablename, $fieldname, $fieldvalue, $other = array()) {
+function do_writeback($env, $tablename, $fieldname, $fieldvalue, $other = array()) {
   global $ERROR;
   $primary = _db_primary($tablename);
   $keytxt = "";
   foreach(split(",", $primary) as $pri) {
-    $id = $rec[$pri];
+    $id = $env[$pri];
     engine_log("action: table $tablename primary $pri = '$id' : field $fieldname = '$fieldvalue'");
     $other[$pri] = $id;
     if($keytxt)
@@ -211,6 +223,7 @@ function do_writeback($rec, $tablename, $fieldname, $fieldvalue, $other = array(
     $keytxt .= "$pri = '$id'";
   }
   if(true) {
+    echo_rule($env);
     echo "writeback ($keytxt) $tablename.$fieldname = '$fieldvalue'\n";
   }
   $other[$fieldname] = $fieldvalue;
@@ -225,6 +238,10 @@ function do_writeback($rec, $tablename, $fieldname, $fieldvalue, $other = array(
  */
 function check_answer(&$env, $line) {
   global $debug;
+  global $trace;
+  if(@$trace) {
+    echo "$line\n";
+  }
   $result = true;
   if(!$line)
     return true;
@@ -298,7 +315,7 @@ function run_script(&$env, $cmd) {
   $pid = proc_get_status($proc);
   $pid = @$pid["pid"];
   $ok = true;
-  $ok &= check_answer($env, "START $pid '$cmd'");
+  $ok &= check_answer($env, "START $pid ($cmd)");
   $timeout = $env["rule_timeout"];
   if($timeout < 1)
     $timeout = 3600 * 24 * 365;
@@ -378,6 +395,7 @@ function do_action(&$env, $action) {
       $rest = $matches[3];
       $data[0][$field] = subst_macros($env, $value, "'", "\\'");
     }
+    echo_rule($env);
     echo "$mode $table:";
     foreach($data[0] as $field => $value) {
       echo " $field = '$value'";
@@ -392,6 +410,36 @@ function do_action(&$env, $action) {
     } else {
       $ok = db_insert($table, $data);
       check_answer($env, "INSERT $ok");
+    }
+  } else if(preg_match("/\Aquery\s+($RAW_ID)\s+($RAW_ID)\s+($RAW_ID\s*=.*)/", $action, $matches)) {
+    $var = $matches[1];
+    $table = $matches[2];
+    $rest = $matches[3];
+    $cond = array();
+    while(preg_match("/\A\s*($RAW_ID)\s*=\s*'((?:[^\\']|\\.)*)'(.*)/", $rest, $matches)) {
+      $field = $matches[1];
+      $value = $matches[2];
+      $rest = $matches[3];
+      $cond[$field] = subst_macros($env, $value, "'", "\\'");
+    }
+    $data = db_read($table, null, $cond, null, 0, 0);
+    //echo "got....."; print_r($data); echo "\n";
+    $env[$var] = $data;
+    $ok = true;
+  } else if(preg_match("/\Avar\s+($RAW_ID(?:->$RAW_ID)*)\s*=\s*'((?:[^\\']|\\.)*)'/", $action, $matches)) {
+    $var = $matches[1];
+    $expr = $matches[2];
+    $lvalue = &$env;
+    while(preg_match("/\A(?:->)?($RAW_ID)(.*)/", $var, $matches)) {
+      $field = $matches[1];
+      $var = $matches[2];
+      $lvalue = &$lvalue[$field];
+    }
+    if($var) {
+      engine_error("cannot assign to variable '$var'");
+    } else {
+      $lvalue = subst_macros($env, $expr, "'", "\\'");
+      $ok = true;
     }
   } else {
     engine_error("cannot parse action '$action'. correct your rules!");

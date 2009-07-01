@@ -7226,10 +7226,42 @@ fieldname
 \family default
 \emph default
 .
- It may stem from the matching tuple, or even from a more complex join delivered
+ It may stem from the matching tuple, or from a more complex join delivered
  by 
 \family typewriter
 bp_joinwith
+\family default
+, or from variables set via 
+\family typewriter
+var
+\family default
+.
+ When complex nested structures have been delivered by 
+\family typewriter
+\emph on
+fieldname
+\emph default
+_pool
+\family default
+ or by a 
+\family typewriter
+query
+\family default
+ statement, you can access them via the syntax 
+\family typewriter
+@{
+\emph on
+field
+\emph default
+->
+\emph on
+subfield1
+\emph default
+->
+\emph on
+subfield2
+\emph default
+}
 \family default
 .
 \end_layout
@@ -7349,6 +7381,39 @@ script wget -O - 'http://...'
  You can query arbitrary web or ftp servers this way.
  When combined with the macro features explained above, you may easily create
  arbitrary REST queries, just for example.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+var
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+name
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+=
+\begin_inset space ~
+\end_inset
+
+'
+\emph on
+value
+\emph default
+'
+\family default
+ Set a variable for 
+\family typewriter
+@
+\family default
+ macro expansion.
+ At the right-hand side, you may use arbitrary macro expansions.
 \end_layout
 
 \begin_layout Description
@@ -7501,12 +7566,63 @@ fieldname1='value1'
  Be careful with it!
 \end_layout
 
+\begin_layout Description
+
+\family typewriter
+query
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+varname
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+tablename
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+fieldname1='value1'
+\emph default
+...
+
+\family default
+ Query the given table by the given keys and values.
+ The query result is assigned to 
+\family typewriter
+\emph on
+varname
+\family default
+\emph default
+ as an array of data records (see 
+\family typewriter
+db_read()
+\family default
+ in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Reading-of-Data"
+
+\end_inset
+
+).
+\end_layout
+
 \begin_layout Standard
-Multiple actions may be supplied if they are on different lines.
+Multiple actions may be specified, each on a different line.
  They will be executed sequentially.
  Note that a failing action (such as a database error) will immediately
  terminate the action chain - the following actions will not be started
- in such a case.
+ upon failure.
 \end_layout
 
 \end_deeper
