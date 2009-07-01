@@ -9252,7 +9252,7 @@ hinder
 \end_layout
 
 \begin_layout Description
-Q: are you really sure that Athomaris is 
+Q: Are you really sure that Athomaris is 
 \emph on
 not
 \emph default
@@ -9315,6 +9315,24 @@ overwriting
 conceptual
 \emph default
  level.
+\end_layout
+
+\begin_layout Description
+Q: Will Athomaris have future OO extensions?
+\end_layout
+
+\begin_layout Description
+A: Yes.
+ Although it 
+\emph on
+internally
+\emph default
+ uses a functional paradigm, future releases will generate class definitions.
+ Then you can choose whether you get an array of data records out of 
+\family typewriter
+db_read()
+\family default
+, or an array of OO objects.
 \end_layout
 
 \end_body
