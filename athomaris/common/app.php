@@ -409,10 +409,10 @@ function app_get_id($tp_table, $primary = null, $data = null) {
   return $cond;
 }
 
-/* output the input table: this contains all input fields.
+/* output the inputs for a record: this contains all input fields.
  * and do all the user-requested actions associated with that.
  */
-function app_input_table($tp_table) {
+function app_input_record($tp_table) {
   global $SCHEMA;
   global $ERROR;
 
@@ -463,7 +463,7 @@ function app_input_table($tp_table) {
     }
     $data = _app_prepare_data($table, $olddata, $mode);
   }
-  tpl_input_table($data);
+  tpl_input_record($data);
 }
 
 function app_display_table($tp_table) {
@@ -530,7 +530,7 @@ function app_display_record($tp_table, $cond) {
     tpl_display_record($data);
     if(db_access_table($table, "W")) {
       tpl_vspace(null);
-      tpl_input_table($data);
+      tpl_input_record($data);
     }
   }
 }
@@ -551,7 +551,9 @@ function app_display_download($tp_table, $cond, $download, $filename) {
     exit(0);
   } else {
     tpl_header($data);
+    tpl_body_start($data);
     print "<tt>"._tpl_format_ascii($data["DATA"][0][$download])."</tt>";
+    tpl_body_end($data);
     tpl_footer($data);
   }
 }

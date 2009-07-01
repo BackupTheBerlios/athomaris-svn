@@ -40,6 +40,7 @@ app_get_templates();
 if(!$download) {
   $data = array("TITLE" => "inspect_$table", "ACTION" => $_SERVER["PHP_SELF"] . "?table=$table");
   tpl_header($data);
+  tpl_body_start($data);
 
   app_links();
 
@@ -54,11 +55,13 @@ if(isset($_REQUEST["primary"])) {
     app_display_record($table, $cond);
   }
  } else {
-  app_input_table($table);
+  app_input_record($table);
   app_display_table($tp_table);
  }
 
-if(!$download)
+if(!$download) {
+  tpl_body_end(null);
   tpl_footer(null);
+ }
 
 ?>

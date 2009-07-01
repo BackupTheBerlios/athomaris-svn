@@ -60,7 +60,9 @@
   <title>{TEXT $TITLE/}</title>
   {TPL "styles"}
 </head>
+{/TEMPLATE}
 
+{TEMPLATE "body_start"}
 <body>
 
 <form name="main" enctype="multipart/form-data" action="{$ACTION/}" method="post" onsubmit='
@@ -80,12 +82,13 @@ for(i = 0; i < all.length; i++) \{
 '>
 {/TEMPLATE}
 
-/////////////////////////////////////////////////////////////////////////
-
-{TEMPLATE "footer"}
+{TEMPLATE "body_end"}
 <br/>
 </form>
 </body>
+{/TEMPLATE}
+
+{TEMPLATE "footer"}
 </html>
 {/TEMPLATE}
 
@@ -322,7 +325,7 @@ for(i = 0; i < all.length; i++) \{
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
-{TEMPLATE "input"}\
+{TEMPLATE "input_default"}\
  {IF PERM $TABLE $FIELD "W" || $FIELD == "hidden"}\
   {IF $IMAGE && !$DISPLAY_TYPE}{VAR $DISPLAY_TYPE = "image"/}{/IF}\
   <input{IF $DISPLAY_TYPE} type="{$DISPLAY_TYPE/}"{/IF}{IF $NAME} name="{$PREFIX}{$NAME}{$SUFFIX}"{/IF}{IF $ID} id="{$ID/}"{/IF}{IF $IMAGE} src="{$IMAGE/}" alt="{$ALT/}"{/IF}{IF $SIZE} size="{$SIZE/}"{/IF}{IF $MAXLEN} maxlength="{$MAXLEN/}"{/IF}{IF $CHECKED} checked="checked"{/IF}{IF isset($TEXT)} value="{TEXT $TEXT/}"{ELSEIF isset($VALUE)} value="{$VALUE/}"{/IF}{IF $CONFIRM} onclick="return confirm('{TEXT $CONFIRM}')"{/IF} />\
@@ -366,7 +369,7 @@ for(i = 0; i < all.length; i++) \{
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "button"}\
- {TPL "input" "IMAGE" => "images/".$NAME.".png", "ALT" => "button_".$NAME /}\
+ {TPL "input_default" "IMAGE" => "images/".$NAME.".png", "ALT" => "button_".$NAME /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
@@ -390,7 +393,7 @@ for(i = 0; i < all.length; i++) \{
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "input_hidden"}\
-  {TPL "input" "DISPLAY_TYPE" => "hidden", "FIELD" => "hidden", "NAME" => $FIELD /}\
+  {TPL "input_default" "DISPLAY_TYPE" => "hidden", "FIELD" => "hidden", "NAME" => $FIELD /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
@@ -402,16 +405,16 @@ for(i = 0; i < all.length; i++) \{
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "input_upload"}\
-  {TPL "input" "DISPLAY_TYPE" => "file", "NAME" => $FIELD, "MAXLEN" => null /}\
+  {TPL "input_default" "DISPLAY_TYPE" => "file", "NAME" => $FIELD, "MAXLEN" => null /}\
 {/TEMPLATE}
 {TEMPLATE "input_upload_filename"}\
-  {TPL "input" "DISPLAY_TYPE" => "file", "NAME" => $FIELD, "MAXLEN" => null, "SUFFIX" => $SUFFIX.":use_filename" /}\
+  {TPL "input_default" "DISPLAY_TYPE" => "file", "NAME" => $FIELD, "MAXLEN" => null, "SUFFIX" => $SUFFIX.":use_filename" /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "input_string"}\
-  {TPL "input" "DISPLAY_TYPE" => "text", "NAME" => $FIELD /}\
+  {TPL "input_default" "DISPLAY_TYPE" => "text", "NAME" => $FIELD /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
@@ -429,19 +432,19 @@ for(i = 0; i < all.length; i++) \{
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "input_bool"}\
-  {TPL "input" "DISPLAY_TYPE" => "checkbox", "NAME" => $FIELD, "CHECKED" => $VALUE, "VALUE" => 1 /}\
+  {TPL "input_default" "DISPLAY_TYPE" => "checkbox", "NAME" => $FIELD, "CHECKED" => $VALUE, "VALUE" => 1 /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "input_password"}\
-  {TPL "input" "DISPLAY_TYPE" => "password", "NAME" => $FIELD, "VALUE" => "" /}\
+  {TPL "input_default" "DISPLAY_TYPE" => "password", "NAME" => $FIELD, "VALUE" => "" /}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
 
 {TEMPLATE "input_mode"}\
-  {TPL "input" "DISPLAY_TYPE" => "radio", "NAME" => $FIELD, "CHECKED" => ($VALUE==$code), "VALUE" => $code /}{IF $text}{TEXT $text}{ELSE}{TEXT $code}{/IF}\
+  {TPL "input_default" "DISPLAY_TYPE" => "radio", "NAME" => $FIELD, "CHECKED" => ($VALUE==$code), "VALUE" => $code /}{IF $text}{TEXT $text}{ELSE}{TEXT $code}{/IF}\
 {/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
@@ -457,16 +460,16 @@ for(i = 0; i < all.length; i++) \{
 
 /////////////////////////////////////////////////////////////////////////
 
-{TEMPLATE "input_table"}
+{TEMPLATE "input_record"}
  <table>
-  {TPL "_input_table_loop" "SUFFIX" => ":0"/}
+  {TPL "_input_record_loop" "SUFFIX" => ":0"/}
   <tr>
     <td class="noborder"></td>
     <td class="noborder">{TPL "button_submit" "NAME" => $MODE, "VALUE" => $MODE /}</td>
   </tr>
  </table>
 {/TEMPLATE}
-{TEMPLATE "_input_table_loop"}
+{TEMPLATE "_input_record_loop"}
   {LOOP $SCHEMA->$TABLE->FIELDS AS $FIELD => $FDEF}
     {VAR $VALUE = @$DATA->0->$FIELD/}
     {VAR $CALL = "input_".$FDEF->DISPLAY_TYPE /}

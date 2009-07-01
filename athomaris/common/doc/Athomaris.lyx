@@ -245,6 +245,10 @@ Security
  attacks like SQL injection, XSS, etc.
 \end_layout
 
+\begin_layout Itemize
+Further aspects: see FAQ in the appendix (last page).
+\end_layout
+
 \begin_layout Standard
 \begin_inset CommandInset toc
 LatexCommand tableofcontents
@@ -4057,23 +4061,6 @@ tablename
 \begin_layout Description
 
 \family typewriter
-app_input_table(
-\begin_inset Quotes eld
-\end_inset
-
-tablename
-\begin_inset Quotes erd
-\end_inset
-
-)
-\family default
- Displays all fields for which the current user has write access, and handles
- all the corresponding input actions.
-\end_layout
-
-\begin_layout Description
-
-\family typewriter
 app_display_record($table,
 \begin_inset space ~
 \end_inset
@@ -4094,6 +4081,23 @@ reference "sub:Reading-of-Data"
 
 .
  Upon write permissions, an input table is also added.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+app_input_record(
+\begin_inset Quotes eld
+\end_inset
+
+tablename
+\begin_inset Quotes erd
+\end_inset
+
+)
+\family default
+ Displays all fields for which the current user has write access, and handles
+ all the corresponding input actions.
 \end_layout
 
 \begin_layout Description
@@ -5618,15 +5622,18 @@ The following conventions are used in
 \family typewriter
 ../common/app.php
 \family default
- and are recommended as a basis for your own extensions:
+ and are recommended as a basis for your own extensions.
 \end_layout
 
-\begin_layout Standard
-...
-\end_layout
-
-\begin_layout Section
+\begin_layout Subsection
 Default Template Callbacks
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Default-Template-Callbacks"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -5638,30 +5645,30 @@ myname
 \emph default
 , another template 
 \family typewriter
+before_
 \emph on
 myname
-\emph default
-_before
 \family default
+\emph default
  will be automatically called before its execution, and 
 \family typewriter
+after_
 \emph on
 myname
-\emph default
-_after
 \family default
+\emph default
  will be called after it has finished.
 \end_layout
 
 \begin_layout Standard
 Normally, such templates are not defined, thus they will not be called.
- Notice that you build even your own chains like 
+ Notice that you can build even long chains like 
 \family typewriter
+before_after_before_
 \emph on
 myname
-\emph default
-_before_after_before
 \family default
+\emph default
 , but this is no recommended style.
 \end_layout
 
@@ -5671,8 +5678,16 @@ These callbacks are especially useful for augmenting the default templates
 \end_layout
 
 \begin_layout Standard
-Note: the easiest way to use Athomaris as an application framework is simply
- to override some of the default templates with your own version (see 
+Note: the easiest way to use Athomaris as an 
+\emph on
+application framework
+\emph default
+ (although its primary goal is a 
+\emph on
+domain framework
+\emph default
+) is simply to override some of the default templates with your own version
+ (see 
 \family typewriter
 {include/}
 \family default
@@ -5684,6 +5699,602 @@ reference "sub:Templates"
 \end_inset
 
 ).
+\end_layout
+
+\begin_layout Subsection
+Common Template Names
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Common-Template-Names"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+header
+\family default
+ Contains the HTML header with 
+\family typewriter
+<html>
+\family default
+, 
+\family typewriter
+<head>
+\family default
+ and 
+\family typewriter
+<title>
+\family default
+.
+ Of course, further elements like 
+\family typewriter
+<?xml
+\family default
+ and 
+\family typewriter
+<!DOCTYPE
+\family default
+ may also be added, depending on the HTML dialect you plan to use.
+ The default is XHTML.
+ If you want to change the HTML protocol header via 
+\family typewriter
+{HEADER/}
+\family default
+, this must come first.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+body_start,
+\begin_inset space ~
+\end_inset
+
+body_end
+\family default
+ Contains the beginning and closing of 
+\family typewriter
+<body>
+\family default
+.
+ This is an interesting hook for injection of your own javascipt code etc.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+footer
+\family default
+ Contains the closing of 
+\family typewriter
+<html>
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+styles
+\family default
+ This is called from the default 
+\family typewriter
+header
+\family default
+ template.
+ You may include your own stylesheets or other stuff here.
+ Hint: by using 
+\family typewriter
+before_styles
+\family default
+ or 
+\family typewriter
+after_styles
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Default-Template-Callbacks"
+
+\end_inset
+
+), you can extend the existing styles without replacing them.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+links
+\family default
+ Displays the default links (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Link-Headers"
+
+\end_inset
+
+) as produced by 
+\family typewriter
+app_links()
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Generic-Application-Layer"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+display_table
+\family default
+ Displays a whole table as supplied by parameter 
+\family typewriter
+$data[
+\begin_inset Quotes eld
+\end_inset
+
+DATA
+\begin_inset Quotes erd
+\end_inset
+
+]
+\family default
+.
+ Called by 
+\family typewriter
+app_display_table()
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Generic-Application-Layer"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+display_subtable
+\family default
+ This is internally used for displaying subtables.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+display_record
+\family default
+ Called by 
+\family typewriter
+app_display_record()
+\family default
+.
+ Shows a single data record.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+display_default
+\family default
+ Internally used for generic display of a single entry from a record or
+ a table.
+ 
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+display_ref,
+\begin_inset space ~
+\end_inset
+
+display_reflist
+\family default
+ Internally used for display of references to other tables.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+display_*
+\family default
+ Further internal templates for display of various items.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+input_record
+\family default
+ Called by 
+\family typewriter
+app_input_record()
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Generic-Application-Layer"
+
+\end_inset
+
+).
+ Presents input fields for a whole record.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+input_selector
+\family default
+ Displays a selector with values from 
+\family typewriter
+\emph on
+fieldname
+\emph default
+_pool
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+input_sublist
+\family default
+ Displays two boxes, one with values from 
+\family typewriter
+\emph on
+fieldname
+\emph default
+_pool
+\family default
+, and the other with the selected items.
+ The user may move the items between the boxes and change their order.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+input_subtable
+\family default
+ Currently not yet functional.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+input_default
+\family default
+ Internally used for input of a single generic input field.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+input_*
+\family default
+ Various other input variants, similar in hierarchy to 
+\family typewriter
+display_*
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+tool_search
+\family default
+ Displays the default search field for browsing table data.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+tool_page
+\family default
+ Displays the default pager for browsing table data.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+tool_history
+\family default
+ Displays a checkbox for switching between temporal and non-temporal views
+ of tha data.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+tool_level
+\family default
+ Currently not yet functional.
+\end_layout
+
+\begin_layout Subsection
+Common Template Variables
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Common-Template-Variables"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+By default, the application supplies various information over the 
+\family typewriter
+$data
+\family default
+ argument of templates.
+ Following are subfields of $data:
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+DATA
+\family default
+ => 
+\emph on
+array
+\emph default
+ of records.
+ This contains the table data for display.
+ The format is the same as from db_read() (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Reading-of-Data"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+TABLE
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ The name of the table currently displayed.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+PRIMARY
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ The primary key.
+ A composed key is indicated by a comma-separated list.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+PRIMARIES
+\family default
+ => 
+\emph on
+array
+\emph default
+ of strings.
+ Each member of composed key as a separate string (useful for 
+\family typewriter
+{LOOP}
+\family default
+ing over it).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+UNIQUE,
+\begin_inset space ~
+\end_inset
+
+UNIQUES
+\family default
+ Like 
+\family typewriter
+PRIMARY
+\family default
+ and 
+\family typewriter
+PRIMARIES
+\family default
+, but indicating the 
+\emph on
+first
+\emph default
+ 
+\family typewriter
+UNIQUE
+\family default
+ key (if one exists).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+ACTION_SELF
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Contains 
+\family typewriter
+$_SERVER["PHP_SELF"]
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+ACTION_BASE
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ A parameter string referencing the currently running PHP script augmented
+ with all 
+\emph on
+relevant
+\emph default
+ GET or POST variables.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Revelant
+\begin_inset Quotes erd
+\end_inset
+
+ means that all parameter neccessary for reloading are included, but others
+ are filtered away.
+ You may take this as a basis for creating links, overriding some of the
+ parameters simply by appending other assignments, and so on.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+ACTION
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ Like 
+\family typewriter
+ACTION_BASE
+\family default
+, but with additional parameters for all the tools described in section
+ ...
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+MODE
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ One of the values 
+\family typewriter
+insert
+\family default
+, 
+\family typewriter
+delete
+\family default
+, 
+\family typewriter
+change
+\family default
+, 
+\family typewriter
+new_clone
+\family default
+, or 
+\family typewriter
+invalid
+\family default
+ indicating the typo of operation currently performed.
+ In case of displaying a tool, the name of the tool like 
+\family typewriter
+search
+\family default
+, 
+\family typewriter
+page
+\family default
+, or 
+\family typewriter
+history
+\family default
+ is provided instead.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+PERM
+\family default
+ => 
+\emph on
+array
+\emph default
+.
+ Contains a data record, namely the currently active 
+\family typewriter
+profile
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+SCHEMA
+\family default
+ => 
+\emph on
+array
+\emph default
+.
+ A copy of the global variable 
+\family typewriter
+$SCHEMA
+\family default
+, as produced by the schema compiler.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+EXTRA,
+\begin_inset space ~
+\end_inset
+
+EXTRAHEAD
+\family default
+ Used for adding extra columns to tables.
+ By default, the buttons for data manipulation are placed here.
 \end_layout
 
 \begin_layout Chapter
