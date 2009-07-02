@@ -162,6 +162,8 @@ $SYNTAX_FIELD =
 	//"TARGET" => false, // for actual values, not in use
 	"ACCESS" => "/^[nrRwW]$/",
 	"REALNAME" => $SYNTAX_ID,
+	"CB_CONV_READ" => $SYNTAX_ID,
+	"CB_CONV_WRITE" => $SYNTAX_ID,
 
 	"DISPLAY_TYPE" => "",
 	"TPL_DISPLAY" => $SYNTAX_IDLIST,
