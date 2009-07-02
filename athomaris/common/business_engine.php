@@ -557,7 +557,7 @@ function poll_childs() {
       return; // do nothing
     }
     $cmd = @$FORKS[$code];
-    unset(@$FORKS[$code]); // avoid memory leaks
+    unset($FORKS[$code]); // avoid memory leaks
     if(pcntl_wifsignaled($status)) {
       $status = pcntl_wtermsig($status);
       check_answer($env, "GLOBAL_SIGNALED $code $status ($cmd)");

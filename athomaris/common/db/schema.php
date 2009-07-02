@@ -374,6 +374,8 @@ $USER_EXTRA =
 	      ),
 	);
 
+/* For the business process engine
+ */
 $ENGINE_VALUE = "(=.*|%.*|\/.*\/)";
 $SYNTAX_RULEACTION = "\A(?:(?:var|script|url|insert|update|delete|query)\s+.*(?:\n|\Z))*";
 
@@ -502,6 +504,34 @@ $ENGINE_SCHEMA =
 			  ),
 		    ),
 	      "UNIQUE" => array("bp_name,rule_prio,cont_prio"),
+	      ),
+	"states" =>
+	array("FIELDS" =>
+	      array(
+		    "bp_name" =>
+		    array("TYPE" => "varchar(32)",
+			  "DEFAULT" => "''",
+			  "REGEX" => $RAW_ID,
+			  "REFERENCES" => array("bps.bp_name" => array("on delete set null", "on update cascade")),
+			  ),
+		    "state_value" =>
+		    array("TYPE" => "varchar(255)",
+			  "DEFAULT" => "''",
+			  ),
+		    "state_env" =>
+		    array("TYPE" => "text",
+			  "DEFAULT" => "''",
+			  ),
+		    "state_returnenv" =>
+		    array("TYPE" => "text",
+			  "DEFAULT" => "''",
+			  ),
+		    "state_returnfield" =>
+		    array("TYPE" => "varchar(64)",
+			  "DEFAULT" => "''",
+			  "REGEX" => "\A(?:|$RAW_DOTID)\Z",
+			  ),
+		    ),
 	      ),
 	);
 

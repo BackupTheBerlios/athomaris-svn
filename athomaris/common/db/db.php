@@ -306,18 +306,29 @@ function _db_cb_process_subdata(&$env, $resultset) {
   return null;
 }
 
-
+/* Handle type conversion and built-in
+ * Splitting.
+ * TODO: the old DATA_SPLIT is a special case of
+ * the newer CB_CONV_READ, replace it!
+ */
 function _db_do_datasplit($data, $env) {
   global $SCHEMA;
   $res = $data;
   foreach($env["KEYS"] as $field => $dummy) {
     foreach($SCHEMA as $table => $tdef) {
-      if($data_split = @($tdef["FIELDS"][$field]["DATA_SPLIT"])) {
+      $fdef = @$tdef["FIELDS"][$field];
+      // callbacks for conversion
+      if($cb = @$fdef["CB_CONV_READ"]) {
+	foreach($data as $idx => $rec) {
+	  $res[$idx][$field] = $cb($table, $field, $rec[$field]);
+	}
+      }
 
+      if(($data_split = @$fdef["DATA_SPLIT"])) {
 
 	$delim = $data_split[0];
 	$newfield = $data_split[1];
-	foreach($data as $idx => $rec) {
+	foreach($res as $idx => $rec) {
 	  $list = @$rec[$field];
 	  $sub_data = array();
 	  if($list) {
@@ -341,8 +352,6 @@ function _db_do_datasplit($data, $env) {
 	  $rec[$field] = $sub_data;
 	  $res[$idx] = $rec;
 	}
-
-
 
 	break;
       }
@@ -700,6 +709,10 @@ function _db_prepare_data($table, $data) {
 	  $newarray[] = $rec[$key];
 	}
 	$newrow[$field] = implode($delim, $newarray);
+      }
+      // callbacks for conversion
+      if($cb = @$fdef["CB_CONV_WRITE"]) {
+	$newrow[$field] = $cb($table, $field, $newrow[$field]);
       }
     }
     $newdata[$idx] = $newrow;

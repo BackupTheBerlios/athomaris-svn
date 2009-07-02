@@ -2487,6 +2487,83 @@ This allows direct throughpassing of MySQL options.
  Try to avoid this!
 \end_layout
 
+\begin_layout Description
+
+\family typewriter
+CB_CONV_READ
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ No default, can be omitted.
+\begin_inset Newline newline
+\end_inset
+
+Hook for supplying a PHP function name which converts the value from a database
+ field into an internal PHP representation upon 
+\family typewriter
+db_read()
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Reading-of-Data"
+
+\end_inset
+
+).
+ The function must have a prototype of the form 
+\family typewriter
+convert_read_function($table, $field, $database_value)
+\family default
+ and return the internal PHP representation, whatever it may be.
+ Hint: you may use this for arbitrary type conversions, even deeply nested
+ PHP structures.
+ For example, you may provide a function which converts an XML string into
+ a nested DOM structure.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+CB_CONV_WRITE
+\family default
+ => 
+\emph on
+string
+\emph default
+.
+ No default, can be omitted.
+\begin_inset Newline newline
+\end_inset
+
+This hook is the inverse of 
+\family typewriter
+CB_CONV_READ
+\family default
+: it just converts in the opposite direction upon 
+\family typewriter
+db_insert()
+\family default
+, 
+\family typewriter
+db_update()
+\family default
+, etc (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Update-Operations"
+
+\end_inset
+
+).
+ The signature of the function follows the same methodology.
+ For example, you can use this for converting a deeply nested PHP structure
+ into an XML string representation.
+\end_layout
+
 \begin_layout Subsection
 Temporal tables
 \begin_inset CommandInset label
