@@ -391,21 +391,22 @@ $ENGINE_SCHEMA =
 		    "bp_statefield" =>
 		    array("TYPE" => "varchar(64)",
 			  "DEFAULT" => "''",
-			  "REGEX" => $RAW_DOTID,
+			  "REGEX" => "\A(?:|$RAW_DOTID)\Z",
 			  ),
 		    "bp_inputs" =>
 		    array("TYPE" => "varchar(255)",
 			  "DEFAULT" => "''",
-			  "REGEX" => $RAW_IDLIST,
+			  "REGEX" => "\A(?:|$RAW_IDLIST)\Z",
 			  ),
 		    "bp_outputs" =>
 		    array("TYPE" => "varchar(255)",
 			  "DEFAULT" => "''",
-			  "REGEX" => $RAW_IDLIST,
+			  "REGEX" => "\A(?:|$RAW_IDLIST)\Z",
 			  ),
 		    "bp_joinwith" =>
 		    array("TYPE" => "varchar(64)",
 			  "DEFAULT" => "''",
+			  "REGEX" => "\A(?:|$RAW_IDLIST)\Z",
 			  ),
 		    "bp_comment" =>
 		    array("TYPE" => "text",
@@ -436,12 +437,12 @@ $ENGINE_SCHEMA =
 		    "rule_condition" =>
 		    array("TYPE" => "text",
 			  "DEFAULT" => "''",
-			  "REGEX" => "(|\?\s*$RAW_ID\s*$ENGINE_VALUE)",
+			  "REGEX" => "\A(|\?\s*$RAW_ID\s*$ENGINE_VALUE)\Z",
 			  ),
 		    "rule_location" =>
 		    array("TYPE" => "varchar(64)",
 			  "DEFAULT" => "''",
-			  "REGEX" => "(|$RAW_ID@$RAW_DOTID)",
+			  "REGEX" => "\A(|$RAW_ID@$RAW_DOTID)\Z",
 			  ),
 		    "rule_firevalue" =>
 		    array("TYPE" => "varchar(255)",

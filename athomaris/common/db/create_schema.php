@@ -30,7 +30,7 @@ if(!@$BASEDIR)
 
 # TODO: security checks
 
-$debug = true;
+//$debug = true;
 require_once($BASEDIR . "/../common/db/db.php");
 
 echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";

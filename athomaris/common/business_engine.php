@@ -24,6 +24,8 @@ require_once("$BASEDIR/compiled/engine_table.php");
 
 $trace = false;
 
+$FORKS = array();
+
 // helper RE obeying correct parenthesis and single_quote nesting...
 $SUBEXPR = ".*";
 for($i = 0; $i < 5; $i++) {
@@ -37,16 +39,16 @@ for($i = 0; $i < 5; $i++) {
 function engine_log($txt) {
   global $debug;
   if($debug) {
-    echo "INFO: $txt <br>\n";
+    echo "INFO: $txt\n";
   } 
 }
 
 function engine_warn($txt) {
-  echo "WARN: $txt <br>\n";
+  echo "WARN: $txt\n";
 }
 
 function engine_error($txt) {
-  echo "ERROR: $txt <br>\n";
+  echo "ERROR: $txt\n";
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -177,8 +179,11 @@ function subst_macros(&$env, $cmd, $search = array(), $replace = array()) {
 	if(preg_match("/\A\s*[0-9]+\s*\Z/", $subfield)) { // convert to integer
 	  $subfield = (int)$subfield;
 	}
-	if(!array_key_exists($subfield, $subst)) {
+	if(!@array_key_exists($subfield, $subst)) {
 	  engine_warn("macro substitution '$subfield' does not exist at runtime");
+	  $subst = "";
+	  $field = "";
+	  break;
 	}
 	$subst = @$subst[$subfield];
       }
@@ -239,12 +244,18 @@ function do_writeback($env, $tablename, $fieldname, $fieldvalue, $other = array(
 function check_answer(&$env, $line) {
   global $debug;
   global $trace;
-  if(@$trace) {
-    echo "$line\n";
-  }
-  $result = true;
   if(!$line)
     return true;
+  if(@$trace) {
+    echo "==> $line\n";
+  }
+
+  if(@$env["LEVEL"] > 1) { // disallow recursion on the output of cont_action
+    //echo"break.....($line)\n";
+    return true;
+  }
+
+  $result = true;
   if($debug) {
     echo "LINE: $line\n";
   }
@@ -282,9 +293,11 @@ function run_script(&$env, $cmd) {
    * The father returns "success", and the son will treat the rest
    * of the action chain.
    */
-  if(!@$env["HAS_FORKED"] && !@$env["IS_SON"]) {
+  if(!@$env["HAS_FORKED"] && !@$env["IS_SON"] && !@$env["IS_GLOBAL"]) {
+    global $FORKS;
     // clean the connection cache: mysql seems to be disturbed by fork()
     _db_close();
+    flush();
     // fork a process for execution of the script
     $pid = pcntl_fork();
     if($pid < 0) { // error
@@ -293,10 +306,14 @@ function run_script(&$env, $cmd) {
     }
     if($pid > 0) { // father
       $env["HAS_FORKED"] = true;
+      $FORKS[$pid] = $cmd;
       return true;
     }
     // son
     $env["IS_SON"] = true;
+    $pid = getmypid();
+    
+    check_answer($env, "FORKED $pid");
     //global $debug; $debug = true;
   }
 
@@ -325,7 +342,7 @@ function run_script(&$env, $cmd) {
     $dummy2 = null;
     $status = stream_select($tests, $dummy1, $dummy2, $timeout);
     if(!$status) { // timeout
-      $ok &= check_answer($env, "TIMEOUT $timeout");
+      $ok &= check_answer($env, "TIMEOUT $pid $timeout");
     }
     $closed = 0;
     foreach($tests as $stream) {
@@ -339,13 +356,31 @@ function run_script(&$env, $cmd) {
     if(!$ok) { // kill it...
       engine_log("killing process $pid");
       proc_terminate($proc);
+      check_answer($env, "KILL $pid");
       exit(1);
     }
   } while($closed < 2);
   fclose($pipes[1]);
   fclose($pipes[2]);
-  $status = proc_close($proc);
-  check_answer($env, "STATUS $status");
+  $has_reported = false;
+  if(true) {
+    $code = pcntl_waitpid($pid, $status, 0);
+    if($code > 0) {
+      if(pcntl_wifsignaled($status)) {
+	$status = pcntl_wtermsig($status);
+	check_answer($env, "SIGNALED $code $status");
+      }
+      if(pcntl_wifexited($status)) {
+	$status = pcntl_wexitstatus($status);
+	check_answer($env, "STATUS $code $status");
+	$has_reported = true;
+      }
+    }
+  }
+  if(!$has_reported) { // after waitpid(), the zombie is lost => proc_close() will no longer work
+    $status = proc_close($proc);
+    check_answer($env, "STATUS $pid $status");
+  }
   return true;
 }
 
@@ -364,9 +399,17 @@ function do_action(&$env, $action) {
     }
     return true;
   }
+
+  if(!$action)
+    return true;
+
+  //echo "ACTION: $action\n";
+  $oldlevel = $env["LEVEL"];
+  $env["LEVEL"]++;
+
   $ok = false;
   if(!$action) {
-    return true;
+    $ok = true;
   } elseif(preg_match("/\A(script|url)\s+(.*)/", $action, $matches)) {
     $op = $matches[1];
     $cmd = $matches[2];
@@ -381,6 +424,7 @@ function do_action(&$env, $action) {
       $table = $matches[2];
     $rest = $matches[3];
     $data = array();
+    //echo "MODE: $mode\n";
     if($mode == "update" || $mode == "delete") {
       $primary = _db_primary($table);
       foreach(split(",", $primary) as $pri) {
@@ -447,6 +491,7 @@ function do_action(&$env, $action) {
   if($ok) {
     $env["HIT_FLAG"] = true;
   }
+  $env["LEVEL"] = $oldlevel;
   return $ok;
 }
 
@@ -461,6 +506,7 @@ function treat_rec($tablename, $fieldname, $rec, $deflist) {
     $startvalue = $def["rule_startvalue"];
     // initialize the environment with some reasonable knowledge about our world
     $env = array_merge($def, $rec);
+    $env["LEVEL"] = 0;
     $env["TABLE"] = $tablename;
     $env["FIELD"] = $fieldname;
     if(value_matches($env, $startvalue, $cell)) {
@@ -494,9 +540,42 @@ function treat_rec($tablename, $fieldname, $rec, $deflist) {
   }
 }
 
+/* Poll child process status and report it
+ */
+function poll_childs() {
+  global $FORKS;
+  global $ENGINE;
+  $env = $ENGINE["GLOBAL.GLOBAL"];
+  $env = array_replace_recursive($env[0], $env);
+  $env["IS_GLOBAL"] = true;
+  $env["TABLE"] = "GLOBAL";
+  $env["FIELD"] = "GLOBAL";
+  $env["LEVEL"] = 1;
+  for(;;) {
+    $code = pcntl_waitpid(0, $status, WNOHANG);
+    if($code <= 0) {
+      return; // do nothing
+    }
+    $cmd = @$FORKS[$code];
+    unset(@$FORKS[$code]); // avoid memory leaks
+    if(pcntl_wifsignaled($status)) {
+      $status = pcntl_wtermsig($status);
+      check_answer($env, "GLOBAL_SIGNALED $code $status ($cmd)");
+    }
+    if(pcntl_wifexited($status)) {
+      $status = pcntl_wexitstatus($status);
+      check_answer($env, "GLOBAL_EXITED $code $status ($cmd)");
+    }
+  }
+}
+
 function engine_run_once() {
   global $ENGINE;
+  poll_childs();
   foreach($ENGINE as $statefield => $deflist) {
+    if($statefield == "GLOBAL.GLOBAL") {
+      continue;
+    }
     $tmp = explode(".", $statefield);
     $tablename = $tmp[0];
     $fieldname = $tmp[1];
@@ -544,11 +623,17 @@ function engine_run_endless($pause = 3) {
     sleep($pause);
   }
 }
-
-if(@$argv[3]) {
-  engine_run_once();
- } else {
+if(@$argv[4]) {
+  $trace = true;
+ }
+$count = @$argv[3];
+if(!$count) {
   engine_run_endless();
+ } else { // debugging
+  for($i = 0; $i < $count; $i++) {
+    engine_run_once();
+    sleep(3);
+  }
  }
 
 ?>
