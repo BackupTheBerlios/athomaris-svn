@@ -8143,8 +8143,23 @@ rule_action
 .
  Although it is possible to start another scripts again, their output is
  not parsed again.
- So use this only for small actions not involving different state changes
- at the cell.
+ 
+\series bold
+Warning:
+\series default
+ use this only for small actions not involving different state changes at
+ the cell.
+ Since the same continuation may be triggered multiple times by different
+ lines of output, you can easily mess up your system with nondeterminism.
+ Be very careful with 
+\family typewriter
+cont_action
+\family default
+; try to prefer 
+\family typewriter
+rule_action
+\family default
+ whenever possible!
 \end_layout
 
 \begin_layout Description
@@ -8186,6 +8201,93 @@ rule_firevalue
 cont_comment
 \family default
  For documentation at the orchestration level.
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+states
+\family default
+ This table holds all internal 
+\emph on
+runtime
+\emph default
+ state for sub-business processes when they are created by 
+\family typewriter
+call
+\family default
+ or 
+\family typewriter
+start
+\family default
+.
+ Normally you should not write on this table, because the business process
+ enginge should be the only reader and writer on it.
+ It contains the following fields:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+
+\family typewriter
+bp_name
+\family default
+ References the name of the caller.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+state_value
+\family default
+ Contains the execution state of the sub-process.
+ Upon start, it is inialized with the value 
+\family typewriter
+START
+\family default
+.
+ Best practice is to use strings in a systematic way.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+state_env
+\family default
+ Contains all the variables of the sub-business process, aka environment.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+state_returnfield
+\family default
+ Tells which field of the caller needs to be updated by the 
+\family typewriter
+\emph on
+returnvalue
+\family default
+\emph default
+ of 
+\family typewriter
+return
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+state_returnid
+\family default
+ Uniquely identifies the tuple where the 
+\family typewriter
+\emph on
+returnvalue
+\family default
+\emph default
+ needs to be written back.
 \end_layout
 
 \end_deeper
