@@ -572,7 +572,7 @@ function do_action(&$env, $action) {
       }
     }
   } else if(preg_match("/\Areturn\s+'((?:[^\\']|\\.)*)'(.*)/", $action, $matches)) {
-    $returnvalue = $matches[1];
+    $returnvalue = subst_macros($env, $matches[1], "'", "\\'");
     $rest = $matches[2];
     if(@$env["NO_RETURN"]) { // original call was asynchronous: ignore return statement
       check_answer($env, "NO_RETURN");
