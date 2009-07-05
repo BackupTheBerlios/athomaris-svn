@@ -756,7 +756,7 @@ function _db_update(&$qstruct) {
     return null;
   }
 
-//echo "-----------QUERY: $query;<br>\n";
+  if($debug) echo "-----------QUERY: $query;<br>\n";
 //return true;
   $env = array("DB" => $database, "CB" => "_db_cb_process_data");
   $ok = _db_multiquery($env, true, $query, $cb_list);

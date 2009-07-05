@@ -306,23 +306,25 @@ function _mysql_make_from($qstruct, &$joinconditions) {
       }
     }
   }
-  $all_joins = $qstruct["JOIN_ON"];
+  $all_joins = @$qstruct["JOIN_ON"];
   if(@$qstruct["JOIN_DEPENDANT"]) {
     $all_joins = array_merge($qstruct["JOIN_DEPENDANT"], $all_joins);
   }
-  foreach($all_joins as $joinstring) {
-    if($joinconditions)
-      $joinconditions .= " and ";
-    // translate $joinstring to the real names
-    if(!preg_match("/^([^.]+).([^=]+)=([^.]+).([^=]+)$/", $joinstring, $matches)) {
-      die("bad joinstring '$joinstring'\n");
+  if($all_joins) {
+    foreach($all_joins as $joinstring) {
+      if($joinconditions)
+	$joinconditions .= " and ";
+      // translate $joinstring to the real names
+      if(!preg_match("/^([^.]+).([^=]+)=([^.]+).([^=]+)$/", $joinstring, $matches)) {
+	die("bad joinstring '$joinstring'\n");
+      }
+      $realtable1 = $translate[$matches[1]];
+      $realfield1 = _db_realname($base_table[$matches[1]], $matches[2]);
+      $realtable2 = $translate[$matches[3]];
+      $realfield2 = _db_realname($base_table[$matches[3]], $matches[4]);
+      $joinstring = "$realtable1.$realfield1=$realtable2.$realfield2";
+      $joinconditions .= $joinstring;
     }
-    $realtable1 = $translate[$matches[1]];
-    $realfield1 = _db_realname($base_table[$matches[1]], $matches[2]);
-    $realtable2 = $translate[$matches[3]];
-    $realfield2 = _db_realname($base_table[$matches[3]], $matches[4]);
-    $joinstring = "$realtable1.$realfield1=$realtable2.$realfield2";
-    $joinconditions .= $joinstring;
   }
   return $res;
 }

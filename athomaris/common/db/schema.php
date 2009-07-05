@@ -379,7 +379,7 @@ $USER_EXTRA =
 /* For the business process engine
  */
 $ENGINE_VALUE = "(=.*|%.*|\/.*\/)";
-$SYNTAX_RULEACTION = "\A(?:(?:var|script|url|insert|update|delete|query)\s+.*(?:\n|\Z))*";
+$SYNTAX_RULEACTION = "\A(?:(?:var|script|url|insert|update|delete|query|call|start|return)\s+.*(?:\n|\Z))*";
 
 $ENGINE_SCHEMA =
   array(
@@ -518,20 +518,20 @@ $ENGINE_SCHEMA =
 			  ),
 		    "state_value" =>
 		    array("TYPE" => "varchar(255)",
-			  "DEFAULT" => "''",
+			  "DEFAULT" => "'START'",
 			  ),
 		    "state_env" =>
-		    array("TYPE" => "text",
+		    array("TYPE" => "longtext",
 			  "DEFAULT" => "''",
-			  ),
-		    "state_returnenv" =>
-		    array("TYPE" => "text",
-			  "DEFAULT" => "''",
+			  "TPL_DISPLAY" => "display_download",
 			  ),
 		    "state_returnfield" =>
 		    array("TYPE" => "varchar(64)",
 			  "DEFAULT" => "''",
-			  "REGEX" => "\A(?:|$RAW_DOTID)\Z",
+			  ),
+		    "state_returnid" =>
+		    array("TYPE" => "varchar(64)",
+			  "DEFAULT" => "''",
 			  ),
 		    ),
 	      ),
@@ -907,6 +907,14 @@ function db_data_to_code($data, $indent = 0) {
   } else {
     return "${prefix}000";
   }
+}
+
+function db_read_code($tablename, $fieldname, $code) {
+  return eval($code);
+}
+
+function db_write_code($tablename, $fieldname, $data) {
+  return "return " . db_data_to_code($data);
 }
 
 ?>

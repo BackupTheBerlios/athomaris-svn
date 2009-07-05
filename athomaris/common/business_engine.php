@@ -39,16 +39,18 @@ for($i = 0; $i < 5; $i++) {
 function engine_log($txt) {
   global $debug;
   if($debug) {
-    echo "INFO: $txt\n";
+    echo "ENGINE_INFO: $txt\n";
   } 
 }
 
 function engine_warn($txt) {
-  echo "WARN: $txt\n";
+  echo "ENGINE_WARN: $txt\n";
+  check_global_answer("ENGINE_WARN ($txt)");
 }
 
 function engine_error($txt) {
-  echo "ERROR: $txt\n";
+  echo "ENGINE_ERROR: $txt\n";
+  check_global_answer("ENGINE_ERROR ($txt)");
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -215,8 +217,11 @@ function echo_rule($env) {
 
 /* Write back results to the database.
  */
-function do_writeback($env, $tablename, $fieldname, $fieldvalue, $other = array()) {
+function do_writeback($env, $fieldvalue, $other = array()) {
   global $ERROR;
+  $tablename = $env["TABLE"];
+  $fieldname = $env["FIELD"];
+  $env_field = $env["ENV_FIELD"];
   $primary = _db_primary($tablename);
   $keytxt = "";
   foreach(split(",", $primary) as $pri) {
@@ -232,6 +237,9 @@ function do_writeback($env, $tablename, $fieldname, $fieldvalue, $other = array(
     echo "writeback ($keytxt) $tablename.$fieldname = '$fieldvalue'\n";
   }
   $other[$fieldname] = $fieldvalue;
+  if($env_field) {
+    $other[$env_field] = db_data_to_code($env);
+  }
   $ok = db_update($tablename, array($other));
   if(!$ok || $ERROR) {
     echo "writeback error: $ERROR<br>\n";
@@ -270,6 +278,10 @@ function check_answer(&$env, $line) {
       $action = $conti["cont_action"];
       $newenv = array_merge($env, $conti);
       do_action($newenv, $action);
+      if(@$newenv["DO_BREAK"]) {
+	$env["DO_BREAK"] = true;
+	return $result;
+      }
       $count++;
       if(!$newenv["cont_endvalue"]) {
 	// the orchestrator requested to continue examining continuation candidates...
@@ -284,6 +296,17 @@ function check_answer(&$env, $line) {
     engine_log("no match found for line '$line'");
   }
   return $result;
+}
+
+function check_global_answer($line) {
+  global $ENGINE;
+  $env = $ENGINE["GLOBAL.GLOBAL"];
+  $env = array_replace_recursive($env[0], $env);
+  $env["IS_GLOBAL"] = true;
+  $env["TABLE"] = "GLOBAL";
+  $env["FIELD"] = "GLOBAL";
+  $env["LEVEL"] = 1;
+  return check_answer($env, $line);
 }
 
 /* Execute the given @cmd as a new subprocess.
@@ -388,12 +411,13 @@ function run_script(&$env, $cmd) {
  */
 function do_action(&$env, $action) {
   global $RAW_ID;
+  global $ERROR;
   if(is_array($action)) {
     foreach($action as $sub) {
       if(!do_action($env, $sub)) {
 	return false;
       }
-      if(@$env["HAS_FORKED"]) {
+      if(@$env["HAS_FORKED"] || @$env["DO_BREAK"]) {
 	return true;
       }
     }
@@ -446,14 +470,17 @@ function do_action(&$env, $action) {
     }
     echo "\n";
     if($mode == "delete") {
-      $ok = db_delete($table, $data);
+      $ok = db_delete($table, $data) && !$ERROR;
       check_answer($env, "DELETE $ok");
     } elseif($mode == "update") {
-      $ok = db_update($table, $data);
+      $ok = db_update($table, $data) && !$ERROR;
       check_answer($env, "UPDATE $ok");
     } else {
-      $ok = db_insert($table, $data);
+      $ok = db_insert($table, $data) && !$ERROR;
       check_answer($env, "INSERT $ok");
+    }
+    if(!$ok) {
+      check_answer($env, "DB_ERROR $mode ($ERROR)");
     }
   } else if(preg_match("/\Aquery\s+($RAW_ID)\s+($RAW_ID)\s+($RAW_ID\s*=.*)/", $action, $matches)) {
     $var = $matches[1];
@@ -485,6 +512,113 @@ function do_action(&$env, $action) {
       $lvalue = subst_macros($env, $expr, "'", "\\'");
       $ok = true;
     }
+  } else if(preg_match("/\A(call|start)\s+($RAW_ID)(.*)/", $action, $matches)) {
+    $ok = false;
+    $mode = $matches[1];
+    $call = $matches[2];
+    $rest = $matches[3];
+    $cond = array("bp_name" => $call);
+    $data = db_read("bps", null, $cond);
+    if(!$data || $ERROR) {
+      check_answer($env, "DB_ERROR read ($ERROR)");
+    } else {
+      $newenv = array();
+      while(preg_match("/\A\s*($RAW_ID)\s*=\s*'((?:[^\\']|\\.)*)'(.*)/", $rest, $matches)) {
+	$field = $matches[1];
+	$value = $matches[2];
+	$rest = $matches[3];
+	$newenv[$field] = subst_macros($env, $value, "'", "\\'");
+      }
+      if($rest) {
+	engine_error("bad call '$call', syntax rest '$rest'");
+      } else {
+	$statefield = $data[0]["bp_statefield"];
+	$newrec = array();
+	$newrec["state_id"] = null;
+	$newrec["bp_name"] = $call;
+	if($mode == "start") { // asynchronous call: make "return" later a nop
+	  $newenv["NO_RETURN"] = true;
+	}
+	$newrec["state_env"] = db_data_to_code($newenv);
+	if(@$newenv["state_value"]) {
+	  $newrec["state_value"] = $newenv["state_value"];
+	}
+	$table = $env["TABLE"];
+	$primary = _db_primary($table);
+	$field = $env["FIELD"];
+	$newrec["state_returnfield"] = "$table.$field";
+	$id_rec = array();
+	foreach(split(",", $primary) as $pri) {
+	  $id_rec[$pri] = $env[$pri];
+	}
+	$newrec["state_returnid"] = db_data_to_code($id_rec);
+
+	$ok = db_insert("states", array($newrec)) && !$ERROR;
+
+	if($ok) {
+	  if(true) {
+	    echo_rule($env);
+	    echo "call $table.$field to states\n";
+	  }
+	  // decide whether to finish the caller or not
+	  if($mode == "call") {
+	    //echo "SHOULD_BREAK....\n";
+	    $env["DO_BREAK"] = true;
+	  } else {
+	  }
+	} else {
+	  check_answer($env, "DB_ERROR insert ($ERROR)");
+	}
+      }
+    }
+  } else if(preg_match("/\Areturn\s+'((?:[^\\']|\\.)*)'(.*)/", $action, $matches)) {
+    $returnvalue = $matches[1];
+    $rest = $matches[2];
+    if(@$env["NO_RETURN"]) { // original call was asynchronous: ignore return statement
+      check_answer($env, "NO_RETURN");
+      if(true) {
+	$table = $env["TABLE"];
+	$field = $env["FIELD"];
+	echo_rule($env);
+	echo "done asynchronous call $table.$field\n";
+      }
+      $ok = true;
+    } else { // advance the caller's state
+      $split = split("\.", $env["state_returnfield"]);
+      $tablename = $split[0];
+      $fieldname = $split[1];
+      $oldrec = eval("return " . $env["state_returnid"] . ";");
+
+      $data = db_read($tablename, null, $oldrec);
+
+      if(!$data || $ERROR) {
+	engine_error("cannot re-read caller's data from table $tablename");
+      } else {
+	if($test = @$data[0]["state_env"]) { // original caller had an environment
+	  $oldenv = eval("return $test;");
+	  while(preg_match("/\A\s*($RAW_ID)\s*=\s*'((?:[^\\']|\\.)*)'(.*)/", $rest, $matches)) {
+	    $field = $matches[1];
+	    $value = $matches[2];
+	    $rest = $matches[3];
+	    $oldenv[$field] = subst_macros($env, $value, "'", "\\'");
+	  }
+	  if($rest) {
+	    engine_warn("return statement has unparsable rest '$rest'");
+	  }
+	  $oldrec["state_env"] = db_data_to_code($oldenv);
+	}
+	$oldrec[$fieldname] = $returnvalue;
+	if(true) {
+	  echo_rule($env);
+	  echo "return to $tablename.$fieldname = '$returnvalue'\n";
+	}
+	$ok = db_update($tablename, array($oldrec)) && !$ERROR;
+	//echo "RETURN $tablename $fieldname='$returnvalue' ok='$ok' ERROR='$ERROR'\n";
+	if(!$ok) {
+	  check_answer($env, "DB_ERROR update ($ERROR)");
+	}
+      }
+    }
   } else {
     engine_error("cannot parse action '$action'. correct your rules!");
   }
@@ -499,27 +633,36 @@ function do_action(&$env, $action) {
 
 // The engine itself
 
-function treat_rec($tablename, $fieldname, $rec, $deflist) {
+function treat_rec($rec, $deflist) {
   global $debug;
-  $cell = $rec[$fieldname];
   foreach($deflist as $def) {
+    $fieldname = $def["FIELD"];
+    $env_field = $def["ENV_FIELD"];
+    $cell = $rec[$fieldname];
     $startvalue = $def["rule_startvalue"];
     // initialize the environment with some reasonable knowledge about our world
     $env = array_merge($def, $rec);
+    // THINK: what's the correct precedence? Should full $rec override the stored environment $rec[$env_field] or not? I'm unsure
+    if($env_field) {
+      $stored_env = eval("return " . $rec[$env_field] . ";");
+      $env = array_merge($stored_env, $env);
+    }
+    $env["HAS_FORKED"] = false;
+    $env["IS_SON"] = false;
+    $env["IS_GLOBAL"] = false;
     $env["LEVEL"] = 0;
-    $env["TABLE"] = $tablename;
-    $env["FIELD"] = $fieldname;
     if(value_matches($env, $startvalue, $cell)) {
       if(test_condition($env, $def["rule_condition"])) {
 	// before starting the action, remember that we have fired...
 	$firevalue = make_default($def["rule_firevalue"], $cell, "start");
-	do_writeback($env, $tablename, $fieldname, $firevalue);
+	do_writeback($env, $firevalue);
 
 	// now do the action...
 	$env["VALUE"] = $cell;
 
 	$ok = do_action($env, $env["rule_action"]);
-	if($ok && @$env["HAS_FORKED"]) {
+	if($ok && (@$env["HAS_FORKED"] || @$env["DO_BREAK"])) {
+	  //echo "BREAK......\n";
 	  break;
 	}
 
@@ -528,7 +671,7 @@ function treat_rec($tablename, $fieldname, $rec, $deflist) {
 	if(@$env["HIT_FLAG"] && @$env["cont_endvalue"]) {
 	  $endvalue = make_default($env["cont_endvalue"], $env["VALUE"], "end", 2);
 	}
-	do_writeback($env, $tablename, $fieldname, $endvalue);
+	do_writeback($env, $endvalue);
 
 	if(@$env["IS_SON"]) { // mission completed...
 	  if($debug) echo "forked mission completed.\n";
@@ -545,12 +688,6 @@ function treat_rec($tablename, $fieldname, $rec, $deflist) {
 function poll_childs() {
   global $FORKS;
   global $ENGINE;
-  $env = $ENGINE["GLOBAL.GLOBAL"];
-  $env = array_replace_recursive($env[0], $env);
-  $env["IS_GLOBAL"] = true;
-  $env["TABLE"] = "GLOBAL";
-  $env["FIELD"] = "GLOBAL";
-  $env["LEVEL"] = 1;
   for(;;) {
     $code = pcntl_waitpid(0, $status, WNOHANG);
     if($code <= 0) {
@@ -560,11 +697,11 @@ function poll_childs() {
     unset($FORKS[$code]); // avoid memory leaks
     if(pcntl_wifsignaled($status)) {
       $status = pcntl_wtermsig($status);
-      check_answer($env, "GLOBAL_SIGNALED $code $status ($cmd)");
+      check_global_answer("GLOBAL_SIGNALED $code $status ($cmd)");
     }
     if(pcntl_wifexited($status)) {
       $status = pcntl_wexitstatus($status);
-      check_answer($env, "GLOBAL_EXITED $code $status ($cmd)");
+      check_global_answer("GLOBAL_EXITED $code $status ($cmd)");
     }
   }
 }
@@ -607,7 +744,7 @@ function engine_run_once() {
 
       foreach($cache as $subdata) {
 	foreach($subdata as $subrec) {
-	  treat_rec($tablename, $fieldname, $subrec, $deflist);
+	  treat_rec($subrec, $deflist);
 	}
       }
     }

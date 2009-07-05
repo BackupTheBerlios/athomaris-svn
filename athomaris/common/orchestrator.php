@@ -72,12 +72,11 @@ function compile_engine() {
     if($bp_name == "GLOBAL") {
       $statefield = "GLOBAL.GLOBAL";
     }
+    if(!$statefield) { // use default: bpstates
+      $statefield = "states.state_value:state_env";
+    }
     $def["rule_condition"] = split("\n", $def["rule_condition"]);
     $def["rule_action"] = split("\n", $def["rule_action"]);
-    if(!$statefield) { // use default: bpstates
-      //...
-      //die("NYI\n");
-    }
     $startvalue = $def["rule_startvalue"];
     echo "compiling business process '$bp_name' prio $rule_prio: acts on $statefield<br>\n";
 
@@ -87,8 +86,15 @@ function compile_engine() {
       $subdata[$subidx]["cont_action"] = split("\n", $subdef["cont_action"]);
     }
     $def["CONTI"] = array_merge($subdata, $APPEND);
+    $split = split(":", $statefield);
+    $state_base = $split[0];
+    $def["bp_statefield"] = $state_base;
+    $def["ENV_FIELD"] = @$split[1];
+    $newsplit = split("\.", $split[0]);
+    $def["TABLE"] = $newsplit[0];
+    $def["FIELD"] = $newsplit[1];
 
-    $table[$statefield][] = $def;
+    $table[$state_base][] = $def;
   }
 
   echo "done.<br>\n";

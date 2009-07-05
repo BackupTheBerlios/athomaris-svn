@@ -7707,12 +7707,249 @@ reference "sub:Reading-of-Data"
 ).
 \end_layout
 
+\begin_layout Description
+
+\family typewriter
+call
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+bpsname
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+varname1='value1'
+\emph default
+...
+
+\family default
+ Call a sub-business process.
+ The state of the subprocess will be kept in table 
+\family typewriter
+states
+\family default
+ (see below); its state_value will be set to the constant 
+\family typewriter
+'START'
+\family default
+.
+ The variable assignments 
+\family typewriter
+\emph on
+varname1
+\family default
+\emph default
+ etc.
+ may be used for transfering selected values from the caller's environment
+ to the callee's environment.
+ Notice that the caller process will not execute any further 
+\family typewriter
+rule_action
+\family default
+s after 
+\family typewriter
+call
+\family default
+.
+ Instead, the caller business process will remain in state 
+\family typewriter
+rule_firevalue
+\family default
+ until the callee returns.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+start
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+bpsname
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+varname1='value1'
+\emph default
+...
+
+\family default
+ Like 
+\family typewriter
+call
+\family default
+, but the sub-process is executed 
+\emph on
+in parallel
+\emph default
+ to the caller.
+ Unlike call, the caller continues with interpreting actions and continuations
+ und thus may overcome 
+\family typewriter
+rule_firevale
+\family default
+ until some 
+\family typewriter
+cont_endvalue
+\family default
+ in parallel to the callee.
+ The callee will ignore any encountered 
+\family typewriter
+return
+\family default
+ statements and thus behave like a main business process.
+ 
+\series bold
+Warning:
+\series default
+ you can exercise recursive calls and starts, but be sure to include logic
+ for avoiding endless recursion and 
+\begin_inset Quotes eld
+\end_inset
+
+fork bombs
+\begin_inset Quotes erd
+\end_inset
+
+ among the business processes.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+return
+\begin_inset space ~
+\end_inset
+
+'
+\emph on
+returnvalue
+\emph default
+'
+\family default
+ Return from a sub-business process to its calling process and set its former
+ statefield (which was stuck at 
+\family typewriter
+rule_firevalue
+\family default
+ during the call) to 
+\family typewriter
+\emph on
+returnvalue
+\family default
+\emph default
+.
+ In case the current process was started with 
+\family typewriter
+start
+\family default
+, this is a nop.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+return
+\begin_inset space ~
+\end_inset
+
+'
+\emph on
+returnvalue
+\emph default
+'
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+varname1='value1'
+\emph default
+...
+
+\family default
+ Like before.
+ In addition, the selected values are transferred back from the subprocess
+ environment into variables of the caller's environment.
+ This works only if the original caller possessed an environment (as is
+ the case with table 
+\family typewriter
+states
+\family default
+).
+\end_layout
+
 \begin_layout Standard
 Multiple actions may be specified, each on a different line.
  They will be executed sequentially.
  Note that a failing action (such as a database error) will immediately
  terminate the action chain - the following actions will not be started
  upon failure.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Warning:
+\series default
+ you can use the 
+\family typewriter
+script
+\family default
+ keyword multiple times at the same rule when given on different lines.
+ However, 
+\emph on
+each
+\emph default
+ of the called scripts will produce pseudo events like 
+\family typewriter
+START
+\family default
+ and 
+\family typewriter
+STATUS
+\family default
+ (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Pseudo-Events"
+
+\end_inset
+
+).
+ If you are not careful, this may result in triggering 
+\emph on
+multiple
+\emph default
+ actions from following continuations, possibly even after further rules
+ have already fired, resulting in nondeterministic behaviour.
+ This can be quite confusing and probably not what you want! Therefore it
+ is 
+\emph on
+highly recommended best practice
+\emph default
+ to use 
+\family typewriter
+script
+\family default
+ at most once at each rule.
+ If you want to start many actions, just place them into a single 
+\family typewriter
+script
+\family default
+ statement, separated by semicolons or other shell structures.
 \end_layout
 
 \end_deeper
@@ -8049,6 +8286,53 @@ delete
 \begin_layout Description
 
 \family typewriter
+DB_ERROR
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+operation
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+(
+\emph on
+text
+\emph default
+)
+\family default
+ Provides additional cleartext information in case of a database error upon
+ 
+\family typewriter
+\emph on
+operation
+\family default
+\emph default
+ 
+\family typewriter
+read
+\family default
+, 
+\family typewriter
+insert
+\family default
+, 
+\family typewriter
+update
+\family default
+, or 
+\family typewriter
+delete
+\family default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
 START
 \begin_inset space ~
 \end_inset
@@ -8280,6 +8564,22 @@ reference "sub:Global-Pseudo-Events"
 ).
 \end_layout
 
+\begin_layout Description
+
+\family typewriter
+NO_RETURN
+\family default
+ Tells that a 
+\family typewriter
+return
+\family default
+ statemen has been skipped due to a parallel 
+\family typewriter
+start
+\family default
+.
+\end_layout
+
 \begin_layout Subsection
 Global Pseudo Events
 \begin_inset CommandInset label
@@ -8359,6 +8659,39 @@ script
 really
 \emph default
  know what you are doing.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+ENGINE_ERROR
+\begin_inset space ~
+\end_inset
+
+(
+\emph on
+text
+\emph default
+)
+\family default
+ Provides cleartext information about internal errors from the engine.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+ENGINE_WARN
+\begin_inset space ~
+\end_inset
+
+(
+\emph on
+text
+\emph default
+)
+\family default
+ Provides cleartext information about internal warnings, such as missing
+ macro names etc.
 \end_layout
 
 \begin_layout Description
