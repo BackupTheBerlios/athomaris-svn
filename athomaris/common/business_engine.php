@@ -205,6 +205,8 @@ function subst_macros(&$env, $cmd, $search = array(), $replace = array()) {
 }
 
 function echo_rule($env) {
+  $pid = getmypid();
+  echo "pid=$pid\t";
   $rule_id = $env["rule_id"];
   $rule_prio = $env["rule_prio"];
   $cont_prio = @$env["cont_prio"];
@@ -328,6 +330,7 @@ function run_script(&$env, $cmd) {
       return false;
     }
     if($pid > 0) { // father
+      //echo "FORK.....$pid\n";
       $env["HAS_FORKED"] = true;
       $FORKS[$pid] = $cmd;
       return true;
@@ -635,6 +638,7 @@ function do_action(&$env, $action) {
 
 function treat_rec($rec, $deflist) {
   global $debug;
+  $has_fired = false;
   foreach($deflist as $def) {
     $fieldname = $def["FIELD"];
     $env_field = $def["ENV_FIELD"];
@@ -653,15 +657,27 @@ function treat_rec($rec, $deflist) {
     $env["LEVEL"] = 0;
     if(value_matches($env, $startvalue, $cell)) {
       if(test_condition($env, $def["rule_condition"])) {
-	// before starting the action, remember that we have fired...
-	$firevalue = make_default($def["rule_firevalue"], $cell, "start");
-	do_writeback($env, $firevalue);
+	if(!$has_fired) {
+	  // before starting the action, remember that we have fired...
+	  $firevalue = make_default($def["rule_firevalue"], $cell, "start");
+	  do_writeback($env, $firevalue);
+	  $has_fired = true;
+	}
 
 	// now do the action...
 	$env["VALUE"] = $cell;
 
 	$ok = do_action($env, $env["rule_action"]);
-	if($ok && (@$env["HAS_FORKED"] || @$env["DO_BREAK"])) {
+	
+	if(!$ok) { // failure: try the next alternative
+	  //echo "FAIL......CONTINUE\n";
+	  if(@$env["IS_SON"]) { // mission completed...
+	    if($debug) echo "forked mission failed.\n";
+	    exit(-1);
+	  }
+	  continue;
+	}
+	if(@$env["HAS_FORKED"] || @$env["DO_BREAK"]) {
 	  //echo "BREAK......\n";
 	  break;
 	}
@@ -673,13 +689,15 @@ function treat_rec($rec, $deflist) {
 	}
 	do_writeback($env, $endvalue);
 
-	if(@$env["IS_SON"]) { // mission completed...
-	  if($debug) echo "forked mission completed.\n";
-	  exit(0);
-	}
+	// end this record
 	break;
       }
     }
+  }
+  // only the father process should consider the next record...
+  if(@$env["IS_SON"]) { // mission completed...
+    if($debug) echo "forked mission completed.\n";
+    exit(0);
   }
 }
 
