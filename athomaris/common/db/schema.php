@@ -555,8 +555,12 @@ function _db_pass_temporal($SCHEMA) {
       $field = "FIELDNAME_" . strtoupper($ext);
       $vers[$ext] = @$tdef[$field];
       if(!$vers[$ext]) {
-	$vers[$ext] = $singular . "_$ext";
-	$tdef[$field] = $vers[$ext];
+	if($field == "FIELDNAME_ID" && @$tdef["PRIMARY"]) {
+	  $tdef[$field] = $tdef["PRIMARY"];
+	} else {
+	  $vers[$ext] = $singular . "_$ext";
+	  $tdef[$field] = $vers[$ext];
+	}
       }
     }
     if(!isset($tdef["TEMPORAL"])) {
