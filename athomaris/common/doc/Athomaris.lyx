@@ -6492,9 +6492,9 @@ deterministic
 status open
 
 \begin_layout Plain Layout
-The nondeterministc nature of rule-based systems (as well as of many inference
- machines or expert systems) iś made deterministic in Athomaris by introduction
- of a 
+The nondeterministc nature of many rule-based systems (as well as of many
+ inference machines or expert systems) is made deterministic in Athomaris
+ by introduction of a 
 \emph on
 precedence relation
 \emph default
