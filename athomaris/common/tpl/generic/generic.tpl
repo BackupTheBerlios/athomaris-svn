@@ -271,8 +271,8 @@ for(i = 0; i < all.length; i++) \{
 
 {TEMPLATE "display_ref"}\
 {IF $REF_FIELDS}\
- {LOOP $FDEF->EXTRA_FIELD AS $KEY}{IF $first++} | {/IF}{TEXT $KEY}:{$ROW->$KEY}{/LOOP}\
- <a class="link" href="{$ACTION_SELF}?table={PARAM $REF_TABLE}&primary={PARAM $REF_FIELD}{TPL "params_primary" "LOOP" => $REF_FIELDS/}">{LOOP $REF_FIELDS AS $KEY}{IF $first++} | {/IF}{TEXT $KEY}:{$ROW->$KEY}{/LOOP}</a>\
+ {LOOP $FDEF->EXTRA_FIELD AS $KEY}{IF $ROW->$KEY}{IF $first++} | {/IF}{TEXT $KEY}:{$ROW->$KEY}{/IF}{/LOOP}\
+ <a class="link" href="{$ACTION_SELF}?table={PARAM $REF_TABLE}&primary={PARAM $REF_FIELD}{TPL "params_primary" "LOOP" => $REF_FIELDS/}">{LOOP $REF_FIELDS AS $KEY}{IF $ROW->$KEY}{IF $first++} | {/IF}{TEXT $KEY}:{$ROW->$KEY}{/IF}{/LOOP}</a>\
 {ELSE}\
  <a class="link" href="{$ACTION_SELF}?table={PARAM $REF_TABLE}&primary={PARAM $REF_FIELD}&{$REF_FIELD}={PARAM $VALUE}">{$VALUE}</a>\
 {/IF}\
