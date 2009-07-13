@@ -1,4 +1,4 @@
-#LyX 1.6.0 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.3 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -75,7 +75,7 @@ Thomas Schöbel-Theuer
 \end_layout
 
 \begin_layout Date
-Version 0.5
+Version 0.6
 \end_layout
 
 \begin_layout Standard
@@ -125,6 +125,20 @@ history
 \series default
  of all changes may be recorded, even deletions.
  Temporal queries possible, in addition to non-temporal views of the data.
+ The originator of a change is automatically recorded: Athomaris is thus
+ a kind of 
+\series bold
+
+\begin_inset Quotes eld
+\end_inset
+
+wiki for databases
+\begin_inset Quotes erd
+\end_inset
+
+
+\series default
+, alleviating a cooperative working style.
 \end_layout
 
 \begin_layout Itemize
@@ -10991,6 +11005,78 @@ internally
 db_read()
 \family default
 , or an array of OO objects.
+\end_layout
+
+\begin_layout Description
+Q: Why didn't you use the RETE algorithm or other inference engines?
+\end_layout
+
+\begin_layout Description
+A: The business process engine of Athomaris does not try to be an expert
+ system (which could also be interpreted as 
+\begin_inset Quotes eld
+\end_inset
+
+a system for experts
+\begin_inset Quotes erd
+\end_inset
+
+).
+ Expert systems have Chomsky type 0 (Turing-complete languages) at the rules
+ level and can easily lead you into extremely complex and non-intuitive
+ runtime situations and nondeterministic behaviour.
+ Instead, Athomaris is more close to Chomsky type 3 (regular languages)
+ at the rules level, or to type 2 when calling sub-processes, and it is
+ 
+\begin_inset Quotes eld
+\end_inset
+
+more deterministic
+\begin_inset Quotes erd
+\end_inset
+
+ (loosely speaking).
+ So the chances are higher that you can 
+\emph on
+really understand
+\emph default
+ what it going on at runtime in the engine.
+ If you need the power of Chomsky type 0, do this kind of work in your scripts
+ or sub-processes.
+\end_layout
+
+\begin_layout Description
+Q: What does 
+\begin_inset Quotes eld
+\end_inset
+
+more deterministic
+\begin_inset Quotes erd
+\end_inset
+
+ mean?
+\end_layout
+
+\begin_layout Description
+A: Athomaris's rules are 
+\emph on
+not
+\emph default
+ of equal importance as is the case in the base mechanism of expert systems,
+ but rather are 
+\emph on
+prioritized
+\emph default
+.
+ Thus the 
+\emph on
+order
+\emph default
+ of rule checking is deterministic (but, of course, the script actions can
+ introduce nondeterminism -- but that's not the fault of Athomaris' concepts
+ if it hurts you).
+ In our opinion, deterministic behaviour is inevitable for enterprise-grade
+ automation of business processes.
 \end_layout
 
 \end_body
