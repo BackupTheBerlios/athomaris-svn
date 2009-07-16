@@ -75,6 +75,7 @@ function compile_engine() {
     if(!$statefield) { // use default: bpstates
       $statefield = "states.state_value:state_env";
     }
+    $def["rule_location"] = split("\n", $def["rule_location"]);
     $def["rule_condition"] = split("\n", $def["rule_condition"]);
     $def["rule_action"] = split("\n", $def["rule_action"]);
     $startvalue = $def["rule_startvalue"];

@@ -83,8 +83,6 @@ function make_default($value, $basis, $prefix, $plus = 1) {
 function make_selectcond($tablename, $fieldname, $deflist) {
   $select = array();
   foreach($deflist as $def) {
-    $loc = $def["rule_location"];
-    //...
     $value = $def["rule_startvalue"];
     if(preg_match("/\A=(.*)/", $value, $matches)) {
       $select["${fieldname}="][] = $matches[1];
@@ -129,7 +127,7 @@ function value_matches(&$env, $value, $check) {
   return false;
 }
 
-/* Test whether a given condition @cnd is true on a given environment @env.
+/* Test whether a given condition @cnd is true on a given environment $env.
  */
 function test_condition(&$env, $cnd) {
   global $RAW_ID;
@@ -155,6 +153,40 @@ function test_condition(&$env, $cnd) {
     return value_matches($env, $rest, $check);
   } else {
     engine_error("cannot parse the condition '$cnd'. correct your rules!");
+    return false;
+  }
+}
+
+/* Test whether we are at the rigth location
+ */
+function test_location(&$env, $cnd) {
+  global $RAW_ID;
+  if(!$cnd) { // empty condition field => accept always
+    return true;
+  }
+  if(is_array($cnd)) {
+    foreach($cnd as $sub) {
+      if(!test_location($env, $sub)) {
+	return false;
+      }
+    }
+    return true;
+  }
+  if(preg_match("/\A\?\s*($RAW_ID)\s*(.*)\Z/", $cnd, $matches)) {
+    $mode = $matches[1];
+    $rest = $matches[2];
+    $check = "UNKNOWN";
+    if($mode == "hostname") {
+      $check = gethostname();
+    } elseif($mode == "ipv4") {
+      $check = gethostbyname(gethostname());
+    } elseif($mode == "class") {
+      global $CLASS;
+      $check = $CLASS;
+    }
+    return value_matches($env, $rest, $check);
+  } else {
+    engine_error("cannot parse the location '$cnd'. correct your rules!");
     return false;
   }
 }
@@ -655,43 +687,43 @@ function treat_rec($rec, $deflist) {
     $env["IS_SON"] = false;
     $env["IS_GLOBAL"] = false;
     $env["LEVEL"] = 0;
-    if(value_matches($env, $startvalue, $cell)) {
-      if(test_condition($env, $def["rule_condition"])) {
-	if(!$has_fired) {
-	  // before starting the action, remember that we have fired...
-	  $firevalue = make_default($def["rule_firevalue"], $cell, "start");
-	  do_writeback($env, $firevalue);
-	  $has_fired = true;
+    if(test_location($env, $def["rule_location"]) &&
+       value_matches($env, $startvalue, $cell) &&
+       test_condition($env, $def["rule_condition"])) {
+      if(!$has_fired) {
+	// before starting the action, remember that we have fired...
+	$firevalue = make_default($def["rule_firevalue"], $cell, "start");
+	do_writeback($env, $firevalue);
+	$has_fired = true;
+      }
+      
+      // now do the action...
+      $env["VALUE"] = $cell;
+      
+      $ok = do_action($env, $env["rule_action"]);
+      
+      if(!$ok) { // failure: try the next alternative
+	//echo "FAIL......CONTINUE\n";
+	if(@$env["IS_SON"]) { // mission completed...
+	  if($debug) echo "forked mission failed.\n";
+	  exit(-1);
 	}
-
-	// now do the action...
-	$env["VALUE"] = $cell;
-
-	$ok = do_action($env, $env["rule_action"]);
-	
-	if(!$ok) { // failure: try the next alternative
-	  //echo "FAIL......CONTINUE\n";
-	  if(@$env["IS_SON"]) { // mission completed...
-	    if($debug) echo "forked mission failed.\n";
-	    exit(-1);
-	  }
-	  continue;
-	}
-	if(@$env["HAS_FORKED"] || @$env["DO_BREAK"]) {
-	  //echo "BREAK......\n";
-	  break;
-	}
-
-	// record final result of execution,
-	$endvalue = "-1 ENGINE_ERROR"; // sorry, but this should never happen: the HIT_FLAG must always be set because of the $APPEND fallbacks
-	if(@$env["HIT_FLAG"] && @$env["cont_endvalue"]) {
-	  $endvalue = make_default($env["cont_endvalue"], $env["VALUE"], "end", 2);
-	}
-	do_writeback($env, $endvalue);
-
-	// end this record
+	continue;
+      }
+      if(@$env["HAS_FORKED"] || @$env["DO_BREAK"]) {
+	//echo "BREAK......\n";
 	break;
       }
+      
+      // record final result of execution,
+      $endvalue = "-1 ENGINE_ERROR"; // sorry, but this should never happen: the HIT_FLAG must always be set because of the $APPEND fallbacks
+      if(@$env["HIT_FLAG"] && @$env["cont_endvalue"]) {
+	$endvalue = make_default($env["cont_endvalue"], $env["VALUE"], "end", 2);
+      }
+      do_writeback($env, $endvalue);
+      
+      // end this record
+      break;
     }
   }
   // only the father process should consider the next record...
@@ -778,10 +810,20 @@ function engine_run_endless($pause = 3) {
     sleep($pause);
   }
 }
+
+/* Argument parsing:
+ * $argv[1] = username (mandatory, checked in schema.php)
+ * $argv[2] = password (mandatory, checked in schema.php)
+ * $argv[3] = class (optional, checked in schema.php)
+ */
+$CLASS = "UNKNOWN";
 if(@$argv[4]) {
+  $CLASS = $argv[4];
+ }
+if(@$argv[5]) {
   $trace = true;
  }
-$count = @$argv[3];
+$count = @$argv[4];
 if(!$count) {
   engine_run_endless();
  } else { // debugging

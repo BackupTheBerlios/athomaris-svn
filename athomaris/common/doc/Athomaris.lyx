@@ -7253,11 +7253,116 @@ You may specify multiple conditions on different lines; these are logically
 \family typewriter
 rule_location
 \family default
- Not yet implemented.
- This will specify the hostname or a group of hostnames where the rule should
- be executed.
+ Used for distribution of multiple instances of the engine over the network.
+ The current rule is only executed if all of the following conditions are
+ sucessful:
 \end_layout
 
+\begin_deeper
+\begin_layout Description
+
+\emph on
+<empty>
+\emph default
+ When left empty, the rule is executed anywhere.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+hostname
+\begin_inset space ~
+\end_inset
+
+=
+\emph on
+myname
+\family default
+\emph default
+ Tests whether 
+\family typewriter
+business_engine.php
+\family default
+ is running on the specified host.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+ipv4
+\begin_inset space ~
+\end_inset
+
+=
+\emph on
+1.2.3.4
+\family default
+\emph default
+ Tests whether the main IP address of the host has the specified address.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+class
+\begin_inset space ~
+\end_inset
+
+=
+\emph on
+classname
+\family default
+\emph default
+ Tests whether 
+\family typewriter
+business_engine.php
+\family default
+ has been started with class parameter 
+\family typewriter
+\emph on
+classname
+\family default
+\emph default
+.
+ The class parameter is the 3rd parameter after username and password.
+ By defining coarse class names such as 
+\family typewriter
+master
+\family default
+ or 
+\family typewriter
+slave
+\family default
+, you may easily distribute the business process engine over lots of hosts.
+\end_layout
+
+\begin_layout Description
+Important
+\begin_inset space ~
+\end_inset
+
+notice: When multiple instances of the business process engine are run in
+ parallel, they may race for execution of the same rule on the same data.
+ Due to database locking until 
+\family typewriter
+rule_firevalue
+\family default
+ is written, only one of them will nondeterministically win the race.
+ Although Athomaris prevents parallel execution of the same rule on the
+ same data, this kind of nondeterminism is often undesired in enterprise-critica
+l applications.
+ Thus it is strongly recommended to use 
+\family typewriter
+rule_location
+\family default
+ to achieve a 
+\series bold
+unique partitioning
+\series default
+ of all the runtime instances over the network.
+\end_layout
+
+\end_deeper
 \begin_layout Description
 
 \family typewriter
