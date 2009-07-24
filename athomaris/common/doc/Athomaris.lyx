@@ -2064,6 +2064,17 @@ longblob
 text
 \family default
 , no comparion for equality is possible.
+ There are no display and input methods available, because the content may
+ be arbitrary binary data.
+ If you want to display and edit 
+\family typewriter
+blob
+\family default
+s, use 
+\family typewriter
+*text
+\family default
+ instead.
 \end_layout
 
 \begin_layout Standard

@@ -752,7 +752,7 @@ function _db_pass_typeinfo($MYSCHEMA) {
 	$restype = "hidden";
       } elseif(preg_match("/^(?:date)?time(stamp)?$/", $type)) {
 	$restype = "string";
-      } elseif(preg_match("/^((?:small)?int([\(][0-9]+[\)])?|bigint)$/", $type)) {
+      } elseif(preg_match("/^((?:tiny|small|medium)?int([\(][0-9]+[\)])?|bigint)$/", $type)) {
 	$restype = "int";
 	$res[$table]["FIELDS"][$field]["SIZE"] = 10; /* set to default */
       } elseif(preg_match("/^bool(ean)?$/", $type)) {
@@ -767,13 +767,17 @@ function _db_pass_typeinfo($MYSCHEMA) {
 	  $res[$table]["FIELDS"][$field]["MINLEN"] = $matches[2];
 	}
 	$res[$table]["FIELDS"][$field]["MAXLEN"] = $matches[2];
-      } elseif(preg_match("/^(tiny|medium|long)?text$/", $type, $matches)) {
+      } elseif(preg_match("/^(tiny|small|medium|long)?text$/", $type, $matches)) {
 	$restype = "text";
 	$res[$table]["FIELDS"][$field]["SIZE"] = 80; /* set to default */
 	$res[$table]["FIELDS"][$field]["LINES"] = 4; /* set to default */
 	$res[$table]["FIELDS"][$field]["MAXLEN"] = null;
 	if(!@$res[$table]["FIELDS"][$field]["TPL_DISPLAY"])
 	  $res[$table]["FIELDS"][$field]["TPL_DISPLAY"] = "display_text";
+      } elseif(preg_match("/^(tiny|small|medium|long)?blob$/", $type, $matches)) {
+	$restype = "blob";
+	if(!@$res[$table]["FIELDS"][$field]["TPL_DISPLAY"])
+	  $res[$table]["FIELDS"][$field]["TPL_DISPLAY"] = "display_blob";
       } elseif($finfo) {
 	$restype = "virtual";
       } else {

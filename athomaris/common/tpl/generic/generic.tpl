@@ -19,6 +19,12 @@
 
 {TEMPLATE "dummy"}
 {/TEMPLATE}
+{TEMPLATE "input_blob"}
+{TEXT "(blob)"}
+{/TEMPLATE}
+{TEMPLATE "display_blob"}
+{TEXT "(blob)"}
+{/TEMPLATE}
 
 /////////////////////////////////////////////////////////////////////////
 
