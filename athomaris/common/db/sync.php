@@ -19,8 +19,18 @@
 
 require_once("$BASEDIR/../common/db/db.php");
 
-include_once("$BASEDIR/compiled/sync_status.php"); // variable $SYNC_STATUS
+@include_once("$BASEDIR/compiled/sync_status.php"); // variable $SYNC_STATUS
 
+
+/* TODO: this is incomplete. 
+ *
+ * 1) currently works only on the non-temporal model. Temporal copies should preserve
+ * _everything_ provided that both tables are temporal (otherwise only
+ * flat copy is possible)
+ *
+ * 2) $modes is NYI. Currently only REPLACE is performed.
+ * Future modes should be any combination of INSERT / UPDATE / DELETE.
+ */
 function _sync_cb_table(&$env, $oldrow) {
   global $SYNC_STATUS;
   global $debug;
@@ -59,7 +69,7 @@ function _sync_cb_table(&$env, $oldrow) {
   return null; // don't aggregate results in the specific driver
 }
 
-function sync_table($src, $dst, $transl, $modes) {
+function sync_table($src, $dst, $transl = null, $modes = array("INSERT", "UPDATE", "DELETE")) {
   global $SYNC_STATUS;
   global $SCHEMA;
   global $ERROR;
@@ -122,9 +132,5 @@ function write_syncstatus() {
   fclose($fp);
   rename($tmp_name, $fin_name);
 }
-
-// testing...
-//$debug = true;
-sync_table("host", "myhosts", null, null);
 
 ?>

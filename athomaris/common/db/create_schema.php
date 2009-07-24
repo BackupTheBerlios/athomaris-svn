@@ -48,8 +48,11 @@ function __db_create_field($field, $value) {
   if(isset($value["OPTIONS"])) {
     $query .= " " . $value["OPTIONS"];
   }
-  if(isset($value["DEFAULT"])) {
+  if(@$value["DEFAULT"]) {
     $query .= " default " . $value["DEFAULT"];
+  }
+  if(@$value["AUTO_INCREMENT"]) {
+    $query .= " auto_increment";
   }
   /* sadly, this does not work with mysql at all..... :(
   $check = "";
@@ -156,7 +159,7 @@ function _db_create_tables($OLD, $NEW, $database, &$count) {
       continue;
     }
     if($newdef["DB"] != $database) {
-      $query .= "/* skipping table '$newtable', not in database '$database' */\n";
+      $query .= "/* skipping table '$newtable', not in database '$database' */\n\n";
       continue;
     }
     if(!db_access_table($newtable, "w")) {

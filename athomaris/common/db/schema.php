@@ -145,6 +145,7 @@ $SYNTAX_FIELD =
 	"SQL_TYPE" => "",       // not yet in use --> TODO!
 	"OPTIONS" => $SYNTAX_IDLIST,
 	"DEFAULT" => null,
+	"AUTO_INCREMENT" => false,
 	"CHANGE_FROM" => $SYNTAX_ID,
 	//"BETWEEN" => null,
 	"LENGTH" => array(0),

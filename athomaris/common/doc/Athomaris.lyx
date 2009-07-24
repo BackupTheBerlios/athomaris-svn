@@ -2141,6 +2141,32 @@ null
 \begin_layout Description
 
 \family typewriter
+AUTO_INCREMENT
+\family default
+ => 
+\emph on
+boolean
+\emph default
+.
+ Defaults to 
+\family typewriter
+false
+\family default
+ when omitted.
+\begin_inset Newline newline
+\end_inset
+
+An automatic counter value will be inserted into this field if no value
+ or 
+\family typewriter
+null
+\family default
+ is given.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
 CHANGE_FROM
 \family default
  => 
