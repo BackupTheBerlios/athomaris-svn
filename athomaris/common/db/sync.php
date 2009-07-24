@@ -33,7 +33,9 @@ require_once("$BASEDIR/../common/db/db.php");
  */
 function _sync_cb_table(&$env, $oldrow) {
   global $SYNC_STATUS;
+  global $ERROR;
   global $debug;
+  $src = $env["SRC"];
   $dst = $env["DST"];
   $transl = $env["TRANSL"];
   $modes = $env["MODES"];
@@ -58,13 +60,15 @@ function _sync_cb_table(&$env, $oldrow) {
   $ok = _db_update($qstruct);
   if($ok) {
     $old_stamp = $env["MAXTIME"];
-    $new_stamp = $oldrow[$env["version"]];
+    $new_stamp = @$oldrow[$env["version"]];
     $old = strtotime($old_stamp);
     $new = strtotime($new_stamp);
-    echo "old = $old_stamp ($old) new = $new_stamp ($new)\n";
+    echo "$src old = $old_stamp ($old) => $dst new = $new_stamp ($new)\n";
     if($new > $old) {
       $env["MAXTIME"] = $new_stamp;
     }
+  } else {
+    echo "ERROR: $ERROR\n";
   }
   return null; // don't aggregate results in the specific driver
 }
@@ -99,6 +103,7 @@ function sync_table($src, $dst, $transl = null, $modes = array("INSERT", "UPDATE
 	  "DB" => $database,
 	  "ARG" => $subqs,
 	  "CB_PROCESS" => "_sync_cb_table",
+	  "SRC" => $src,
 	  "DST" => $dst,
 	  "TRANSL" => $transl,
 	  "MODES" => $modes,

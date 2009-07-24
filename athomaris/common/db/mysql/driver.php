@@ -556,6 +556,7 @@ function _mysql_is_done(&$done, $qstruct, $test_mode = null) {
 
 function _mysql_make_allref(&$stack, $first_qstruct, &$cb_list) {
   global $ERROR;
+  global $debug; 
   $local_queue = array();
   $done = array();
   $res = "";
@@ -584,8 +585,9 @@ function _mysql_make_allref(&$stack, $first_qstruct, &$cb_list) {
     if(!_mysql_is_done($done, $qstruct)) {
       // the following may update $stack once again, leading to transitive closure
       $sub_cb_list = array();
-      global $debug; if($debug) { echo "_mysyql_make_update: "; print_r($qstruct); echo "<br>\n"; }
+      if($debug) { echo "_mysql_make_update: "; print_r($qstruct); echo "<br>\n"; }
       $subres = _mysql_make_update($stack, $qstruct, $sub_cb_list);
+      if($debug) { echo "_mysql_make_update subres: '$subres'<br>\n"; }
       // pushback to $local_queue because new tests might have been added
       $local_queue[] = array($subres, @$sub_cb_list);
     }
@@ -597,6 +599,7 @@ function _mysql_make_allref(&$stack, $first_qstruct, &$cb_list) {
     $res .= $pair[0];
     $cb_list = array_merge($cb_list, $pair[1]);
   }
+  if($debug) { echo "_mysql_make_update res: '$res'<br>\n"; }
   return $res;
 }
 
@@ -654,7 +657,7 @@ function _mysql_make_update_flat(&$stack, $qstruct, &$cb_list) {
       if($mode == "INSERT" && $field == $autoinc) {
 	$value = null;
       }
-      if(!_mysql_check_allref($stack, $table, $field, $value, $mode, $idcond)) {
+      if(!@$qstruct["RAW_MODE"] && !_mysql_check_allref($stack, $table, $field, $value, $mode, $idcond)) {
 	return null;
       }
       if($rowcount++)
@@ -704,7 +707,7 @@ function _mysql_make_delete_tp(&$stack, $qstruct, &$cb_list) {
     
     $idcond = _mysql_make_idcond_base($qstruct, null);
     $idcond["FIELD"] = array($field);
-    if(!_db_check_xref($stack, $table, $field, null, "DELETE", $idcond)) {
+    if(!@$qstruct["RAW_MODE"] && !_db_check_xref($stack, $table, $field, null, "DELETE", $idcond)) {
       return null;
     }
     
@@ -755,7 +758,7 @@ function _mysql_make_update_tp(&$stack, $qstruct, &$cb_list) {
 	$value = @$row[$field];
 	if($field == $autoinc && $mode == "INSERT")
 	  $value = null;
-	if(!_mysql_check_allref($stack, $table, $field, $value, $mode, $idcond)) {
+	if(!@$qstruct["RAW_MODE"] && !_mysql_check_allref($stack, $table, $field, $value, $mode, $idcond)) {
 	  return null;
 	}
 	$newdata .= db_esc_sql($value);
@@ -799,7 +802,7 @@ function mysql_make_update($qstruct, &$cb_list) {
   $mode = $qstruct["MODE"];
   // add special checks/requests only for the _first_ qstruct
   foreach($qstruct["DATA"] as $row) {
-    if($mode == "INSERT") {
+    if(!@$qstruct["RAW_MODE"] && $mode == "INSERT") {
       _db_check_unique($stack, $table, $row);
     }
     foreach($row as $field => $value) {

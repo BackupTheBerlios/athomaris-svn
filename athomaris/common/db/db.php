@@ -457,6 +457,7 @@ function _db_check_field($table, $field, $value) {
 function _db_check_unique(&$stack, $tp_table, $rec) {
   global $ERROR;
   global $SCHEMA;
+  global $debug;
   _db_temporal($tp_table, $table);
   if(($uniques = @$SCHEMA[$table]["UNIQUE"])) {
     foreach ($uniques as $raw_fields) {
@@ -485,6 +486,7 @@ function _db_check_unique(&$stack, $tp_table, $rec) {
 	      "CB" => "_db_cb_check_test",
 	      "TEST_MODE" => "UNIQUE",
 	      );
+      if($debug) { echo "push stack TEST: "; print_r($qstruct); echo "<br>\n"; }
       $stack["TEST"][] = $qstruct;
     }
   }
@@ -525,6 +527,7 @@ function _db_check_ref(&$stack, $table, $field, $value) {
 	    "CB" => "_db_cb_check_test",
 	    "TEST_MODE" => "EXISTS",
 	    );
+    if($debug) { echo "push stack TEST: "; print_r($qstruct); echo "<br>\n"; }
     $stack["TEST"][] = $qstruct;
   }
   return true;
@@ -533,6 +536,7 @@ function _db_check_ref(&$stack, $table, $field, $value) {
 function _db_check_xref(&$stack, $table, $field, $value, $mode, $idcond) {
   global $SCHEMA;
   global $ERROR;
+  global $debug;
   $xref = @$SCHEMA[$table]["XREF"][$field];
   if(!$xref)
     return true;
@@ -573,6 +577,7 @@ function _db_check_xref(&$stack, $table, $field, $value, $mode, $idcond) {
 	break;
       }
       if(@$qstruct["MODE"]) {
+	if($debug) { echo "_db_check_xref: push stack UPDATE: "; print_r($qstruct); echo "<br>\n"; }
 	$stack["UPDATE"][] = $qstruct;
       }
     }
@@ -582,6 +587,7 @@ function _db_check_xref(&$stack, $table, $field, $value, $mode, $idcond) {
 
 function _db_push_subdata(&$stack, $table, $field, $subdata, $master_row) {
   global $SCHEMA;
+  global $debug;
   $fdef = @$SCHEMA[$table]["FIELDS"][$field];
   if(!$fdef || !@$fdef["VIRTUAL"] || !($subdef = @$fdef["SUB_DATA"]) || !db_access_field($table, $field, "w")) {
     return;
@@ -604,6 +610,7 @@ function _db_push_subdata(&$stack, $table, $field, $subdata, $master_row) {
 	  "CB" => "_db_cb_update",
 	  "TEST_MODE" => "DO_UPDATE",
 	  );
+  if($debug) { echo "_db_push_subdata: push stack UPDATE: "; print_r($qstruct); echo "<br>\n"; }
   $stack["UPDATE"][] = $qstruct;
   //echo "subdata: $table $field ".count($stack).": "; print_r($qstruct); echo "<br>\n";
 
@@ -651,6 +658,7 @@ function _db_push_subdata(&$stack, $table, $field, $subdata, $master_row) {
 	    "CB" => "_db_cb_update",
 	    "TEST_MODE" => "DO_SET_DELETE",
 	    );
+    if($debug) { echo "push stack UPDATE: "; print_r($qstruct); echo "<br>\n"; }
     $stack["UPDATE"][] = $qstruct;
   }
 }
