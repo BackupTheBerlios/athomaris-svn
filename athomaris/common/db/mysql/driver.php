@@ -467,6 +467,7 @@ function mysql_make_query(&$subqs, $qstruct) {
 // generate mysql statements for referential integrity
 
 function _mysql_make_idcond_base($qstruct, $row) {
+  global $ERROR;
   $table = $qstruct["TABLE"];
   if(!($cond = @$qstruct["COND"])) {
     if(!$row && isset($qstruct["DATA"])) {
@@ -493,6 +494,8 @@ function _mysql_make_idcond_base($qstruct, $row) {
 	  "START" => 0,
 	  "COUNT" => 0,
 	  );
+  if($ERROR)
+    $ERROR = "in table '$table': $ERROR";
   return $idcond;
 }
 
@@ -608,9 +611,14 @@ function _mysql_make_allref(&$stack, $first_qstruct, &$cb_list) {
 // generate mysql statements for writing
 
 function _mysql_make_idwhere($qstruct, $row = null) {
+  global $ERROR;
   $table = $qstruct["TABLE"];
-  if($row) {
+  if($row && !@$qstruct["ALLOW_MANY"]) {
     $cond = _db_make_idcond($table, $row);
+    if($ERROR) {
+      $ERROR = "in table '$table': $ERROR";
+      return "";
+    }
     return _mysql_make_where($table, $cond);
   }
   if(($cond = @$qstruct["COND"])) {

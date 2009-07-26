@@ -454,6 +454,23 @@ function _db_check_field($table, $field, $value) {
   return true;
 }
 
+function _db_push_stack(&$stack, $mode, $qstruct, $info) {
+  global $debug;
+  if($debug) {
+    global $ERROR;
+    $old_debug = $debug;
+    $debug = false;
+    $test = @$qstruct["MODE"] ? _db_update($qstruct) : _db_read($qstruct);
+    $debug = $old_debug;
+    if(!$test) {
+      echo "-------BAD QSTRUCT-------($ERROR)\n";
+      $ERROR = "";
+    }
+    echo "$info: push stack $mode qstruct="; print_r($qstruct); echo "<br>\n";
+  }
+  $stack[$mode][] = $qstruct;
+}
+
 function _db_check_unique(&$stack, $tp_table, $rec) {
   global $ERROR;
   global $SCHEMA;
@@ -486,8 +503,7 @@ function _db_check_unique(&$stack, $tp_table, $rec) {
 	      "CB" => "_db_cb_check_test",
 	      "TEST_MODE" => "UNIQUE",
 	      );
-      if($debug) { echo "push stack TEST: "; print_r($qstruct); echo "<br>\n"; }
-      $stack["TEST"][] = $qstruct;
+      _db_push_stack($stack, "TEST", $qstruct, "_db_check_unique");
     }
   }
   return true;
@@ -527,8 +543,7 @@ function _db_check_ref(&$stack, $table, $field, $value) {
 	    "CB" => "_db_cb_check_test",
 	    "TEST_MODE" => "EXISTS",
 	    );
-    if($debug) { echo "push stack TEST: "; print_r($qstruct); echo "<br>\n"; }
-    $stack["TEST"][] = $qstruct;
+    _db_push_stack($stack, "TEST", $qstruct, "_db_check_ref");
   }
   return true;
 }
@@ -553,10 +568,11 @@ function _db_check_xref(&$stack, $table, $field, $value, $mode, $idcond) {
       $qstruct =
 	array(
 	      "TABLE" => $xtable,
-	      "DATA" => array(array($xfield => $use)),
+	      //"DATA" => array(array($xfield => $use)),
 	      "COND" => array("$xfield in" => $idcond),
 	      "CB" => "_db_cb_update",
 	      "TEST_MODE" => "DO_UPDATE",
+	      //"ALLOW_MANY" => true,
 	      );
       switch($xprop) {
       case "on delete cascade":
@@ -577,8 +593,7 @@ function _db_check_xref(&$stack, $table, $field, $value, $mode, $idcond) {
 	break;
       }
       if(@$qstruct["MODE"]) {
-	if($debug) { echo "_db_check_xref: push stack UPDATE: "; print_r($qstruct); echo "<br>\n"; }
-	$stack["UPDATE"][] = $qstruct;
+	_db_push_stack($stack, "UPDATE", $qstruct, "_db_check_xref");
       }
     }
   }
@@ -658,8 +673,7 @@ function _db_push_subdata(&$stack, $table, $field, $subdata, $master_row) {
 	    "CB" => "_db_cb_update",
 	    "TEST_MODE" => "DO_SET_DELETE",
 	    );
-    if($debug) { echo "push stack UPDATE: "; print_r($qstruct); echo "<br>\n"; }
-    $stack["UPDATE"][] = $qstruct;
+    _db_push_stack($stack, "UPDATE", $qstruct, "_db_push_subdata");
   }
 }
 
@@ -793,7 +807,9 @@ function _db_update(&$qstruct) {
 
 function _db_make_idcond($table, $row) {
   global $ERROR;
+  global $debug;
   $primary = _db_primary($table);
+  if($debug) { echo "_db_make_idcond table='$table' row="; print_r($row); echo "<br>\n"; }
   $ok = true;
   foreach(split(",", $primary) as $pr) {
     if(!array_key_exists($pr, @$row)) {

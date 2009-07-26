@@ -136,6 +136,7 @@ $SYNTAX_UPDATE =
 	"CB" => "", // internal
 	"TEST_MODE" => null, // internal
 	"RAW_MODE" => null, // internal
+	"ALLOW_MANY" => false, // internal, switch off id-checking
 	);
 
 
