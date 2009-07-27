@@ -568,11 +568,11 @@ function _db_check_xref(&$stack, $table, $field, $value, $mode, $idcond) {
       $qstruct =
 	array(
 	      "TABLE" => $xtable,
-	      //"DATA" => array(array($xfield => $use)),
+	      "DATA" => array(array($xfield => $use)),
 	      "COND" => array("$xfield in" => $idcond),
 	      "CB" => "_db_cb_update",
 	      "TEST_MODE" => "DO_UPDATE",
-	      //"ALLOW_MANY" => true,
+	      "ALLOW_MANY" => true,
 	      );
       switch($xprop) {
       case "on delete cascade":
