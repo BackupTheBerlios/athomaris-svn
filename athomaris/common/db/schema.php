@@ -629,10 +629,8 @@ function _db_pass_main($MYSCHEMA) {
     $newtdef = $tdef;
     if(@$tdef["VIEW"]) {
       global $SCHEMA;
-      $oldschema = $SCHEMA;
       $SCHEMA = $MYSCHEMA;
       $q2 = _db_mangle_query($databases, $tdef["VIEW"]);
-      $SCHEMA = $oldschema;
       $tdef["FIELDS"] = $q2["SCHEMA_FIELDS"];
       $newtdef["ACCESS"] = "R";
       $newtdef["TEMPORAL"] = false;
@@ -681,6 +679,7 @@ function _db_pass_main($MYSCHEMA) {
     }
     //echo "<br>newfields: "; print_r($newfields); echo "<br>\n";
     $newtdef["FIELDS"] = $newfields;
+    $MYSCHEMA[$table] = $newtdef;
     $RES[$table] = $newtdef;
   }
   return $RES;
@@ -847,6 +846,7 @@ function _db_pass_typeinfo($MYSCHEMA) {
 function db_mangle_schema($MYSCHEMA) {
   global $SYNTAX_SCHEMA;
   global $CONFIG;
+  global $SCHEMA;
   $error = db_check_syntax($MYSCHEMA, $SYNTAX_SCHEMA);
   if($error)
     die("bad syntax in schema: $error<br>\n");
@@ -869,6 +869,9 @@ function db_mangle_schema($MYSCHEMA) {
 
   // mangling
 
+  $oldschema = $SCHEMA;
+  $SCHEMA = $MYSCHEMA;
+
   $MYSCHEMA = _db_pass_temporal($MYSCHEMA);
 
   $MYSCHEMA = _db_update_profiles($MYSCHEMA);
@@ -876,6 +879,8 @@ function db_mangle_schema($MYSCHEMA) {
   $MYSCHEMA = _db_pass_main($MYSCHEMA);
   
   $MYSCHEMA = _db_pass_typeinfo($MYSCHEMA);
+
+  $SCHEMA = $oldschema;
 
   return $MYSCHEMA;
 }

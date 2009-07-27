@@ -165,7 +165,7 @@ function _db_mangle_joins($qstruct) {
       }
       _db_temporal($tp_table, $table);
       if(!$fields = @$SCHEMA[$table]["FIELDS"])
-	die("table $table does not exist");
+	die("table $table has no FIELDS definition");
       $myfields = array_keys($fields);
       foreach(array_intersect($candidate_fields, $myfields) as $field) {
 	$joinfields[$field] = $field;
