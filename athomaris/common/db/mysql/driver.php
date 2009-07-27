@@ -331,6 +331,8 @@ function _mysql_make_from($qstruct, &$joinconditions) {
 
 function _mysql_make_boolean($table, $field, $value, $use_or) {
   global $RAW_DOTID;
+  global $ERROR;
+  global $debug;
   // check nested conditions
   if(!is_string($field) && is_array($value)) { // toggle and<->or
     $subres = _mysql_make_where($table, $value, !$use_or);
@@ -352,17 +354,16 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
   
   // check binary operators
   $op = "=";
-  $regex = "/^($RAW_DOTID)\\s*?(=|<>|<|>|<=|>=|!|@|%| rlike| in)?\\s*($RAW_DOTID)?$/";
+  $regex = "/^($RAW_DOTID)\\s*(=|<>|<|>|<=|>=|!|@|%| like| rlike| in)?(?:\\s+?($RAW_DOTID))?$/";
   $old_field = $field;
   if(!preg_match($regex, $field, $matches)) {
-    global $ERROR;
     $ERROR = "bad field expression '$field'";
     return "false";
   }
   $field = $matches[1];
   if(@$matches[2]) {
-    $op = $matches[2];
-    if(is_array($value)) { // multiple conditions (indicated by presence of operator)
+    $op = trim($matches[2]);
+    if(is_array($value) && $op != "in") { // multiple conditions (indicated by presence of operator)
       $res = "";
       foreach($value as $item) {
 	if($res) {
@@ -380,12 +381,15 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
   }
   
   if(is_array($value)) { // sub-sql statement (indicated by _absence_ of operator)
-    if(!$value["TABLE"]) { // test against most sloppiness
+    if(!@$value["TABLE"]) { // test against most sloppiness
       print_r($value);
       die("field '$old_field': badly formed sub-sql statement\n");
     }
+    if($debug) { echo "start homogenizing: "; print_r($value); echo "<br>\n"; }
+    $value = _db_homogenize($value);
     $dummy = array();
-    $sql_value = "(" . mysql_make_query($dummy, $value) . ")";
+    $subquery = mysql_make_query($dummy, $value);
+    $sql_value = "($subquery)";
   } else {
     $sql_value = db_esc_sql($value);
   }
@@ -400,7 +404,7 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
     die("cannot find field '$field' in table '$table'\n");
   if($op == "@") {
     $res = "$realfield is not null";
-  } elseif($op == "%") {
+  } elseif($op == "%" || $op == "like") {
     $res = "$realfield like $sql_value";
   } elseif($op == "!") {
     $res = "$realfield is null";

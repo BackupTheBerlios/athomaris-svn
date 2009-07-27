@@ -39,11 +39,10 @@ function _sync_cb_table(&$env, $oldrow) {
   $dst = $env["DST"];
   $transl = $env["TRANSL"];
   $modes = $env["MODES"];
-  $newrow = array();
-  foreach($oldrow as $oldkey => $value) {
-    $newkey = $transl ? @$transl[$oldkey] : $oldkey;
-    if($newkey)
-      $newrow[$newkey] = $value;
+  if($transl) {
+    $newrow = $transl($oldrow);
+  } else {
+    $newrow = $oldrow;
   }
   if($debug) { echo "sync_data: "; print_r($newrow); echo "<br>\n"; }
   $data = array($newrow);
@@ -73,7 +72,7 @@ function _sync_cb_table(&$env, $oldrow) {
   return null; // don't aggregate results in the specific driver
 }
 
-function sync_table($src, $dst, $transl = null, $modes = array("INSERT", "UPDATE", "DELETE")) {
+function sync_table($src, $dst, $cond = array(), $transl = "", $modes = array("INSERT", "UPDATE", "DELETE")) {
   global $SYNC_STATUS;
   global $SCHEMA;
   global $ERROR;
@@ -82,7 +81,9 @@ function sync_table($src, $dst, $transl = null, $modes = array("INSERT", "UPDATE
   $tdef = $SCHEMA[$src];
   $version = _db_extfield($src, "version");
   $limit = @$SYNC_STATUS[$src][$dst];
-  $cond = $limit ? array("$version >" => $limit) : array();
+  if($limit) {
+    $cond["$version >"] = $limit;
+  }
   $qstruct = 
     array(
 	  "TABLE" => $src,
@@ -90,7 +91,7 @@ function sync_table($src, $dst, $transl = null, $modes = array("INSERT", "UPDATE
 	  "COND" => $cond,
 	  "ORDER" => "",
 	  "START" => 0,
-	  "COUNT" => $debug ? 10 : 0,
+	  "COUNT" => 0,
 	  );
 
   $q2 = _db_mangle_query($databases, $qstruct);

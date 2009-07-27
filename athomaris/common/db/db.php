@@ -70,6 +70,8 @@ function _db_stripfields(&$fieldlist, $db_reduce) {
  */
 function _db_homogenize($qstruct, $db_reduce = null) {
   global $SCHEMA;
+  global $debug;
+  if($debug) { echo "homogenize: "; print_r($qstruct); echo"<br>\n";}
   $homo = $qstruct;
   if(($test = @$qstruct["TABLE"]) && is_string($test)) {
     $homo["TABLE"] = split(",", $test);
@@ -121,7 +123,7 @@ function _db_homogenize($qstruct, $db_reduce = null) {
     _db_stripfields($homo["ORDER"], $db_reduce);
   }
   _db_stripcond($homo["COND"], $db_reduce);
-  global $debug; if($debug) { echo "homogenized: "; print_r($homo); echo"<br>\n";}
+  if($debug) { echo "homogenized: "; print_r($homo); echo"<br>\n";}
   return $homo;
 }
 
