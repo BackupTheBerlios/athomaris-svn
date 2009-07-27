@@ -174,6 +174,9 @@ function _db_mangle_joins($qstruct) {
     }
     $qstruct["JOINFIELDS"] = $joinfields;
   }
+  if(is_string($qstruct["JOINFIELDS"])) {
+    $qstruct["JOINFIELDS"] = split(",", $qstruct["JOINFIELDS"]);
+  }
   if(!@$qstruct["JOIN_ON"]) { // make defaults: all pairs of tables are joined whenever possible
     // first, compute the set of all occurring aliases
     $alias_names = array();
