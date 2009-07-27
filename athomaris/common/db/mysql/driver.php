@@ -437,6 +437,9 @@ function mysql_make_query(&$subqs, $qstruct) {
   if($is_empty) {
     return "select $select";
   }
+  if(@$qstruct["DISTINCT"]) {
+    $select = "distinct $select";
+  }
   $from = _mysql_make_from($qstruct, $join_where);
   $query = "select $select from $from";
   $where = _mysql_make_where($qstruct["TABLE"], @$qstruct["COND"], false);

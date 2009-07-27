@@ -10118,6 +10118,27 @@ dynamically computed
 \begin_layout Description
 
 \family typewriter
+DISTINCT => 
+\emph on
+boolean
+\family default
+\emph default
+.
+ Defaults to 
+\family typewriter
+false
+\family default
+ when omitted.
+ When 
+\family typewriter
+true
+\family default
+, duplicates in the resultset are eliminated.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
 COND => $cond
 \family default
 .

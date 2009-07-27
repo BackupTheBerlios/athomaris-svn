@@ -102,6 +102,7 @@ $SYNTAX_QUERY =
 		    $SYNTAX_ID => &$SYNTAX_QUERY,
 		    ),
 	      ),
+	"DISTINCT" => false,
 	"FIELD" =>
 	array("|" =>
 	      $SYNTAX_DOTIDLIST,
