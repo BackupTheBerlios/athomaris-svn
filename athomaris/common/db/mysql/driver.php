@@ -163,24 +163,16 @@ function _mysql_make_select(&$subqs, $qstruct, $is_empty) {
   if(($pair = @$qstruct["AGG"])) { // treat aggregate functions
     if(($list = @$pair["FIELD"])) {
       foreach($list as $alias => $field) {
+	echo "'$alias' / '$field'<br>\n";
 	if($res)
 	  $res .= ", ";
-	$realfield = _db_realname($table, $field);
-	if(!$realfield)
-	  die("cannot find aggregate field '$field' in table '$table'\n");
-	$res .= $realfield;
-	if(is_string($alias)) {
-	  $res .= " as $alias";
+	if(is_string($alias) && is_string($field) && $alias != $field) {
+	  $realfield = $field;
+	} else {
+	  $realfield = _db_realname($table, $field);
+	  if(!$realfield)
+	    die("cannot find aggregate field '$field' in table '$table'\n");
 	}
-      }
-    }
-    if($list = @$pair["GROUP"]) {
-      foreach($list as $alias => $field) {
-	if($res)
-	  $res .= ", ";
-	$realfield = _db_realname($table, $field);
-	if(!$realfield)
-	  die("cannot find group-by field '$field' in table '$table'\n");
 	$res .= $realfield;
 	if(is_string($alias)) {
 	  $res .= " as $alias";
@@ -322,14 +314,16 @@ function _mysql_make_from($qstruct, &$joinconditions) {
       if($joinconditions)
 	$joinconditions .= " and ";
       // translate $joinstring to the real names
-      if(!preg_match("/^([^.]+).([^=]+)=([^.]+).([^=]+)$/", $joinstring, $matches)) {
+      global $RAW_ID;
+      if(!preg_match("/^($RAW_ID).($RAW_ID)([=<>]+)($RAW_ID).($RAW_ID)$/", $joinstring, $matches)) {
 	die("bad joinstring '$joinstring'\n");
       }
       $realtable1 = $translate[$matches[1]];
       $realfield1 = _db_realname($base_table[$matches[1]], $matches[2]);
-      $realtable2 = $translate[$matches[3]];
-      $realfield2 = _db_realname($base_table[$matches[3]], $matches[4]);
-      $joinstring = "$realtable1.$realfield1=$realtable2.$realfield2";
+      $op = $matches[3];
+      $realtable2 = $translate[$matches[4]];
+      $realfield2 = _db_realname($base_table[$matches[4]], $matches[5]);
+      $joinstring = "$realtable1.$realfield1 $op $realtable2.$realfield2";
       $joinconditions .= $joinstring;
     }
   }

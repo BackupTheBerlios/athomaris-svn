@@ -71,6 +71,36 @@ function _db_stripfields(&$fieldlist, $db_reduce) {
   }
 }
 
+function _db_homogenize_field(&$homo, $qstruct, $base_table, $db_reduce) {
+  global $SCHEMA;
+  $homo["FIELD"] = @$qstruct["FIELD"];
+  if(($test = @$qstruct["FIELD"]) && is_string($test)) {
+    $homo["FIELD"] = split(",", $test);
+  }
+  $makeall = !($test = @$homo["FIELD"]) || !count($test);
+  if(is_array($homo["FIELD"]) && array_search("*", $homo["FIELD"]) !== false) {
+    $makeall = true;
+    // remove the star field
+    $old = $homo["FIELD"];
+    $homo["FIELD"] = array();
+    foreach($old as $idx => $val) {
+      if(is_string($val) && $val == "*")
+	continue;
+      $homo["FIELD"][$idx] = $val;
+    }
+  }
+  if($makeall) { // make all field names explicit, avoid using "*" because there might be access restrictions
+    foreach($base_table as $table) {
+      foreach($SCHEMA[$table]["FIELDS"] as $field => $fdef) {
+	if(!@$fdef["VIRTUAL"] && db_access_field($table, $field, "r")) {
+	  //echo "listing '$table' '$field'<br>\n";
+	  $homo["FIELD"][$field] = $field;
+	}
+      }
+    }
+  }
+}
+
 /* Replace comma-separated strings by exploded arrays.
  * When $db_reduce is non-null, remove anything not belonging
  * to that databases.
@@ -100,37 +130,18 @@ function _db_homogenize($qstruct, $db_reduce = null) {
       die("bad qstruct (TABLE) - this should not happen\n");
     }
   }
-  $homo["FIELD"] = @$qstruct["FIELD"];
-  if(($test = @$qstruct["FIELD"]) && is_string($test)) {
-    $homo["FIELD"] = split(",", $test);
-  }
-  $makeall = !($test = @$homo["FIELD"]) || !count($test);
-  if(is_array($homo["FIELD"]) && array_search("*", $homo["FIELD"]) !== false) {
-    $makeall = true;
-    // remove the star field
-    $old = $homo["FIELD"];
-    $homo["FIELD"] = array();
-    foreach($old as $idx => $val) {
-      if(is_string($val) && $val == "*")
-	continue;
-      $homo["FIELD"][$idx] = $val;
-    }
-  }
-  if($makeall) { // make all field names explicit, avoid using "*" because there might be access restrictions
-    foreach($homo["BASE_TABLE"] as $table) {
-      foreach($SCHEMA[$table]["FIELDS"] as $field => $fdef) {
-	if(!@$fdef["VIRTUAL"] && db_access_field($table, $field, "r")) {
-	  //echo "listing '$table' '$field'<br>\n";
-	  $homo["FIELD"][$field] = $field;
-	}
-      }
-    }
-  }
+
+  _db_homogenize_field($homo, $qstruct, $homo["BASE_TABLE"], $db_reduce);
   $homo["FIELD"] = _db_strip_permissions($homo, $homo["FIELD"]);
   _db_stripfields($homo["FIELD"], $db_reduce);
+
   if($test = @$qstruct["AGG"]["FIELD"]) {
+    _db_homogenize_field($homo["AGG"], $qstruct["AGG"], $homo["BASE_TABLE"], $db_reduce);
+    print_r($homo["AGG"]);echo"<br>\n";
+    /*
     $homo["AGG"]["FIELD"] = split(",", $test);
     //$homo["AGG"]["FIELD"] = _db_strip_permissions($homo, $homo["AGG"]["FIELD"]);
+    */
     _db_stripfields($homo["AGG"]["FIELD"], $db_reduce);
   }
   if($test = @$qstruct["AGG"]["GROUP"]) {
@@ -247,7 +258,10 @@ function _db_mangle_joins($qstruct) {
     }
   }
   // Construct some dummy values for ad-hoc fields
-  foreach($qstruct["FIELD"] as $alias => $expr) {
+  $test = @$qstruct["FIELD"];
+  if(@$qstruct["AGG"])
+    $test = @$qstruct["AGG"]["FIELD"];
+  foreach($test as $alias => $expr) {
     if(!is_string($alias) || @$schema_fields[$alias]) {
       continue; // already known
     }

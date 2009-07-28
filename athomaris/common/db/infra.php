@@ -176,12 +176,16 @@ function _db_check(&$database, &$table, $field = null) {
  */
 function _db_realname($tp_table, $field = null) {
   global $SCHEMA;
+  global $RAW_ID;
   if(is_array($field)) { // structured case
     $res = array();
     foreach($field as $item) {
       $res[] = _db_realname($tp_table, $item);
     }
     return $res;
+  }
+  if(is_string($field) && preg_match("/^($RAW_ID)\.$RAW_ID$/", $field, $matches)) {
+    return $matches[1];
   }
   if(is_array($tp_table)) { // no _exact_ table given -> search for one
     $tlist = "";
