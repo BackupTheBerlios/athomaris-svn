@@ -137,11 +137,6 @@ function _db_homogenize($qstruct, $db_reduce = null) {
 
   if($test = @$qstruct["AGG"]["FIELD"]) {
     _db_homogenize_field($homo["AGG"], $qstruct["AGG"], $homo["BASE_TABLE"], $db_reduce);
-    print_r($homo["AGG"]);echo"<br>\n";
-    /*
-    $homo["AGG"]["FIELD"] = split(",", $test);
-    //$homo["AGG"]["FIELD"] = _db_strip_permissions($homo, $homo["AGG"]["FIELD"]);
-    */
     _db_stripfields($homo["AGG"]["FIELD"], $db_reduce);
   }
   if($test = @$qstruct["AGG"]["GROUP"]) {

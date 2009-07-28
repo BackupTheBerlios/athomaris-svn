@@ -163,7 +163,7 @@ function _mysql_make_select(&$subqs, $qstruct, $is_empty) {
   if(($pair = @$qstruct["AGG"])) { // treat aggregate functions
     if(($list = @$pair["FIELD"])) {
       foreach($list as $alias => $field) {
-	echo "'$alias' / '$field'<br>\n";
+	//echo "'$alias' / '$field'<br>\n";
 	if($res)
 	  $res .= ", ";
 	if(is_string($alias) && is_string($field) && $alias != $field) {
@@ -220,20 +220,25 @@ function _mysql_make_select(&$subqs, $qstruct, $is_empty) {
 	  $res .= ", ";
 	$subexpr = _mysql_make_where($table, $field);
 	$res .= "($subexpr)";
-      } else { // we have a sub-query
+      } elseif(is_array($field) && @$field["TABLE"]) { // we have a sub-query
 	global $debug; if($debug) { echo "subquery: "; print_r($field); echo"<br>\n";}
 	$dummy = array();
 	$subquery = mysql_make_query($dummy, $field);
-	if(@$field["AGG"]) { // we can embed it as ordinary subquery
+	$joinfields = @$field["JOINFIELDS"];
+	if(!$joinfields && !preg_match("/_pool$/", $alias)) { // we can embed it as ordinary subquery (yields an ordinary field, not a subtable) TODO: make the difference clear by means of an exlicit SUB_TABLE expression, and use it for *_pool also!
 	  if($res)
 	    $res .= ", ";
 	  $res .= "($subquery)";
-	} else { // we have a true subtable which cannot be executed in a single query
-	  $joinfields = @$field["JOINFIELDS"];
+	  if(is_string($alias)) {
+	    $res .= " as $alias";
+	  }
+	} else { // We have a true subtable which cannot be executed in a single query. This is non-standard semantics!
 	  if($debug) { echo "pushback subquery: alias='$alias' joinfields='$joinfields'<br>\n";}
 	  $subqs[$alias] = array($joinfields, $subquery, $alias);
 	  continue;
 	}
+      } else { // error
+	die("this should not happen.");
       }
       if($is_empty || (is_string($alias) && is_string($field) && $alias != _db_realname($table, $field))) {
 	$res .= " as $alias";
@@ -359,45 +364,48 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
   $old_field = $field;
   if(!preg_match($regex, $field, $matches)) {
     $ERROR = "bad field expression '$field'";
-    return "false";
+    return "/*bad field expression '$field'*/false";
   }
   $field = $matches[1];
-  if(@$matches[2]) {
-    $op = trim($matches[2]);
-    if(is_array($value) && $op != "in"&& $op != "not in") { // multiple conditions (indicated by presence of operator)
-      $res = "";
-      foreach($value as $item) {
-	if($res) {
-	  if($use_or) {
-	    $res .= " or ";
-	  } else {
-	    $res .= " and ";
-	  }
-	}
-	// treat the same as if the operator had been repeated.
-	$res .= _mysql_make_boolean($table, $old_field, $item, $use_or);
-      }
-      return $res;
-    }
-  }
-  
-  if(is_array($value)) { // sub-sql statement (indicated by _absence_ of operator)
-    if(!@$value["TABLE"]) { // test against most sloppiness
-      print_r($value);
-      die("field '$old_field': badly formed sub-sql statement\n");
-    }
-    if($debug) { echo "start homogenizing: "; print_r($value); echo "<br>\n"; }
-    $value = _db_homogenize($value);
-    $dummy = array();
-    $subquery = mysql_make_query($dummy, $value);
-    $sql_value = "($subquery)";
-  } else {
-    $sql_value = db_esc_sql($value);
-  }
+  $sql_value = null;
   if(@$matches[3]) {
     $sql_value = $matches[3];
+    $op = trim($matches[2]);
   } elseif(is_null($value)) {
     $op = "!";
+  } else {
+    if(@$matches[2]) {
+      $op = trim($matches[2]);
+      if(is_array($value) && $op != "in"&& $op != "not in") { // multiple conditions (indicated by presence of operator)
+	$res = "";
+	foreach($value as $item) {
+	  if($res) {
+	    if($use_or) {
+	      $res .= " or ";
+	    } else {
+	      $res .= " and ";
+	    }
+	  }
+	  // treat the same as if the operator had been repeated.
+	  $res .= _mysql_make_boolean($table, $old_field, $item, $use_or);
+	}
+	return $res;
+      }
+    }
+  
+    if(is_array($value)) { // sub-sql statement (indicated by _absence_ of operator)
+      if(!@$value["TABLE"]) { // test against most sloppiness
+	print_r($value);
+	die("field '$old_field': badly formed sub-sql statement\n");
+      }
+      if($debug) { echo "start homogenizing: "; print_r($value); echo "<br>\n"; }
+      $value = _db_homogenize($value);
+      $dummy = array();
+      $subquery = mysql_make_query($dummy, $value);
+      $sql_value = "($subquery)";
+    } else {
+      $sql_value = db_esc_sql($value);
+    }
   }
 
   $realfield = _db_realname($table, $field);
