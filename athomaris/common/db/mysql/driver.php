@@ -354,7 +354,7 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
   
   // check binary operators
   $op = "=";
-  $regex = "/^($RAW_DOTID)\\s*(=|<>|<|>|<=|>=|!|@|%| like| rlike| in)?(?:\\s+?($RAW_DOTID))?$/";
+  $regex = "/^($RAW_DOTID)\\s*(=|<>|<|>|<=|>=|!|@|%| like| rlike| in| not in)?(?:\\s+?($RAW_DOTID))?$/";
   $old_field = $field;
   if(!preg_match($regex, $field, $matches)) {
     $ERROR = "bad field expression '$field'";
@@ -363,7 +363,7 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
   $field = $matches[1];
   if(@$matches[2]) {
     $op = trim($matches[2]);
-    if(is_array($value) && $op != "in") { // multiple conditions (indicated by presence of operator)
+    if(is_array($value) && $op != "in"&& $op != "not in") { // multiple conditions (indicated by presence of operator)
       $res = "";
       foreach($value as $item) {
 	if($res) {
