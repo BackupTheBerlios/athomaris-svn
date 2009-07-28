@@ -228,6 +228,7 @@ function _db_mangle_joins($qstruct) {
     }
     $qstruct["JOIN_ON"] = $join_on;
   }
+  // Compute the set of all occurring fields. Needed for VIEW.
   $schema_fields = array();
   foreach($qstruct["TABLE"] as $alias => $tp_table) {
     if(is_array($tp_table)) {
@@ -236,10 +237,36 @@ function _db_mangle_joins($qstruct) {
     }
     _db_temporal($tp_table, $table);
     foreach($SCHEMA[$table]["FIELDS"] as $field => $fdef) {
-      if(!$field || @$schema_fields[$field])
+      if(!$field || @$schema_fields[$field]) {
 	continue;
+      }
+      if(preg_match("/_pool\Z/", $field)) {
+	continue;
+      }
       $schema_fields[$field] = $fdef;
     }
+  }
+  // Construct some dummy values for ad-hoc fields
+  foreach($qstruct["FIELD"] as $alias => $expr) {
+    if(!is_string($alias) || @$schema_fields[$alias]) {
+      continue; // already known
+    }
+    if(preg_match("/_pool\Z/", $alias)) {
+      continue;
+    }
+    $fdef =
+      array( // currently type-agnostic. TODO: improve this!
+	    "TYPE" => "text",
+	    "ACCESS" => "R",
+	    "MINLEN" => 0,
+	    "MAXLEN" => 9999,
+	    "SIZE" => 40,
+	    "SQL_TYPE" => "text",
+	    "DISPLAY_TYPE" => "string",
+	    "TPL_DISPLAY" => "display_text",
+	    "EXTRA_FIELD" => array(),
+	    );
+    $schema_fields[$alias] = $fdef;
   }
   $qstruct["SCHEMA_FIELDS"] = $schema_fields;
   return $qstruct;
