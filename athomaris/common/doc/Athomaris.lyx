@@ -10118,6 +10118,52 @@ dynamically computed
 \begin_layout Description
 
 \family typewriter
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+aliasname
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+=>
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+expression
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ Same as before, but the value is computed by an arbitrary SQL expression
+ which is passed though uninterpreted.
+ No substution of 
+\family typewriter
+REALNAME
+\family default
+ and no syntax checking is currently done.
+ Please prefer the subquery method, this is not portable!
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
 DISTINCT => 
 \emph on
 boolean

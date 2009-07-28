@@ -208,9 +208,16 @@ function _mysql_make_select(&$subqs, $qstruct, $is_empty) {
 	      die("cannot find alias field '$init' in table '$table'\n");
 	    $alias = $realfield;
 	  }
+	} elseif(is_string($alias) && $alias != $field) { // named subexpression
+	  if($res)
+	    $res .= ", ";
+	  //echo ".......[$field/$alias].......<br>\n";
+	  $res .= "($field) as $alias";
+	  continue;
 	} else { // normal case
 	  if($res)
 	    $res .= ", ";
+	  //echo ".......($field/$alias).......<br>\n";
 	  $realfield = _db_realname($table, $field);
 	  if(!$realfield)
 	    die("cannot find real fieldname for '$field'\n");

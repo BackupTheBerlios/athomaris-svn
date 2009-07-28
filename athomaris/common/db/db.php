@@ -29,7 +29,11 @@ $FROM = @$_SERVER["REMOTE_HOST"] ? $_SERVER["REMOTE_HOST"] : (@$_SERVER["REMOTE_
 function _db_strip_permissions($qstruct, $fields) {
   $new = array();
   if($fields) {
-    foreach($fields as $field) {
+    foreach($fields as $alias => $field) {
+      if(is_string($alias) && is_string($field) && $alias != $field) { // don't check named subexpressions for REALNAME
+	$new[$alias] = $field;
+	continue;
+      }
       $ok = false;
       foreach($qstruct["BASE_TABLE"] as $table) {
 	if(db_access_field($table, $field, "r")) {
@@ -50,8 +54,11 @@ function _db_stripcond(&$cond, $db_reduce) {
 
 function _db_stripfields(&$fieldlist, $db_reduce) {
   foreach($fieldlist as $alias => $field) {
-    if(is_string($field)) {
-      // remote functions such as min(), max(), count() etc
+    if(is_string($alias) && is_string($field)) {
+      // NYI
+      continue;
+    } elseif(is_string($field)) {
+      // remove functions such as min(), max(), count() etc
       $field = preg_replace("/\A\s*[a-zAZ]+\s*\(\s*([a-zA-Z0-9])\s*\)\Z/", "\\1", $field);
       if($db_reduce && !_db_check($db_reduce, null, $field)) {
 	unset($fieldlist[$alias]);
@@ -93,10 +100,22 @@ function _db_homogenize($qstruct, $db_reduce = null) {
       die("bad qstruct (TABLE) - this should not happen\n");
     }
   }
+  $homo["FIELD"] = @$qstruct["FIELD"];
   if(($test = @$qstruct["FIELD"]) && is_string($test)) {
     $homo["FIELD"] = split(",", $test);
   }
-  $makeall = !($test = @$qstruct["FIELD"]) || !count($test);
+  $makeall = !($test = @$homo["FIELD"]) || !count($test);
+  if(is_array($homo["FIELD"]) && array_search("*", $homo["FIELD"]) !== false) {
+    $makeall = true;
+    // remove the star field
+    $old = $homo["FIELD"];
+    $homo["FIELD"] = array();
+    foreach($old as $idx => $val) {
+      if(is_string($val) && $val == "*")
+	continue;
+      $homo["FIELD"][$idx] = $val;
+    }
+  }
   if($makeall) { // make all field names explicit, avoid using "*" because there might be access restrictions
     foreach($homo["BASE_TABLE"] as $table) {
       foreach($SCHEMA[$table]["FIELDS"] as $field => $fdef) {
