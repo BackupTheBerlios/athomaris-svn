@@ -10157,7 +10157,7 @@ expression
 \family typewriter
 REALNAME
 \family default
- and no syntax checking is currently done.
+ and no syntax checking is currently performed.
  Please prefer the subquery method, this is not portable!
 \end_layout
 

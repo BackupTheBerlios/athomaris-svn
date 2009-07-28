@@ -336,8 +336,7 @@ function _app_prepare_data($table, $querydata, $mode) {
   $data["PRIMARIES"] = split(",", $data["PRIMARY"]);
   $data["UNIQUE"] = _db_unique($table);
   $data["UNIQUES"] = split(",", $data["UNIQUE"]);
-  $data["PREFIX"] = "";
-  $data["SUFFIX"] = "";
+  $data["PREFIX"] = "";  $data["SUFFIX"] = "";
   $data["PERM"] = $PERM;
   $data["SCHEMA"] = $SCHEMA;
   $data["ACTION_SELF"] = $_SERVER["PHP_SELF"];
@@ -507,7 +506,6 @@ function app_display_table($tp_table) {
     $data["EXTRA"]["button_clone"] = $primary;
     $data["EXTRA"]["button_delete"] = $primary;
   }
-
   tpl_display_table($data);
 }
 

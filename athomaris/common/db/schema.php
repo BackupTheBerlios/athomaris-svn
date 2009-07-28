@@ -789,10 +789,9 @@ function _db_pass_typeinfo($MYSCHEMA) {
       } else {
 	die("ERROR in schema: cannot translate SQL type '$type'\n");
       }
-      if(@($finfo["REF_LINKS"])) {
+      if(($ref = @$finfo["REF_LINKS"])) {
 	//echo "Aha: table=$table field=$field<br>\n";
 	$restype = "selector";
-	$ref = $finfo["REF_LINKS"];
 	$split = preg_split("/\./", $ref);
 	//print_r($split); echo "<br>\n";
 	$res[$table]["FIELDS"][$field]["REF_TABLE"] = $split[0];

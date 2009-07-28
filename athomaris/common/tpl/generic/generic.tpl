@@ -275,10 +275,12 @@ for(i = 0; i < all.length; i++) \{
 
 /////////////////////////////////////////////////////////////////////////
 
+// TODO: introduce assocation between local field name and remote field name. Current provisionary code works only for count($REF_FIELDS)==1.
+
 {TEMPLATE "display_ref"}\
 {IF $REF_FIELDS}\
- {LOOP $FDEF->EXTRA_FIELD AS $KEY}{IF $ROW->$KEY}{IF $first++} | {/IF}{TEXT $KEY}:{$ROW->$KEY}{/IF}{/LOOP}\
- <a class="link" href="{$ACTION_SELF}?table={PARAM $REF_TABLE}&primary={PARAM $REF_FIELD}{TPL "params_primary" "LOOP" => $REF_FIELDS/}">{LOOP $REF_FIELDS AS $KEY}{IF $ROW->$KEY}{IF $first++} | {/IF}{TEXT $KEY}:{$ROW->$KEY}{/IF}{/LOOP}</a>\
+ {LOOP $FDEF->EXTRA_FIELD AS $KEY}{IF $ROW->$FIELD}{IF $first++} | {/IF}{TEXT $KEY}:{$ROW->$FIELD}{/IF}{/LOOP}\
+ <a class="link" href="{$ACTION_SELF}?table={PARAM $REF_TABLE}&primary={PARAM $REF_FIELD}{LOOP $REF_FIELDS AS $KEY}&{$KEY}={PARAM $ROW->$FIELD}{/LOOP}">{LOOP $REF_FIELDS AS $KEY}{IF $ROW->$FIELD}{IF $first++} | {/IF}{TEXT $KEY}:{$ROW->$FIELD}{/IF}{/LOOP}</a>\
 {ELSE}\
  <a class="link" href="{$ACTION_SELF}?table={PARAM $REF_TABLE}&primary={PARAM $REF_FIELD}&{$REF_FIELD}={PARAM $VALUE}">{$VALUE}</a>\
 {/IF}\
@@ -500,7 +502,8 @@ for(i = 0; i < all.length; i++) \{
  {IF $DATA->0->$POOL}
   <select name="{$PREFIX}{$FIELD}{$SUFFIX}" size="{IF $SIZE}{$SIZE}{ELSE}5{/IF}">
   {LOOP $DATA->0->$POOL as $IDX => $REC}
-    <option value="{$REC->$FIELD}"{IF $DATA->0->$FIELD == $REC->$FIELD} selected="selected"{/IF}>{TEXT $REC->$FIELD}</option>
+    {VAR $POOLFIELD = $SCHEMA->$TABLE->FIELDS->$FIELD->POOL_DATA->FIELD/}
+    <option value="{$REC->$POOLFIELD}"{IF $DATA->0->$FIELD == $REC->$POOLFIELD} selected="selected"{/IF}>{TEXT $REC->$POOLFIELD}</option>
   {/LOOP}
  </select>
  {ELSE}
