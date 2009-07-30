@@ -91,6 +91,10 @@ $SYNTAX_COND =
 
 $SYNTAX_QUERY =
   array(
+	"UNION" =>
+	array(
+	      $SYNTAX_ID => &$SYNTAX_QUERY,
+	      ),
 	"JOINFIELDS" => $SYNTAX_IDLIST,
 	"JOIN_ON" => array($SYNTAX_JOIN_ON),
 	"JOIN_DEPENDANT" => array($SYNTAX_JOIN_ON), // only for internal use
@@ -647,6 +651,7 @@ function _db_pass_main($MYSCHEMA) {
     if(@$tdef["VIEW"]) {
       global $SCHEMA;
       $SCHEMA = $MYSCHEMA;
+      $databases = array();
       $q2 = _db_mangle_query($databases, $tdef["VIEW"]);
       $tdef["FIELDS"] = $q2["SCHEMA_FIELDS"];
       $newtdef["ACCESS"] = "R";

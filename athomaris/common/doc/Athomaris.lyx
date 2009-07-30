@@ -9646,7 +9646,8 @@ fieldvalue
 \emph default
  are selected.
  When providing multiple hash keys, all conditions are logically anded.
- More complex boolean expressions may be constructed in the following way:
+ More complex boolean expressions may be constructed in one of the following
+ ways:
 \end_layout
 
 \begin_layout Enumerate
@@ -9668,8 +9669,11 @@ operator
 \begin_inset Quotes erd
 \end_inset
 
- => fieldvalue
+ => 
+\emph on
+fieldvalue
 \family default
+\emph default
  uses 
 \family typewriter
 \emph on
@@ -9686,6 +9690,7 @@ operator
 s are possible: 
 \end_layout
 
+\begin_deeper
 \begin_layout Description
 
 \family typewriter
@@ -9861,6 +9866,7 @@ exists
  Similar; the meaning is intuitively clear to SQL programmers.
 \end_layout
 
+\end_deeper
 \begin_layout Enumerate
 when 
 \family typewriter
@@ -9870,9 +9876,16 @@ fieldvalue
 \emph default
  is an 
 \emph on
-aggregating sub-query
+(aggregating) sub-query
 \emph default
  as described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Full-Subqueries"
+
+\end_inset
+
+ or 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sub:Aggregated-Subqueries"
@@ -9906,6 +9919,61 @@ fieldname
 \end_layout
 
 \begin_layout Enumerate
+the variant 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+operator
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+ => array(
+\emph on
+expr1
+\emph default
+, 
+\emph on
+expr2
+\emph default
+)
+\family default
+ allows comparisons between two different sub-queries.
+ 
+\family typewriter
+\emph on
+expr1
+\family default
+\emph default
+ and 
+\family typewriter
+\emph on
+expr2
+\family default
+\emph default
+ must (recursively) obey the construction rules described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Full-Subqueries"
+
+\end_inset
+
+ or 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Aggregated-Subqueries"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
 when 
 \family typewriter
 
@@ -9916,7 +9984,7 @@ when
 \emph on
 fieldname
 \emph default
-
+ operator
 \begin_inset Quotes erd
 \end_inset
 
@@ -9928,14 +9996,17 @@ fieldname
 fieldvalue
 \family default
 \emph default
- is itself a hash obeying the same construction rules, these conditions
- are logically 
+ is a plain array (recursivley) denoting multiple 
+\family typewriter
+COND
+\family default
+ expressions as described here, all of these conditions are logically 
 \emph on
 ored
 \emph default
  instead of anded.
- When recursively nesting such expressions, oring and anding will always
- 
+ When recursively nesting such plain expressions, oring and anding will
+ always 
 \emph on
 alternate,
 \emph default

@@ -42,7 +42,7 @@ function _db_strip_permissions($qstruct, $fields) {
 	}
       }
       if($ok) {
-	$new[] = $field;
+	$new[$alias] = $field;
       }
     }
   }
@@ -287,6 +287,12 @@ function _db_mangle_joins($qstruct) {
 function _db_mangle_query(&$databases, $qstruct) {
   global $SCHEMA;
   global $SYNTAX_QUERY;
+  if($list = @$qstruct["UNION"]) {
+    foreach($list as $alias => $subq) {
+      $qstruct[$alias] = _db_mangle_query($databases, $subq);
+    }
+    return $qstruct;
+  }
   if($error = db_check_syntax($qstruct, $SYNTAX_QUERY)) {
     echo "qstruct error: $error<br>\n";
     global $debug; if($debug) { echo "syntax: "; print_r($qstruct); echo"<br>\n";}
@@ -297,7 +303,6 @@ function _db_mangle_query(&$databases, $qstruct) {
   $homo = _db_add_schema($homo);
   $homo = _db_mangle_joins($homo);
   // check whether all tables are on the same database
-  $databases = array();
   foreach($homo["BASE_TABLE"] as $table) {
     $database = _db_database($table);
     $databases[$database] = true;
@@ -424,6 +429,7 @@ function _db_read($qstruct) {
   global $ERROR;
   global $debug;
   if($debug) { echo "_db_read raw data: "; print_r($qstruct); echo "<br>\n"; }
+  $databases = array();
   $q2 = _db_mangle_query($databases, $qstruct);
   // currently only 1 database supported
   $database = key($databases);

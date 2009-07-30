@@ -215,12 +215,12 @@ function _mysql_make_select(&$subqs, $qstruct, $is_empty) {
 	    die("cannot find real fieldname for '$field'\n");
 	  $res .= $realfield;
 	}
-      } elseif(!@$field["TABLE"]) { // we have a boolean sub-expression
+      } elseif(!@$field["TABLE"] && !@$field["UNION"]) { // we have a boolean sub-expression
 	if($res)
 	  $res .= ", ";
 	$subexpr = _mysql_make_where($table, $field);
 	$res .= "($subexpr)";
-      } elseif(is_array($field) && @$field["TABLE"]) { // we have a sub-query
+      } elseif(is_array($field) && (@$field["TABLE"] || !@$field["UNION"])) { // we have a sub-query
 	global $debug; if($debug) { echo "subquery: "; print_r($field); echo"<br>\n";}
 	$dummy = array();
 	$subquery = mysql_make_query($dummy, $field);
@@ -269,6 +269,7 @@ function _mysql_make_group($qstruct) {
 
 function _mysql_make_from($qstruct, &$joinconditions) {
   global $SCHEMA;
+  global $ERROR;
   global $debug; if($debug) { echo "make_from: "; print_r($qstruct); echo"<br>\n";}
   $res = "";
   $joinconditions = "";
@@ -360,13 +361,32 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
   
   // check binary operators
   $op = "=";
-  $regex = "/^($RAW_DOTID)\\s*(=|<>|<|>|<=|>=|!|@|%| like| rlike| in| not in)?(?:\\s+?($RAW_DOTID))?$/";
+  $regex = "/^($RAW_DOTID)?\\s*(=|<>|<|>|<=|>=|!|@|%| like| rlike| in| not in)?\\s*($RAW_DOTID)?$/";
   $old_field = $field;
   if(!preg_match($regex, $field, $matches)) {
     $ERROR = "bad field expression '$field'";
     return "/*bad field expression '$field'*/false";
   }
   $field = $matches[1];
+  if(!$field) { // pure operator
+    if(!@$matches[2]) {
+      die("bad single operator");
+    }
+    $op = trim($matches[2]);
+    $arg1 = $value[0];
+    $arg2 = $value[1];
+    $value1 = _db_homogenize($arg1);
+    $value2 = _db_homogenize($arg2);
+    $dummy = array();
+    $subquery1 = mysql_make_query($dummy, $value1);
+    $dummy = array();
+    $subquery2 = mysql_make_query($dummy, $value2);
+    $res = "($subquery1) $op ($subquery2)";
+    return $res;
+  }
+  $realfield = _db_realname($table, $field);
+  if(!$realfield)
+    die("cannot find field '$field' in table '$table'\n");
   $sql_value = null;
   if(@$matches[3]) {
     $sql_value = $matches[3];
@@ -394,7 +414,7 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
     }
   
     if(is_array($value)) { // sub-sql statement (indicated by _absence_ of operator)
-      if(!@$value["TABLE"]) { // test against most sloppiness
+      if(!@$value["TABLE"] && !@$value["UNION"]) { // test against most sloppiness
 	print_r($value);
 	die("field '$old_field': badly formed sub-sql statement\n");
       }
@@ -408,9 +428,6 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
     }
   }
 
-  $realfield = _db_realname($table, $field);
-  if(!$realfield)
-    die("cannot find field '$field' in table '$table'\n");
   if($op == "@") {
     $res = "$realfield is not null";
   } elseif($op == "%" || $op == "like") {
@@ -441,6 +458,17 @@ function _mysql_make_where($table, $fields, $use_or = false) {
 
 function mysql_make_query(&$subqs, $qstruct) {
   global $debug; if($debug) { echo "mysql_make_query: "; print_r($qstruct); echo"<br>\n";}
+  if(($list = @$qstruct["UNION"])) {
+    foreach($list as $alias => $subqstruct) {
+      $subquery = mysql_make_query($subqs, $subqstruct);
+      if($ERROR)
+	return "";
+      if($res)
+	$res .= " union ";
+      $res .= "$subquery $alias";
+    }
+    return $res;
+  }
   $is_empty = isset($qstruct["COND"]["EMPTY"]);
   $select = _mysql_make_select($subqs, $qstruct, $is_empty);
   if($is_empty) {

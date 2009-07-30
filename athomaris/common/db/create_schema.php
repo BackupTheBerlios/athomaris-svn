@@ -138,6 +138,7 @@ function _db_create_view($NEW, $alias, $qstruct) {
   global $SCHEMA;
   $oldschema = $SCHEMA;
   $SCHEMA = $NEW;
+  $databases = array();
   $q2 = _db_mangle_query($databases, $qstruct);
   if(count($databases) == 1) {
     $database = key($databases);

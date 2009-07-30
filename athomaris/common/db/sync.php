@@ -94,6 +94,7 @@ function sync_table($src, $dst, $cond = array(), $transl = "", $modes = array("I
 	  "COUNT" => 0,
 	  );
 
+  $databases = array();
   $q2 = _db_mangle_query($databases, $qstruct);
   // currently only 1 database supported
   $database = key($databases);
