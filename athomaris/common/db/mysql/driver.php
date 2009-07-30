@@ -263,6 +263,10 @@ function _mysql_make_group($qstruct) {
 	$res .= ", ";
       $res .= $field; // no _db_realname() should be necessary
     }
+    if($list = @$qstruct["AGG"]["HAVING"]) {
+      $where = _mysql_make_where($qstruct["TABLE"], $list, false);
+      $res .= " having $where";
+    }
   }
   return $res;
 }
@@ -302,7 +306,7 @@ function _mysql_make_from($qstruct, &$joinconditions) {
 	die("no realtable set .... this should never happen\n");
       if(is_string($alias)) {
 	$base_table[$alias] = $table;
-	$translate[$alias] = $realtable;
+	$translate[$alias] = $alias;
 	$res .= "$realtable $alias";
       } else {
 	$base_table[$tp_table] = $table;
@@ -361,7 +365,7 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
   
   // check binary operators
   $op = "=";
-  $regex = "/^($RAW_DOTID)?\\s*(?:(=|<>|<|>|<=|>=|!|@|%| like| rlike| in| not in)\\s*($RAW_DOTID)?)?$/";
+  $regex = "/^(\\\\?$RAW_DOTID)?\\s*(?:(=|<>|<|>|<=|>=|!|@|%| like| rlike| in| not in)\\s*($RAW_DOTID)?)?$/";
   $old_field = $field;
   if(!preg_match($regex, $field, $matches)) {
     $ERROR = "bad field expression '$field'";
@@ -396,7 +400,7 @@ function _mysql_make_boolean($table, $field, $value, $use_or) {
   } else {
     if(@$matches[2]) {
       $op = trim($matches[2]);
-      if(is_array($value) && $op != "in" && $op != "not in") { // multiple conditions (indicated by presence of operator)
+      if(is_array($value) && !@$value["TABLE"] && !@$value["UNION"]) { // multiple conditions (indicated by absence of TABLE or UNION)
 	$res = "";
 	foreach($value as $item) {
 	  if($res) {

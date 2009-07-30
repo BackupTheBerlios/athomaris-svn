@@ -184,6 +184,9 @@ function _db_realname($tp_table, $field = null) {
     }
     return $res;
   }
+  if(is_string($field) && preg_match("/^\\\\(.*)/", $field, $matches)) {
+    return $matches[1];
+  }
   if(is_string($field) && preg_match("/^($RAW_ID)\.($RAW_ID)$/", $field, $matches)) {
     //return $matches[1] . "." . _db_realname($matches[1], $matches[2]);
     return $field;

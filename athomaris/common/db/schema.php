@@ -79,7 +79,7 @@ $SYNTAX_DOTID = "/^${RAW_DOTID}$/";
 $SYNTAX_IDLIST = "/^(?:${RAW_ID}(?:,${RAW_ID})*)?$/";
 $SYNTAX_DOTIDLIST = "/^${RAW_DOTID}(?:,${RAW_DOTID})*$/";
 $SYNTAX_EXPRLIST = "/^${RAW_ID}[(]${RAW_DOTID}[)](?:,${RAW_ID}[(]${RAW_DOTID}[)])*$/";
-$SYNTAX_CONDFIELD = "/^${RAW_DOTID}(?:\\s*[<>=!@%]+\\s*(?:${RAW_DOTID})?)?$/";
+$SYNTAX_CONDFIELD = "/^\\\\?${RAW_DOTID}(?:\\s*[<>=!@%]+\\s*(?:${RAW_DOTID})?)?$/";
 $SYNTAX_JOIN_ON = "/^${RAW_ID}\.${RAW_ID}[=<>]+${RAW_ID}\.${RAW_ID}$/";
 
 
@@ -136,6 +136,7 @@ $SYNTAX_QUERY =
 			  ),
 		    ),
 	      "GROUP" => $SYNTAX_DOTIDLIST,
+	      "HAVING" => $SYNTAX_COND,
 	      ),
 	"COND" => $SYNTAX_COND,
 	"ORDER" => $SYNTAX_IDLIST,
