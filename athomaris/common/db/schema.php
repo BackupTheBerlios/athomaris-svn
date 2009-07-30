@@ -775,7 +775,7 @@ function _db_pass_typeinfo($MYSCHEMA) {
 	$restype = "hidden";
       } elseif(preg_match("/^(?:date)?time(stamp)?$/", $type)) {
 	$restype = "string";
-      } elseif(preg_match("/^((?:tiny|small|medium)?int([\(][0-9]+[\)])?|bigint)$/", $type)) {
+      } elseif(preg_match("/^((?:tiny|small|medium)?int([\(][0-9]+[\)])?|bigint|decimal\([0-9]+,[0-9]+\))$/", $type)) {
 	$restype = "int";
 	$res[$table]["FIELDS"][$field]["SIZE"] = 10; /* set to default */
       } elseif(preg_match("/^bool(ean)?$/", $type)) {
