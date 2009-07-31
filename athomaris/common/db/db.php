@@ -236,6 +236,9 @@ function _db_mangle_joins($qstruct) {
   }
   // Compute the set of all occurring fields. Needed for VIEW.
   $schema_fields = array();
+  $test = @$qstruct["FIELD"];
+  if(@$qstruct["AGG"])
+    $test = @$qstruct["AGG"]["FIELD"];
   foreach($qstruct["TABLE"] as $alias => $tp_table) {
     if(is_array($tp_table)) {
       // currently, sub-queries are not taken into account. this could be improved.
@@ -249,13 +252,13 @@ function _db_mangle_joins($qstruct) {
       if(preg_match("/_pool\Z/", $field)) {
 	continue;
       }
+      if(!array_key_exists($field, $test) && array_search($field, $test) === false) {
+	continue;
+      }
       $schema_fields[$field] = $fdef;
     }
   }
   // Construct some dummy values for ad-hoc fields
-  $test = @$qstruct["FIELD"];
-  if(@$qstruct["AGG"])
-    $test = @$qstruct["AGG"]["FIELD"];
   foreach($test as $alias => $expr) {
     if(!is_string($alias) || @$schema_fields[$alias]) {
       continue; // already known
