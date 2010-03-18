@@ -95,6 +95,14 @@ function _db_autoinc($table, $MYSCHEMA = null) {
   return _db_extfield($table, "id", $MYSCHEMA);
 }
 
+/* return name of version field
+ */
+function _db_version($table, $MYSCHEMA = null) {
+  if(@$MYSCHEMA[$table]["FIELDNAME_VERSION"])
+    return $MYSCHEMA[$table]["FIELDNAME_VERSION"];
+  return _db_extfield($table, "version", $MYSCHEMA);
+}
+
 /* Currently the suffix "_tp" cannot be overridden
  */
 function _db_2temporal($table) {

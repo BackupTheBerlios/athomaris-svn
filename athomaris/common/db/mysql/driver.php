@@ -784,6 +784,7 @@ function _mysql_make_update_tp(&$stack, $qstruct, &$cb_list) {
   $realtable = _db_realname($table);
   $realtable_tp = _db_2temporal($realtable);
   $autoinc = _db_autoinc($table);
+  $version = _db_version($table);
   $deleted = _db_extfield($table, "deleted");
   $fields = implode(", ", _db_realname($table, $qstruct["ALL_FIELDS"]));
   $count = 0;
@@ -791,7 +792,8 @@ function _mysql_make_update_tp(&$stack, $qstruct, &$cb_list) {
     $idcond = _mysql_make_idcond_base($qstruct, $row);
     if($count++)
       $res .="; ";
-    $res .= "replace into $realtable_tp($fields) ";
+    //$res .= "replace into $realtable_tp($fields) ";
+    $res .= "insert into $realtable_tp($fields) ";
 
     $where = _mysql_make_idwhere($qstruct, $row);
     if($ERROR) {
@@ -808,7 +810,8 @@ function _mysql_make_update_tp(&$stack, $qstruct, &$cb_list) {
       if($field == $deleted) {
 	$row[$field] = false;
       }
-      if($mode == "INSERT" && $field == $autoinc) { // give AUTO_INCREMENT a chance
+      if(($mode == "INSERT" && $field == $autoinc)
+	|| $field == $version) { // give AUTO_INCREMENT / versioning a chance
 	$newdata .= "null";
       } elseif(array_key_exists($field, $row) && in_array($field, $qstruct["UPDATE_FIELDS"])) { // take new value
 	$value = @$row[$field];
