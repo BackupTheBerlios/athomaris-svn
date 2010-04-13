@@ -468,11 +468,13 @@ function app_input_record($tp_table) {
 function app_display_table($tp_table) {
   global $SCHEMA;
   global $TOOL;
+  global $ERROR;
   global $debug;
 
   _db_temporal($tp_table, $table);
 
   if(!db_access_table($table, "r")) {
+    tpl_error_permission_denied(null);
     return;
   }
   app_tools($table);
@@ -495,7 +497,12 @@ function app_display_table($tp_table) {
     $prio = @$TOOL["tool_level"];
     //$cond["#class_name in (select class_name from classes where class_prio >= $prio)"] = true;
   }
+
   $tmp = db_read($tp_table, null, $cond, @$TOOL["order"], ($page_start - 1) * $page_size, $page_size);
+  if($ERROR) {
+    tpl_error(array("ERROR" => $ERROR));
+    return;
+  }
 
   $data = _app_prepare_data($table, $tmp, "invalid");
 

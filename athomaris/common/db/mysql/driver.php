@@ -25,12 +25,16 @@
 
 function mysql_do_open($host, $user, $passwd, $base = null) {
   global $ERROR;
+  global $debug;
   if($base) {
     $mysqli = new mysqli($host, $user, $passwd, $base);
   } else {
     $mysqli = new mysqli($host, $user, $passwd);
   }
-  if(($ERROR = $mysqli->error)) {
+  if($ERROR = $mysqli->connect_error) {
+    if($debug) {
+      echo "mysql_do_open(): error '$ERROR'<br>\n";
+    }
     return null;
   }
   return $mysqli;
@@ -53,6 +57,13 @@ function mysql_multiquery(&$env, $mysqli, $query, $cb_list) {
   global $ERROR;
   global $debug;
 
+  if(!is_a($mysqli, "mysqli")) {
+    echo "internal error: bad mysqli object ";
+    print_r($mysqli);
+    echo "<br>\n";
+    return false;
+  }
+
   $cb = "";
   if($cb_list)
     $cb = array_shift($cb_list);
@@ -60,6 +71,12 @@ function mysql_multiquery(&$env, $mysqli, $query, $cb_list) {
   $next = $mysqli->multi_query($query);
   if(!$next) {
     $ERROR .= $mysqli->error;
+    if($debug) {
+      echo "<br>\nmultiquery error '$ERROR' on first query ($query)<br>\n";
+      echo "next='"; print_r($next); echo"'<br>\n";
+      echo "is_bool(next)='"; print_r(is_bool($next)); echo"'<br>\n";
+      echo "<br>\n";
+    }
     _db_close($mysqli);
     return false;
   } elseif($cb) {

@@ -111,4 +111,14 @@ function db_check_syntax($STRUCTURE, $SYNTAX) {
   return "unknown part cannot be checked";
 }
 
+function db_enforce_syntax($STRUCTURE, $SYNTAX) {
+  global $debug;
+  if(@$debug) {
+    $err = db_check_syntax($STRUCTURE, $SYNTAX);
+    if($err) {
+      die("BAD SYNTAX: $err");
+    }
+  }
+}
+
 ?>
